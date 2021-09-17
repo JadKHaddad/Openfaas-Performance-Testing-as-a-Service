@@ -1,0 +1,25 @@
+html, body {
+    height: 100%;
+    scroll-behavior: smooth;
+  }
+
+body {
+display: flex;
+flex-direction: column;
+}
+  
+.content {
+flex: 1 0 auto;
+padding-top: 70px;
+padding-bottom: 50px;
+margin-left:auto;
+margin-right:auto;
+}
+
+.footer {
+flex-shrink: 0;
+}
+
+.card{
+    margin-top:10px;
+}
