@@ -1,0 +1,15 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: <your gateway>
+functions:
+  ptas:
+    lang: python3-flask-debian
+    handler: ./ptas
+    image: <your prefix>/ptas:latest
+    environment:
+      write_timeout: "10000s"
+      read_timeout: "10000s"
+      exec_timeout: "10000s"
+      
+
