@@ -21,7 +21,7 @@
 </head>
 
 <body>
-   <!-- Start your project here-->
+   <!-- Start -->
    <header>
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
@@ -44,8 +44,8 @@
       </nav>
       <!-- Navbar -->
    </header>
+   <!-- content -->
    <div class="content" id="content">
-      <!-- content -->
       <!-- Button trigger modal -->
       <div>
          <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#exampleModal">
@@ -55,13 +55,9 @@
       <div class="card">
          <div class="card-header">Featured</div>
          <div class="card-body">
-
          </div>
       </div>
-
    </div>
-   <!-- Modal -->
-
 
    <!-- Modal -->
    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -72,30 +68,25 @@
                <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-               <!-- body -->
                <form>
                   <!-- Users input -->
                   <div class="form-outline mb-4">
                      <input type="email" id="users" class="form-control" />
                      <label class="form-label" for="users">Users</label>
                   </div>
-
                   <!-- Spawn rate input -->
                   <div class="form-outline mb-4">
                      <input type="password" id="spawn-rate" class="form-control" />
                      <label class="form-label" for="spawn-rate">Spawn rate</label>
                   </div>
-
                   <div class="form-text" style="padding-bottom:10px;">
                      This will overwrite all hosts in your file
                   </div>
                   <!-- Host input -->
                   <div class="form-outline mb-4">
-
                      <input type="password" id="host" class="form-control" />
                      <label class="form-label" for="host">Host</label>
                   </div>
-
                   <div class="form-text" style="padding-bottom:10px;">
                      If time is not set, the test will not stop automatically
                   </div>
@@ -104,7 +95,6 @@
                      <input type="password" id="time" class="form-control" />
                      <label class="form-label" for="time">Time in seconds</label>
                   </div>
-
                   <!-- File input-->
                   <div class="form-outline mb-4">
                      <input type="file" class="form-control" id="file" />
@@ -113,7 +103,6 @@
                   <button type="submit" class="btn btn-primary btn-block">Deploy</button>
                </form>
             </div>
-
          </div>
       </div>
    </div>
@@ -128,7 +117,7 @@
       </div>
       <!-- Copyright -->
    </footer>
-   <!-- End your project here-->
+   <!-- End -->
 
    <!-- MDB -->
    <script type="text/javascript" src="{{ url_for('static', filename='scripts/mdb.min.js') }}"></script>
