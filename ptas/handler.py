@@ -109,16 +109,8 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request") 
             test_dir = join(tests_dir, id)
             csv_file_path = join(test_dir, f'{id}_stats.csv')
-            #wait until csv file is created
-            tries = 0
-            while True:
-                if tries > 4:
-                    return jsonify(success=False,exit_code=3,message="csv file does not exist",path=csv_file_path)
-                if not Path(csv_file_path).exists():
-                    tries = tries + 1
-                    gevent.sleep(1)
-                else:
-                    break
+            if not Path(csv_file_path).exists():
+                return jsonify(success=False,exit_code=3,message="csv file does not exist",path=csv_file_path)
             pd_data = pd.read_csv(csv_file_path) 
             j = pd_data.to_json(orient='records')
             # check if test is runnig

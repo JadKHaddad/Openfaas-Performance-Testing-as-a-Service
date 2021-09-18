@@ -33,23 +33,11 @@ function CreateTest(id, users, spawnRate, host, date){
                     <div class="col-1">FPS</div>
                 </div>
             </div>
+            <div class="container-fluid results">
+            </div>
         </div>
         <div class="card-footer">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-1"></div>
-                    <div class="col-2">Aggregated</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                    <div class="col-1">/</div>
-                </div>
-            </div>
+
         </div>
     </div>
     <div class="buttons">
@@ -72,7 +60,7 @@ function CreateTest(id, users, spawnRate, host, date){
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
     var intv;
-    const eventSource = new EventSource('/stream/' + id);
+    var eventSource;
     stopBtn.prop("disabled",true);
     downloadBtn.prop("disabled",true);
 
@@ -85,6 +73,7 @@ function CreateTest(id, users, spawnRate, host, date){
         $(this).prop("disabled",true);
         stopBtn.prop("disabled",false);
 
+        eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
             message = JSON.parse(e.data)
             if (message.success){
@@ -95,20 +84,29 @@ function CreateTest(id, users, spawnRate, host, date){
                     }, 1000);
                 }
                 const jData = JSON.parse(message.data)
+                const results = $(test).find('.card-body > .results');
+                const footer = $(test).find('.card-footer');
+                footer.children().remove();
+                results.children().remove();
                 for (var i = 0; i < jData.length; i++){
-                    console.log(
-                        'Type: ', jData[i]["Type"],
-                        'Name: ', jData[i]["Name"],
-                        'Request Count: ', jData[i]["Request Count"],
-                        'Failure Count: ', jData[i]["Failure Count"],
-                        'Median Response Time: ', jData[i]["Median Response Time"],
-                        'Average Response Time: ', jData[i]["Average Response Time"],
-                        'Min Response Time: ', jData[i]["Min Response Time"],
-                        'Max Response Time: ', jData[i]["Max Response Time"],
-                        'Average Content Size: ', jData[i]["Average Content Size"],
-                        'Requests/s: ', jData[i]["Requests/s"],
-                        'Failures/s: ', jData[i]["Failures/s"]
-                    );
+                    var type = jData[i]["Type"];
+                    const name = jData[i]["Name"];
+                    const requests = jData[i]["Request Count"];
+                    const fails = jData[i]["Failure Count"];
+                    const med = jData[i]["Median Response Time"];
+                    const avg =  jData[i]["Average Response Time"].toString().slice(0, 8);
+                    const min =  jData[i]["Min Response Time"].toString().slice(0, 8);
+                    const max =  jData[i]["Max Response Time"].toString().slice(0, 8);
+                    const avgSize =  jData[i]["Average Content Size"].toString().slice(0, 8);
+                    const rps =  jData[i]["Requests/s"].toString().slice(0, 8);
+                    const fps =  jData[i]["Failures/s"].toString().slice(0, 8);
+                    if (i == jData.length -1){
+                        type = '';
+                        footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+                    }else{
+                        results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+                    }
+                    
                 }
             }
         };
@@ -128,8 +126,24 @@ function CreateTest(id, users, spawnRate, host, date){
     return test;
 }
 
-function createRow(){
-
+function createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps){
+    var row = document.createElement('div');
+    row.classList.add('row');
+    const template = `
+        <div class="col-1">${type}</div>
+        <div class="col-2">${name}</div>
+        <div class="col-1">${requests}</div>
+        <div class="col-1">${fails}</div>
+        <div class="col-1">${med}</div>
+        <div class="col-1">${avg}</div>
+        <div class="col-1">${min}</div>
+        <div class="col-1">${max}</div>
+        <div class="col-1">${avgSize}</div>
+        <div class="col-1">${rps}</div>
+        <div class="col-1">${fps}</div>
+    `;
+    row.innerHTML = template;
+    return row;
 }
 
 function formatDate(date, format) {
@@ -181,9 +195,29 @@ window.onload = function () {
                 document.getElementById('content').appendChild(test);
             }
         }).catch();
-        
-        // get id -> create test
-        //console.log(requestJson);
         return false;
     });
+
+    // deploy a test for debugging
+    const users = 4;
+    const spawnRate = 6;
+    const host = 'https://google.com';
+    const time = 90;
+    code = "from locust import HttpUser, task, between\nclass User(HttpUser):\n    wait_time = between(1, 5)\n    host = \"https://google.com\"\n\n    @task\n    def my_task(self):\n        self.client.get(\"/\")\n\n    @task\n    def task_404(self):\n        self.client.get(\"/non-existing-path\")\n\n";
+    let formData = new FormData();
+    formData.append('users', users);
+    formData.append('spawn_rate', spawnRate);
+    formData.append('host', host);
+    formData.append('time', time);
+    formData.append('code', code);
+
+    fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
+        if (data.success){
+            const id = data.id;
+            const today = new Date();
+            const date = formatDate(today, 'dd.mm.yyyy');
+            const test = CreateTest(id, users, spawnRate, host,date);
+            document.getElementById('content').appendChild(test);
+        }
+    }).catch();
 }   
