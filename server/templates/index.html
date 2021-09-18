@@ -26,11 +26,11 @@
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
          <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarExample01"
-               aria-controls="navbarExample01" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarTop"
+               aria-controls="navbarTop" aria-expanded="false" aria-label="Toggle navigation">
                <i class="fas fa-bars"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarExample01">
+            <div class="collapse navbar-collapse" id="navbarTop">
                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                   <li class="nav-item active">
                      <a class="nav-link" aria-current="page" href="/">Home</a>
@@ -48,65 +48,54 @@
    <div class="content" id="content">
       <!-- Button trigger modal -->
       <div>
-         <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#exampleModal">
+         <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal">
             Deploy a new test
          </button>
-      </div>
-      <div class="card">
-         <div class="card-header">
-            <div class="row">
-               <div class="col-4">.col-4</div>
-               <div class="col-4">.col-4</div>
-               <div class="col-4">.col-4</div>
-             </div>
-         </div>
-         <div class="card-body">
-         </div>
       </div>
    </div>
 
    <!-- Modal -->
-   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+   <div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
       <div class="modal-dialog">
          <div class="modal-content">
             <div class="modal-header">
-               <h5 class="modal-title" id="exampleModalLabel">Deploy a new test</h5>
+               <h5 class="modal-title" id="ModalLabel">Deploy a new test</h5>
                <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                <form>
                   <!-- Users input -->
                   <div class="form-outline mb-4">
-                     <input type="email" id="users" class="form-control" />
-                     <label class="form-label" for="users">Users</label>
+                     <input type="text" id="users-input" class="form-control" />
+                     <label class="form-label" for="users-input">Users</label>
                   </div>
                   <!-- Spawn rate input -->
                   <div class="form-outline mb-4">
-                     <input type="password" id="spawn-rate" class="form-control" />
-                     <label class="form-label" for="spawn-rate">Spawn rate</label>
+                     <input type="text" id="spawn-rate-input" class="form-control" />
+                     <label class="form-label" for="spawn-rate-input">Spawn rate</label>
                   </div>
                   <div class="form-text" style="padding-bottom:10px;">
                      This will overwrite all hosts in your file
                   </div>
                   <!-- Host input -->
                   <div class="form-outline mb-4">
-                     <input type="password" id="host" class="form-control" />
-                     <label class="form-label" for="host">Host</label>
+                     <input type="text" id="host-input" class="form-control" />
+                     <label class="form-label" for="host-input">Host</label>
                   </div>
                   <div class="form-text" style="padding-bottom:10px;">
                      If time is not set, the test will not stop automatically
                   </div>
                   <!-- Time input -->
                   <div class="form-outline mb-4">
-                     <input type="password" id="time" class="form-control" />
-                     <label class="form-label" for="time">Time in seconds</label>
+                     <input type="text" id="time-input" class="form-control" />
+                     <label class="form-label" for="time-input">Time in seconds</label>
                   </div>
                   <!-- File input-->
                   <div class="form-outline mb-4">
-                     <input type="file" class="form-control" id="file" />
+                     <input type="file" class="form-control" id="file-input" />
                   </div>
                   <!-- Submit button -->
-                  <button type="submit" class="btn btn-primary btn-block">Deploy</button>
+                  <button type="submit" class="btn btn-primary btn-block" id="deploy-btn">Deploy</button>
                </form>
             </div>
          </div>
@@ -127,7 +116,7 @@
    <!-- MDB -->
    <script type="text/javascript" src="{{ url_for('static', filename='scripts/mdb.min.js') }}"></script>
    <!-- Custom scripts -->
-   <script type="text/javascript"></script>
+   <script type="text/javascript" src="{{ url_for('static', filename='scripts/script.js') }}"></script>
 </body>
 
 </html>
