@@ -77,6 +77,15 @@ function CreateTest(id, users, spawnRate, host, date){
         eventSource.onmessage = function (e) {
             message = JSON.parse(e.data)
             if (message.success){
+                if (message.status == 0){
+                    // test is not running
+                    spinner.addClass('hidden');
+                    clearInterval(intv);
+                    stopBtn.prop("disabled",true);
+                    downloadBtn.prop("disabled",false);
+                    eventSource.close();
+                    return;
+                }
                 if (elapsedTime == 0){
                     intv = setInterval(function(){ 
                         elapsedText.text(elapsedTime);
@@ -117,7 +126,6 @@ function CreateTest(id, users, spawnRate, host, date){
         spinner.addClass('hidden');
         $(this).prop("disabled",true);
         downloadBtn.prop("disabled",false);
-
         eventSource.close();
     });
     downloadBtn.on('click', function(){

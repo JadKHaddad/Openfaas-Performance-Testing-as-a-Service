@@ -1,6 +1,7 @@
 TODO:
 
 Openfaas function:
+    tests delete dirs,
     handle wrong test parameters,
     zip files,
     create plots,
@@ -8,6 +9,7 @@ Openfaas function:
 
 server:
     front:
+        whats wrong with the buttons?,
         handle wrong test parameters,
         correct date,
     back:

@@ -1,125 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
+{% include "header.html" %}
+<!-- Button trigger modal -->
+<div>
+   <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal">
+      Deploy a new test
+   </button>
+</div>
 
-<head>
-   <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-   <meta http-equiv="x-ua-compatible" content="ie=edge" />
-   <title>Performance Test Service</title>
-   <!-- Font Awesome -->
-   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css" />
-   <!-- Google Fonts Roboto -->
-   <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
-   <!-- MDB -->
-   <link rel="stylesheet" href="{{ url_for('static', filename='css/mdb.min.css') }}">
 
-   <!-- Custom -->
-   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-   <!-- jquery-->
-   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-
-<body>
-   <!-- Start -->
-   <header>
-      <!-- Navbar -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-         <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarTop"
-               aria-controls="navbarTop" aria-expanded="false" aria-label="Toggle navigation">
-               <i class="fas fa-bars"></i>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarTop">
-               <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                  <li class="nav-item active">
-                     <a class="nav-link" aria-current="page" href="/">Home</a>
-                  </li>
-                  <li class="nav-item">
-                     <a class="nav-link" aria-current="page" href="/about">About</a>
-                  </li>
-                  <li class="nav-item">
-                     <a class="nav-link" aria-current="page" href="https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service">Source</a>
-                  </li>
-               </ul>
-            </div>
+<!-- Modal -->
+<div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="ModalLabel">Deploy a new test</h5>
+            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
          </div>
-      </nav>
-      <!-- Navbar -->
-   </header>
-   <!-- content -->
-   <div class="content" id="content">
-      <!-- Button trigger modal -->
-      <div>
-         <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal">
-            Deploy a new test
-         </button>
-      </div>
-   </div>
-
-   <!-- Modal -->
-   <div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-         <div class="modal-content">
-            <div class="modal-header">
-               <h5 class="modal-title" id="ModalLabel">Deploy a new test</h5>
-               <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-               <form>
-                  <!-- Users input -->
-                  <div class="form-outline mb-4">
-                     <input type="text" id="users-input" class="form-control" />
-                     <label class="form-label" for="users-input">Users</label>
-                  </div>
-                  <!-- Spawn rate input -->
-                  <div class="form-outline mb-4">
-                     <input type="text" id="spawn-rate-input" class="form-control" />
-                     <label class="form-label" for="spawn-rate-input">Spawn rate</label>
-                  </div>
-                  <div class="form-text" style="padding-bottom:10px;">
-                     This will overwrite all hosts in your file
-                  </div>
-                  <!-- Host input -->
-                  <div class="form-outline mb-4">
-                     <input type="text" id="host-input" class="form-control" />
-                     <label class="form-label" for="host-input">Host</label>
-                  </div>
-                  <div class="form-text" style="padding-bottom:10px;">
-                     If time is not set, the test will not stop automatically
-                  </div>
-                  <!-- Time input -->
-                  <div class="form-outline mb-4">
-                     <input type="text" id="time-input" class="form-control" />
-                     <label class="form-label" for="time-input">Time in seconds</label>
-                  </div>
-                  <!-- File input-->
-                  <div class="form-outline mb-4">
-                     <input type="file" class="form-control" id="file-input" />
-                  </div>
-                  <!-- Submit button -->
-                  <button type="submit" class="btn btn-primary btn-block" id="deploy-btn">Deploy</button>
-               </form>
-            </div>
+         <div class="modal-body">
+            <form>
+               <!-- Users input -->
+               <div class="form-outline mb-4">
+                  <input type="text" id="users-input" class="form-control" />
+                  <label class="form-label" for="users-input">Users</label>
+               </div>
+               <!-- Spawn rate input -->
+               <div class="form-outline mb-4">
+                  <input type="text" id="spawn-rate-input" class="form-control" />
+                  <label class="form-label" for="spawn-rate-input">Spawn rate</label>
+               </div>
+               <div class="form-text" style="padding-bottom:10px;">
+                  This will overwrite all hosts in your file
+               </div>
+               <!-- Host input -->
+               <div class="form-outline mb-4">
+                  <input type="text" id="host-input" class="form-control" />
+                  <label class="form-label" for="host-input">Host</label>
+               </div>
+               <div class="form-text" style="padding-bottom:10px;">
+                  If time is not set, the test will not stop automatically
+               </div>
+               <!-- Time input -->
+               <div class="form-outline mb-4">
+                  <input type="text" id="time-input" class="form-control" />
+                  <label class="form-label" for="time-input">Time in seconds</label>
+               </div>
+               <!-- File input-->
+               <div class="form-outline mb-4">
+                  <input type="file" class="form-control" id="file-input" />
+               </div>
+               <!-- Submit button -->
+               <button type="submit" class="btn btn-primary btn-block" id="deploy-btn">Deploy</button>
+            </form>
          </div>
       </div>
    </div>
+</div>
 
-   <footer class="bg-light text-center text-white footer">
-      <!-- Copyright -->
-      <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-         <a class="text-white" href="https://www.uni-muenster.de/">Westfälische Wilhelms-Universität Münster</a>
-         &nbsp&nbsp|&nbsp&nbsp
-         <a class="text-white" href="https://www.gselectronic.com/">GS Electronics</a>
-      </div>
-      <!-- Copyright -->
-   </footer>
-   <!-- End -->
+</div>
+<!-- close content-->
+<!-- Custom scripts -->
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/index.js') }}"></script>
 
-   <!-- MDB -->
-   <script type="text/javascript" src="{{ url_for('static', filename='scripts/mdb.min.js') }}"></script>
-   <!-- Custom scripts -->
-   <script type="text/javascript" src="{{ url_for('static', filename='scripts/script.js') }}"></script>
-</body>
-
-</html>
+{% include "footer.html" %}

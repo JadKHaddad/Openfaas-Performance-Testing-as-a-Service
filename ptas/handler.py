@@ -4,7 +4,7 @@ from os.path import join, dirname, realpath
 import time as t
 from pathlib import Path
 import os
-import gevent
+import shutil
 import pandas as pd
 import subprocess
 
@@ -41,59 +41,61 @@ class Test():
             self.process.terminate()
 
 def handle(req):
-    #we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
+    # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
         data = json.loads(req)
         command = data.get("command") or None
         if not command:
             return  jsonify(success=False,exit_code=1,message="bad request")
         
-        #to be removed
-        if command == 9: #test -> sync
+        # to be removed
+        if command == 9: # test -> sync
             id = data.get('id') or None
             test_dir = join(tests_dir, id)
             file_path = join(test_dir, f'{id}.py')
             exists = Path(file_path).exists()
             return jsonify(exists=exists)
 
-        if command == 1: #deploy -> sync
+        if command == 1: # deploy -> sync
             users = data.get("users") or None
             spawn_rate = data.get("spawn_rate") or None
             host = data.get("host") or None
             time = data.get("time") or None
             code = data.get("code") or None
 
-            #TODO
+            # TODO
             # handle None values
+            if not users or not spawn_rate or not code:
+                return jsonify(success=False,exit_code=1,message="bad request") 
 
-            #create test id
+            # create test id
             id = str(t.time()).replace('.', '_')
-            #save test in tests dir        
+            # save test in tests dir        
             test_dir = join(tests_dir, id)
             if not Path(test_dir).exists():
                 os.mkdir(test_dir)
             file_path = join(test_dir, f'{id}.py')
             with open(file_path, "w", encoding="UTF-8") as file:
                 file.write(code)
-            #configure test
+            # configure test
             test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time)
-            #save test in tests
+            # save test in tests
             tests[id] = test 
             return jsonify(success=True,exit_code=0,id=id,message="test deployed")
 
-        if command == 2: #start -> async
+        if command == 2: # start -> async
             id = data.get("id") or None
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request") 
             if id not in tests:
                 return jsonify(success=True,exit_code=2,message="test is not deployed")
             tests[id].start()
-            #remove the test from the tests if not stopped via request
+            # remove the test from the tests if not stopped via request
             if id in tests:
                 del tests[id]
             return jsonify(success=True,exit_code=0,message="test started and finished successfully")
 
-        if command == 3: #stop -> sync
+        if command == 3: # stop -> sync
             id = data.get("id") or None
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request") 
@@ -103,7 +105,7 @@ def handle(req):
             del tests[id]
             return jsonify(success=True,exit_code=0,message="test is stopped")
 
-        if command == 4: #stats -> sync
+        if command == 4: # stats -> sync
             id = data.get("id") or None
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request") 
@@ -118,12 +120,27 @@ def handle(req):
                 return jsonify(success=True,exit_code=0,status=1,data=j,message="test running") # status 1 -> test is running
             return jsonify(success=True,exit_code=0,status=0,data=j,message="test is not running") # status 0 -> test not running
 
-        if command == 5: #download -> sync
-            #TODO
-            #create plots
-            #zip files
+        if command == 5: # download -> sync
+            # TODO
+            # create plots
+            # zip files
             return jsonify(success=True,exit_code=0,message="download")
-            
+        if command == 6: # get tests -> sync
+            tests_folders = [ os.path.basename(f.path) for f in os.scandir(tests_dir) if f.is_dir() ]   
+            return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders")
+
+        if command == 7: # delete a test folder -> sync
+            ids = data.get("ids") or None
+            if not ids:
+               return jsonify(success=False,exit_code=1,message="bad request")
+            deleted = []
+            for id in ids:
+                test_dir = join(tests_dir, id)
+                if Path(test_dir).exists():
+                    shutil.rmtree(test_dir)
+                    deleted.append(id)
+            return jsonify(success=True,exit_code=0,deleted=deleted)
+
         else:
             return jsonify(success=False,exit_code=1,message="bad request")
     except Exception as e:

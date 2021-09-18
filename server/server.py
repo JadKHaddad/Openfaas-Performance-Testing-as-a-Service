@@ -14,6 +14,16 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+@app.route('/explore')
+def explore():
+    return render_template('explore.html')
+
+@app.route('/tests')
+def tests():
+    data = {'command':6}
+    response = requests.post(FUNCTIONURL, data=json.dumps(data))
+    return response.text
+
 @app.route('/deploy', methods=['POST'])
 def deploy():
     users = request.form.get('users') or None
