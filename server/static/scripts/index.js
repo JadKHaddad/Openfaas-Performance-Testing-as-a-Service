@@ -44,10 +44,10 @@ function CreateTest(id, users, spawnRate, host, date){
         <button type="button" class="btn btn-primary start-test">
             Start
         </button>
-        <button type="button" class="btn btn-primary stop-test">
+        <button type="button" class="btn btn-primary stop-test" disabled>
             Stop
         </button>
-        <button type="button" class="btn btn-primary download-test">
+        <button type="button" class="btn btn-primary download-test" disabled>
             Download
         </button>
     </div>
@@ -61,9 +61,7 @@ function CreateTest(id, users, spawnRate, host, date){
     const elapsedText = $(test).find('.elapsed-text');
     var intv;
     var eventSource;
-    stopBtn.prop("disabled",true);
-    downloadBtn.prop("disabled",true);
-
+    
     startBtn.on('click', function(){
         fetch('/start/'+ id, {method: 'POST'});
         spinner.removeClass('hidden');
