@@ -22,4 +22,16 @@ flex-shrink: 0;
 
 .card{
     margin-top:10px;
+    margin-bottom:10px;
+    min-width: 1500px;
+    
+}
+
+.row {
+  --mdb-gutter-x: 3rem;
+}
+
+.buttons{
+  margin-left:auto;
+  margin-right: auto;
 }
