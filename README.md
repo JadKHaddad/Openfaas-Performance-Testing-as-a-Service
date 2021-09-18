@@ -1,7 +1,6 @@
 TODO:
 
 Openfaas function:
-    tests delete dirs,
     handle wrong test parameters,
     zip files,
     create plots,
