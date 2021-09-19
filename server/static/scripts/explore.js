@@ -3,19 +3,26 @@ function createTestsList(tests){
     list.classList.add('list-group');
     for (var i = 0; i < tests.length; i++)  (function (i) {
         var item = document.createElement('a');
-        item.setAttribute('id', tests[i]);
+        item.setAttribute('id', tests[i].id);
         item.classList.add('list-group-item');
         item.classList.add('list-group-item-action');
+        var labelClass = ''
+        if(tests[i].status == 1){
+            labelClass = "green"
+        }
+        if(tests[i].status == 2){
+            labelClass = "orange"
+        }
         const template = `
             <div class="form-check">
             <input
                 class="form-check-input"
                 type="checkbox"
                 value=""
-                id="flexCheckDefault-${tests[i]}"
+                id="flexCheckDefault-${tests[i].id}"
             />
-            <label class="test-label">
-                ${tests[i]}
+            <label class="test-label ${labelClass}">
+                ${tests[i].id}
             </label>
             </div>
         `;

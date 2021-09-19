@@ -38,3 +38,15 @@ flex-shrink: 0;
 .hidden{
   display:none;
 }
+
+#info-message{
+  color:#F44336;
+}
+
+.green{
+  color:#4CAF50;
+}
+
+.orange{
+  color:#FFA726;
+}

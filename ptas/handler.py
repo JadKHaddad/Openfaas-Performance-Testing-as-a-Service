@@ -23,6 +23,8 @@ class Test():
         self.host = host
         self.time = time
         self.process = None
+        self.running = False
+        self.started_at = t.time()
 
         time_command = ''
         if self.time:
@@ -35,11 +37,14 @@ class Test():
         self.command = f'locust -f {file_path} --host {self.host} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
        
     def start(self):
+        self.running = True
         self.process = subprocess.call(self.command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,shell=True)
+        self.running = False
 
     def stop(self):
         if self.process:
             self.process.terminate()
+        self.running = False
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
@@ -118,8 +123,11 @@ def handle(req):
             j = pd_data.to_json(orient='records')
             # check if test is runnig
             if id in tests:
-                return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-            return jsonify(success=True,exit_code=0,status=0,data=j,message="test is not running"), headers # status 0 -> test not running
+                if tests[id].running:
+                    return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
+                else:
+                    return jsonify(success=True,exit_code=0,status=2,data=j,message="test is deployed"), headers # status 1 -> test is deployed
+            return jsonify(success=True,exit_code=0,status=0,data=j,message="test is no longer deployed"), headers # status 0 -> test not running
 
         if command == 5: # download -> sync
             # TODO
@@ -127,8 +135,26 @@ def handle(req):
             # zip files
             return jsonify(success=True,exit_code=0,message="download"), headers
         if command == 6: # get tests -> sync
-            tests_folders = [ os.path.basename(f.path) for f in os.scandir(tests_dir) if f.is_dir() ]   
-            return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders")
+            tests_folders = []
+            for f in os.scandir(tests_dir):
+                if f.is_dir():
+                    id = os.path.basename(f.path)
+                    test_dir = join(tests_dir, id)
+                    csv_file_path = join(test_dir, f'{id}_stats.csv')
+                    if Path(csv_file_path).exists():
+                        pd_data = pd.read_csv(csv_file_path) 
+                        j = pd_data.to_json(orient='records')
+                    else:
+                        j = None
+                    
+                    if id in tests:
+                        if tests[id].running:
+                            tests_folders.append({"id":id, "status":1, "started_at": tests[id].started_at, "data":j}) # status 1 -> test is running 
+                        else:
+                            tests_folders.append({"id":id, "status":2, "data":j}) # status 2 -> test is deployed
+                    else:
+                        tests_folders.append({"id":id, "status":0, "data":j}) # status 0 -> test is no longer deployed
+            return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 7: # delete a test folder -> sync
             ids = data.get("ids") or None
@@ -139,6 +165,9 @@ def handle(req):
                 test_dir = join(tests_dir, id)
                 if Path(test_dir).exists():
                     shutil.rmtree(test_dir)
+                    if id in tests: # stop the test if running 
+                        tests[id].stop()
+                        del tests[id]
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 

@@ -1,4 +1,4 @@
-function CreateTest(id, users, spawnRate, host, date){
+function CreateTest(id, users, spawnRate, host, date, status, stats){
     var test = document.createElement('div');
     test.setAttribute('id', id);
     const template = `
@@ -50,27 +50,32 @@ function CreateTest(id, users, spawnRate, host, date){
         <button type="button" class="btn btn-primary download-test" disabled>
             Download
         </button>
+        <button type="button" class="btn btn-danger delete-test">Delete</button>
     </div>
     `;
     test.innerHTML = template;
     const startBtn = $(test).find('.start-test');
     const stopBtn = $(test).find('.stop-test');
     const downloadBtn = $(test).find('.download-test');
+    const deleteBtn = $(test).find('.delete-test');
     const spinner = $(test).find('.spinner');
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
     var intv;
     var eventSource;
-    
-    startBtn.on('click', function(){
-        fetch('/start/'+ id, {method: 'POST'});
-        spinner.removeClass('hidden');
-        elapsed.removeClass('hidden');
-        var elapsedTime = 0;
 
-        $(this).prop("disabled",true);
+    if (status == 0){ // not deployed
+        startBtn.prop("disabled",true);
+        stopBtn.prop("disabled",true);
+        downloadBtn.prop("disabled",false);
+    }
+    if (status == 1){ // running 
+        startBtn.prop("disabled",true);
         stopBtn.prop("disabled",false);
-
+        downloadBtn.prop("disabled",true);
+        spinner.removeClass('hidden');
+        // get updates
+        var elapsedTime = 0;
         eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
             message = JSON.parse(e.data)
@@ -117,6 +122,73 @@ function CreateTest(id, users, spawnRate, host, date){
                 }
             }
         };
+    }
+    if (status == 2){ // deployed
+        startBtn.prop("disabled",false);
+        stopBtn.prop("disabled",true);
+        downloadBtn.prop("disabled",true);
+    }
+
+    const results = $(test).find('.card-body > .results');
+    const footer = $(test).find('.card-footer');
+
+    function update(jData){
+        footer.children().remove();
+        results.children().remove();
+        for (var i = 0; i < jData.length; i++){
+            var type = jData[i]["Type"];
+            const name = jData[i]["Name"];
+            const requests = jData[i]["Request Count"];
+            const fails = jData[i]["Failure Count"];
+            const med = jData[i]["Median Response Time"];
+            const avg =  jData[i]["Average Response Time"].toString().slice(0, 8);
+            const min =  jData[i]["Min Response Time"].toString().slice(0, 8);
+            const max =  jData[i]["Max Response Time"].toString().slice(0, 8);
+            const avgSize =  jData[i]["Average Content Size"].toString().slice(0, 8);
+            const rps =  jData[i]["Requests/s"].toString().slice(0, 8);
+            const fps =  jData[i]["Failures/s"].toString().slice(0, 8);
+            if (i == jData.length -1){
+                type = '';
+                footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+            }else{
+                results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+            }
+            
+        }
+    }
+    startBtn.on('click', function(){
+        fetch('/start/'+ id, {method: 'POST'});
+        spinner.removeClass('hidden');
+        elapsed.removeClass('hidden');
+        var elapsedTime = 0;
+
+        $(this).prop("disabled",true);
+        stopBtn.prop("disabled",false);
+
+        eventSource = new EventSource('/stream/' + id);
+        eventSource.onmessage = function (e) {
+            message = JSON.parse(e.data)
+            if (message.success){
+                if (message.status == 0){
+                    // test is not running
+                    spinner.addClass('hidden');
+                    clearInterval(intv);
+                    stopBtn.prop("disabled",true);
+                    downloadBtn.prop("disabled",false);
+                    eventSource.close();
+                    return;
+                }
+                if (elapsedTime == 0){
+                    intv = setInterval(function(){ 
+                        elapsedText.text(elapsedTime);
+                        elapsedTime = elapsedTime + 1;
+                    }, 1000);
+                }
+                const jData = JSON.parse(message.data)
+                update(jData);
+                
+            }
+        };
     });
     stopBtn.on('click', function(){
         fetch('/stop/'+ id, {method: 'POST'});
@@ -126,9 +198,18 @@ function CreateTest(id, users, spawnRate, host, date){
         downloadBtn.prop("disabled",false);
         eventSource.close();
     });
+
     downloadBtn.on('click', function(){
         console.log('download')
     });
+
+    deleteBtn.on('click', function(){
+        console.log('delete')
+    });
+    if (stats != null){
+        const jData = JSON.parse(stats)
+        update(jData);
+    }
     return test;
 }
 
@@ -163,6 +244,18 @@ function formatDate(date, format) {
     return format.replace(/mm|dd|yy|yyy/gi, matched => map[matched])
 }
 
+function showInfo(message){
+    // set message
+    $('#info-message').text(message);
+    // show message
+    $('#info-modal-button').click();
+}
+
+function isInteger(str) {
+    var pattern = /^\d+$/;
+    return pattern.test(str);
+}
+
 window.onload = function () {
     const deployBtn = $('#deploy-btn');
     var code = '';
@@ -185,6 +278,35 @@ window.onload = function () {
         const spawnRate = $('#spawn-rate-input').val();
         const host = $('#host-input').val();
         const time = $('#time-input').val();
+        const fileInput = $('#file-input')[0];
+        // handle false inputs
+        if(users === ''){
+            showInfo('Users cant be empty');
+            return false
+        }
+        if(!isInteger(users)){
+            showInfo('Users must be an integer');
+            return false
+        }
+        if(spawnRate === ''){
+            showInfo('Spawn rate cant be empty');
+            return false
+        }
+        if(!isInteger(spawnRate)){
+            showInfo('Spawn rate must be an integer');
+            return false
+        }
+        if(fileInput.value === ''){
+            showInfo('Please select a locust file');
+            return false;
+        }
+        if(time != ''){
+            if(!isInteger(time)){
+                showInfo('Time must be an integer');
+                return false 
+            }
+        }
+
         let formData = new FormData();
         formData.append('users', users);
         formData.append('spawn_rate', spawnRate);
@@ -197,33 +319,27 @@ window.onload = function () {
                 const id = data.id;
                 const today = new Date();
                 const date = formatDate(today, 'dd.mm.yyyy');
-                const test = CreateTest(id, users, spawnRate, host,date);
-                document.getElementById('content').appendChild(test);
+                const test = CreateTest(id, users, spawnRate, host,date,2);
+                document.getElementById('tests').appendChild(test);
             }
         }).catch();
         return false;
     });
 
-    // deploy a test for debugging
-    const users = 4;
-    const spawnRate = 6;
-    const host = 'https://google.com';
-    const time = 90;
-    code = "from locust import HttpUser, task, between\nclass User(HttpUser):\n    wait_time = between(1, 5)\n    host = \"https://google.com\"\n\n    @task\n    def my_task(self):\n        self.client.get(\"/\")\n\n    @task\n    def task_404(self):\n        self.client.get(\"/non-existing-path\")\n\n";
-    let formData = new FormData();
-    formData.append('users', users);
-    formData.append('spawn_rate', spawnRate);
-    formData.append('host', host);
-    formData.append('time', time);
-    formData.append('code', code);
-
-    fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
+    // get all tests
+    fetch('/tests').then(data => data.json()).then(data => {
         if (data.success){
-            const id = data.id;
-            const today = new Date();
-            const date = formatDate(today, 'dd.mm.yyyy');
-            const test = CreateTest(id, users, spawnRate, host,date);
-            document.getElementById('content').appendChild(test);
+            const tests = data.tests;
+            if (tests != null){
+                for (var i = 0; i < tests.length; i++)(function (i) {
+                    const test = CreateTest(tests[i].id, null, null, null,null,tests[i].status, tests[i].data);
+                    document.getElementById('tests').appendChild(test);
+
+                })(i);
+            } 
+
         }
     }).catch();
+
+
 }   
