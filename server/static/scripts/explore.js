@@ -33,7 +33,7 @@ function createTestsList(tests){
             if (this.checked) {
                 $('#delete').prop("disabled",false);
                 // add test to selected tests
-                selectedTests.push(tests[i]);
+                selectedTests.push(tests[i].id);
                 
             } else {
                 // remove test from selected tests
@@ -69,7 +69,15 @@ window.onload = function () {
     deleteBtn.prop("disabled",true);
     //handle delete button
     deleteBtn.on("click", function(){
-        console.log(selectedTests, "will be deleted");
+        let formData = new FormData();
+        formData.append('ids', JSON.stringify(selectedTests));
+
+        fetch('/delete', { method: 'POST', body: formData }).then(data => {
+            location.reload();
+        }).catch();
+
+        return false;
+
     });
 
 }   

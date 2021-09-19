@@ -208,7 +208,13 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
     });
 
     deleteBtn.on('click', function(){
-        console.log('delete')
+        let formData = new FormData();
+        formData.append('ids', '["'+id+'"]');
+        fetch('/delete', { method: 'POST', body: formData }).then(data => {
+           $(test).remove();
+        }).catch();
+
+        return false;
     });
     if (stats != null){
         const jData = JSON.parse(stats)

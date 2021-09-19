@@ -50,6 +50,13 @@ def stop(id):
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
+@app.route('/delete', methods=['POST'])
+def delete():
+    ids = request.form.get('ids')
+    data = '{"command":7,"ids":'+ids+'}'
+    response = requests.post(FUNCTIONURL, data)
+    return response.text
+
 @app.route('/stream/<id>')
 def stream(id):
     data = {'command':4,'id': id}
@@ -61,6 +68,7 @@ def stream(id):
     return Response(stats_stream(), mimetype="text/event-stream")
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
