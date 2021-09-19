@@ -5,8 +5,6 @@ import json
 import gevent
 import argparse
 from urllib.parse import urljoin
-import sys
-
 
 OPENFASSULR = None
 FUNCTION = None
