@@ -21,6 +21,7 @@ server:
         fix waitress.queue
 
 ![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/img.jpg?raw=true)
+    
 ![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/seq.jpg?raw=true)
     
 synchronous taskts like stop, delete and download work like deploy
