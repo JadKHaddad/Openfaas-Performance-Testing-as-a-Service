@@ -48,7 +48,7 @@ function createTestsList(tests){
         });
 
         $(item).find('label').on('click', function(){
-            console.log("show test tesults");
+            window.location.href = '/test/'+tests[i].id;
         });
         list.appendChild(item);
     })(i);

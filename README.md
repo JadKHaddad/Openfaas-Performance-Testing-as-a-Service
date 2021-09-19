@@ -16,5 +16,7 @@ server:
     front:
         whats wrong with the buttons?,
         handle elapsed
+    back:
+        fix waitress.queue
 
 ![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/img.jpg?raw=true)

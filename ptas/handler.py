@@ -46,6 +46,36 @@ class Test():
             self.process.terminate()
         self.running = False
 
+def get_test_info(id):
+    test_dir = join(tests_dir, id)
+    csv_file_path = join(test_dir, f'{id}_stats.csv')
+    info_file_path = join(test_dir, f'{id}_info.txt')
+    code_file_path = join(test_dir, f'{id}.py')
+
+    if Path(csv_file_path).exists():
+        pd_data = pd.read_csv(csv_file_path) 
+        j = pd_data.to_json(orient='records')
+    else:
+        j = None
+    if Path(info_file_path).exists():
+        with open(info_file_path, 'r') as file:
+            info = file.read()
+    else:
+        info = None
+    if Path(code_file_path).exists():
+        with open(code_file_path, 'r') as file:
+            code = file.read()
+    else:
+        code = None
+    if id in tests:
+        if tests[id].running:
+            data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code} # status 1 -> test is running 
+        else:
+            data = {"id":id, "status":2, "data":j,"info":info, "code":code}# status 2 -> test is deployed
+    else:
+        data = {"id":id, "status":0, "data":j, "info":info, "code":code} # status 0 -> test is no longer deployed
+    return data 
+
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
@@ -54,14 +84,6 @@ def handle(req):
         if not command:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
         
-        # to be removed
-        if command == 9: # test -> sync
-            id = data.get('id') or None
-            test_dir = join(tests_dir, id)
-            file_path = join(test_dir, f'{id}.py')
-            exists = Path(file_path).exists()
-            return jsonify(exists=exists)
-
         if command == 1: # deploy -> sync
             users = data.get("users") or None
             spawn_rate = data.get("spawn_rate") or None
@@ -143,33 +165,7 @@ def handle(req):
             for f in os.scandir(tests_dir):
                 if f.is_dir():
                     id = os.path.basename(f.path)
-                    test_dir = join(tests_dir, id)
-                    csv_file_path = join(test_dir, f'{id}_stats.csv')
-                    info_file_path = join(test_dir, f'{id}_info.txt')
-                    code_file_path = join(test_dir, f'{id}.py')
-
-                    if Path(csv_file_path).exists():
-                        pd_data = pd.read_csv(csv_file_path) 
-                        j = pd_data.to_json(orient='records')
-                    else:
-                        j = None
-                    if Path(info_file_path).exists():
-                        with open(info_file_path, 'r') as file:
-                            info = file.read()
-                    else:
-                        info = None
-                    if Path(code_file_path).exists():
-                        with open(code_file_path, 'r') as file:
-                            code = file.read()
-                    else:
-                        code = None
-                    if id in tests:
-                        if tests[id].running:
-                            tests_folders.append({"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code}) # status 1 -> test is running 
-                        else:
-                            tests_folders.append({"id":id, "status":2, "data":j,"info":info, "code":code}) # status 2 -> test is deployed
-                    else:
-                        tests_folders.append({"id":id, "status":0, "data":j, "info":info, "code":code}) # status 0 -> test is no longer deployed
+                    tests_folders.append(get_test_info(id))
             return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 7: # delete a test folder -> sync
@@ -187,7 +183,14 @@ def handle(req):
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
+        if command == 9: # get test
+            id = data.get("id") or None
+            if not id:
+               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            data = get_test_info(id)
+            return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
         else:
             return jsonify(success=False,exit_code=1,message="bad request"), headers
+            
     except Exception as e:
         return jsonify(success=False,exit_code=1,message=str(e)), headers

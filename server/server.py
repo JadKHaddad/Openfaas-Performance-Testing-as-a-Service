@@ -27,6 +27,16 @@ def tests():
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
+@app.route('/test/<id>')
+def test(id):
+    return render_template('test.html', id=id)
+
+@app.route('/test-info/<id>', methods=['POST'])
+def test_info(id):
+    data = {'command':9,'id': id}
+    response = requests.post(FUNCTIONURL, data=json.dumps(data))
+    return response.text
+
 @app.route('/deploy', methods=['POST'])
 def deploy():
     users = request.form.get('users') or None
