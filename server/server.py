@@ -88,5 +88,8 @@ if __name__ == '__main__':
     FUNCTIONURL = urljoin(SYNC, FUNCTION)
     ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
 
-    print (f'{host}:{port}')
+    print(f'openfaas url {OPENFASSULR}')
+    print(f'sync function call {FUNCTIONURL}')
+    print(f'async function call {ASYNCFUNCTIONURL}')
+    print(f'server running on {host}:{port}')
     serve(app, host=host, port=port)
