@@ -83,6 +83,10 @@ def handle(req):
             file_path = join(test_dir, f'{id}.py')
             with open(file_path, "w", encoding="UTF-8") as file:
                 file.write(code)
+            
+            info_file_path = join(test_dir, f'{id}_info.txt')
+            with open(info_file_path, "w", encoding="UTF-8") as file:
+                file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host, "time": time, "date":t.time()}))
             # configure test
             test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time)
             # save test in tests
@@ -141,19 +145,31 @@ def handle(req):
                     id = os.path.basename(f.path)
                     test_dir = join(tests_dir, id)
                     csv_file_path = join(test_dir, f'{id}_stats.csv')
+                    info_file_path = join(test_dir, f'{id}_info.txt')
+                    code_file_path = join(test_dir, f'{id}.py')
+
                     if Path(csv_file_path).exists():
                         pd_data = pd.read_csv(csv_file_path) 
                         j = pd_data.to_json(orient='records')
                     else:
                         j = None
-                    
+                    if Path(info_file_path).exists():
+                        with open(info_file_path, 'r') as file:
+                            info = file.read()
+                    else:
+                        info = None
+                    if Path(code_file_path).exists():
+                        with open(code_file_path, 'r') as file:
+                            code = file.read()
+                    else:
+                        code = None
                     if id in tests:
                         if tests[id].running:
-                            tests_folders.append({"id":id, "status":1, "started_at": tests[id].started_at, "data":j}) # status 1 -> test is running 
+                            tests_folders.append({"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code}) # status 1 -> test is running 
                         else:
-                            tests_folders.append({"id":id, "status":2, "data":j}) # status 2 -> test is deployed
+                            tests_folders.append({"id":id, "status":2, "data":j,"info":info, "code":code}) # status 2 -> test is deployed
                     else:
-                        tests_folders.append({"id":id, "status":0, "data":j}) # status 0 -> test is no longer deployed
+                        tests_folders.append({"id":id, "status":0, "data":j, "info":info, "code":code}) # status 0 -> test is no longer deployed
             return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 7: # delete a test folder -> sync

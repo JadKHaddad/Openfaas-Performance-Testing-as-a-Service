@@ -1,4 +1,4 @@
-function CreateTest(id, users, spawnRate, host, date, status, stats){
+function CreateTest(id, users, spawnRate, host, status, code, stats){
     var test = document.createElement('div');
     test.setAttribute('id', id);
     const template = `
@@ -6,10 +6,12 @@ function CreateTest(id, users, spawnRate, host, date, status, stats){
         <div class="card-header">
             <div class="row">
                 <div class="col-2">${id}</div>
-                <div class="col-1">Users: ${users}</div>
+                <div class="col-2">Users: ${users}</div>
                 <div class="col-2">Spawn rate: ${spawnRate}</div>
                 <div class="col-2">Host: ${host}</div>
-                <div class="col-2">${date}</div>
+                <div class="col-1">
+                    <i class="far fa-file-alt code"></i>
+                </div>
                 <div class="col-2 elapsed hidden">elapsed: <label class="elapsed-text">pending</label></div>
                 <div class="col-1">
                     <div class="spinner-border text-primary spinner hidden"></div>
@@ -61,6 +63,7 @@ function CreateTest(id, users, spawnRate, host, date, status, stats){
     const spinner = $(test).find('.spinner');
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
+    const codeLink = $(test).find('.code');
     var intv;
     var eventSource;
 
@@ -132,6 +135,7 @@ function CreateTest(id, users, spawnRate, host, date, status, stats){
     const results = $(test).find('.card-body > .results');
     const footer = $(test).find('.card-footer');
 
+    // update results
     function update(jData){
         footer.children().remove();
         results.children().remove();
@@ -210,6 +214,10 @@ function CreateTest(id, users, spawnRate, host, date, status, stats){
         const jData = JSON.parse(stats)
         update(jData);
     }
+    codeLink.on('click', function(){
+        console.log('code');
+        setUpCode(code);
+    });
     return test;
 }
 
@@ -233,24 +241,18 @@ function createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps
     return row;
 }
 
-function formatDate(date, format) {
-    const map = {
-        mm: date.getMonth() + 1,
-        dd: date.getDate(),
-        yy: date.getFullYear().toString().slice(-2),
-        yyyy: date.getFullYear()
-    }
-
-    return format.replace(/mm|dd|yy|yyy/gi, matched => map[matched])
-}
-
 function showInfo(message){
     // set message
     $('#info-message').text(message);
     // show message
     $('#info-modal-button').click();
 }
-
+function setUpCode(code){
+    // set code
+    $('#code').text(code);
+    // show code
+    $('#code-modal-button').click(); 
+}
 function isInteger(str) {
     var pattern = /^\d+$/;
     return pattern.test(str);
@@ -317,9 +319,7 @@ window.onload = function () {
         fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
             if (data.success){
                 const id = data.id;
-                const today = new Date();
-                const date = formatDate(today, 'dd.mm.yyyy');
-                const test = CreateTest(id, users, spawnRate, host,date,2);
+                const test = CreateTest(id, users, spawnRate, host, code, 2, null);
                 document.getElementById('tests').appendChild(test);
             }
         }).catch();
@@ -332,14 +332,22 @@ window.onload = function () {
             const tests = data.tests;
             if (tests != null){
                 for (var i = 0; i < tests.length; i++)(function (i) {
-                    const test = CreateTest(tests[i].id, null, null, null,null,tests[i].status, tests[i].data);
+                    var users = null;
+                    var spawn_rate = null;
+                    var host = null;
+                    var time =  null;
+                    const info = JSON.parse(tests[i].info);
+                    if (info != null){
+                        users = info.users;
+                        spawn_rate = info.spawn_rate;
+                        host = info.host;
+                        date = info.date;
+                    }
+                    const test = CreateTest(tests[i].id, users, spawn_rate, host, tests[i].status, tests[i].code, tests[i].data);
                     document.getElementById('tests').appendChild(test);
 
                 })(i);
             } 
-
         }
     }).catch();
-
-
 }   

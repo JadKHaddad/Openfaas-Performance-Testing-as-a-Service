@@ -1,7 +1,6 @@
 TODO:
 
 Openfaas function:
-    create csv for parameters, give it back when needed
     handle wrong test parameters,
     zip files,
     create plots,
@@ -10,8 +9,8 @@ Openfaas function:
 server:
     front:
         whats wrong with the buttons?,
-        handle elapsed, handle old data: users, spawn,
-        correct date,
+        handle elapsed
+
     back:
         [openfaasurl, host, port, functionname] from args.
 
