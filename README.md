@@ -7,6 +7,7 @@ Run server; python server.py --host <host> --port <port> --url <openfaas url> --
 TODO:
 
 Openfaas function:
+    handle None values
     handle wrong test parameters,
     zip files,
     create plots,

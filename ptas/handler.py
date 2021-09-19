@@ -10,6 +10,7 @@ import subprocess
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
+not_valid_tests = {}
 
 tests_dir = join(dirname(realpath(__file__)), 'tests')
 if not Path(tests_dir).exists():
@@ -120,11 +121,15 @@ def handle(req):
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id not in tests:
-                return jsonify(success=True,exit_code=2,message="test is not deployed"), headers
+                return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
             tests[id].start()
             # remove the test from the tests if not stopped via request
             if id in tests:
                 del tests[id]
+            test_dir = join(tests_dir, id)
+            csv_file_path = join(test_dir, f'{id}_stats.csv')
+            if not Path(csv_file_path).exists(): # test is not valid
+                not_valid_tests[id] = None
             return jsonify(success=True,exit_code=0,message="test started and finished successfully"), headers
 
         if command == 3: # stop -> sync
@@ -141,10 +146,13 @@ def handle(req):
             id = data.get("id") or None
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            if id in not_valid_tests:
+                del not_valid_tests[id]
+                return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
             test_dir = join(tests_dir, id)
             csv_file_path = join(test_dir, f'{id}_stats.csv')
             if not Path(csv_file_path).exists():
-                return jsonify(success=False,exit_code=3,message="csv file does not exist",path=csv_file_path), headers
+                return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
             pd_data = pd.read_csv(csv_file_path) 
             j = pd_data.to_json(orient='records')
             # check if test is runnig
@@ -183,7 +191,7 @@ def handle(req):
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
-        if command == 9: # get test
+        if command == 8: # get test
             id = data.get("id") or None
             if not id:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
@@ -193,4 +201,4 @@ def handle(req):
             return jsonify(success=False,exit_code=1,message="bad request"), headers
             
     except Exception as e:
-        return jsonify(success=False,exit_code=1,message=str(e)), headers
+        return jsonify(success=False,exit_code=-1,message=str(e)), headers

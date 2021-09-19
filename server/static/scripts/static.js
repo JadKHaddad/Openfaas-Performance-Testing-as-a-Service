@@ -55,6 +55,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
         <button type="button" class="btn btn-danger delete-test">Delete</button>
     </div>
     `;
+
     test.innerHTML = template;
     const startBtn = $(test).find('.start-test');
     const stopBtn = $(test).find('.stop-test');
@@ -72,6 +73,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
         stopBtn.prop("disabled",true);
         downloadBtn.prop("disabled",false);
     }
+
     if (status == 1){ // running 
         startBtn.prop("disabled",true);
         stopBtn.prop("disabled",false);
@@ -98,30 +100,18 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                         elapsedTime = elapsedTime + 1;
                     }, 1000);
                 }
-                const jData = JSON.parse(message.data)
-                const results = $(test).find('.card-body > .results');
-                const footer = $(test).find('.card-footer');
-                footer.children().remove();
-                results.children().remove();
-                for (var i = 0; i < jData.length; i++){
-                    var type = jData[i]["Type"];
-                    const name = jData[i]["Name"];
-                    const requests = jData[i]["Request Count"];
-                    const fails = jData[i]["Failure Count"];
-                    const med = jData[i]["Median Response Time"];
-                    const avg =  jData[i]["Average Response Time"].toString().slice(0, 8);
-                    const min =  jData[i]["Min Response Time"].toString().slice(0, 8);
-                    const max =  jData[i]["Max Response Time"].toString().slice(0, 8);
-                    const avgSize =  jData[i]["Average Content Size"].toString().slice(0, 8);
-                    const rps =  jData[i]["Requests/s"].toString().slice(0, 8);
-                    const fps =  jData[i]["Failures/s"].toString().slice(0, 8);
-                    if (i == jData.length -1){
-                        type = '';
-                        footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
-                    }else{
-                        results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
-                    }
-                    
+                const jData = JSON.parse(message.data);
+                update(jData);
+            }else{
+                if(message.exit_code == 4){
+                    showInfo(id + 'There was an error running your locust file');
+                    clearInterval(intv);
+                    spinner.addClass('hidden');
+                    startBtn.prop("disabled",true);
+                    stopBtn.prop("disabled",true);
+                    downloadBtn.prop("disabled",true);
+                    eventSource.close();
+                    return;
                 }
             }
         };
@@ -157,9 +147,9 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
             }else{
                 results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
             }
-            
         }
     }
+
     startBtn.on('click', function(){
         fetch('/start/'+ id, {method: 'POST'});
         spinner.removeClass('hidden');
@@ -190,10 +180,21 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                 }
                 const jData = JSON.parse(message.data)
                 update(jData);
-                
+        }else{
+            if(message.exit_code == 4){
+                showInfo(id + 'There was an error running your locust file');
+                clearInterval(intv);
+                spinner.addClass('hidden');
+                startBtn.prop("disabled",true);
+                stopBtn.prop("disabled",true);
+                downloadBtn.prop("disabled",true);
+                eventSource.close();
+                return;
             }
+        }
         };
     });
+
     stopBtn.on('click', function(){
         fetch('/stop/'+ id, {method: 'POST'});
         clearInterval(intv);
@@ -218,10 +219,12 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
         });
         return false;
     });
+
     if (stats != null){
         const jData = JSON.parse(stats)
         update(jData);
     }
+
     codeLink.on('click', function(){
         setUpCode(code);
     });

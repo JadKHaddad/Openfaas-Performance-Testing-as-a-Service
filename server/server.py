@@ -33,7 +33,7 @@ def test(id):
 
 @app.route('/test-info/<id>', methods=['POST'])
 def test_info(id):
-    data = {'command':9,'id': id}
+    data = {'command':8,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
