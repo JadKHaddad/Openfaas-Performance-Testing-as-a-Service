@@ -3,10 +3,15 @@ from waitress import serve
 import requests
 import json
 import gevent
+import argparse
+from urllib.parse import urljoin
+import sys
 
-OPENFAASURL = "http://172.17.123.151:8080/"
-FUNCTIONURL = OPENFAASURL + "function/ptas"
-ASYNCFUNCTIONURL = OPENFAASURL + "async-function/ptas"
+
+OPENFASSULR = None
+FUNCTION = None
+FUNCTIONURL = None
+ASYNCFUNCTIONURL = None
 
 app = Flask(__name__)
 
@@ -58,5 +63,30 @@ def stream(id):
     return Response(stats_stream(), mimetype="text/event-stream")
 
 if __name__ == '__main__':
-    print ("localhost:8070")
-    serve(app, host="0.0.0.0", port=8070)
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
+    parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
+    parser.add_argument('-s', '--host', help='server host',metavar='')
+    parser.add_argument('-p', '--port', help='server port',metavar='')
+    parser.add_argument('-u', '--url', help='openfaas url',metavar='')
+    parser.add_argument('-f','--function', help='function name',metavar='')
+
+    args = parser.parse_args()
+
+    host = args.host
+    port = args.port
+    url = args.url
+    function = args.function
+    if not host or not port or not url or not function:
+        print('all arguments are required --host <host> --port <port> --url <openfaas url> --function <funcion name>')
+        exit()
+
+    OPENFASSULR = url
+    FUNCTION = function
+    SYNC = urljoin(OPENFASSULR, 'function/')
+    ASYNC = urljoin(OPENFASSULR, 'async-function/')
+    FUNCTIONURL = urljoin(SYNC, FUNCTION)
+    ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
+
+    print (f'{host}:{port}')
+    serve(app, host=host, port=port)

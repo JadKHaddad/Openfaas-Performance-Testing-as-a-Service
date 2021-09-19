@@ -11,6 +11,4 @@ server:
         whats wrong with the buttons?,
         handle elapsed
 
-    back:
-        [openfaasurl, host, port, functionname] from args.
 
