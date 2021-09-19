@@ -17,4 +17,4 @@ server:
         whats wrong with the buttons?,
         handle elapsed
 
-![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/image.jpg?raw=true)
+![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/image.jpg?raw=true)
