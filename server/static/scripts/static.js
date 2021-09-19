@@ -210,10 +210,12 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
     deleteBtn.on('click', function(){
         let formData = new FormData();
         formData.append('ids', '["'+id+'"]');
-        fetch('/delete', { method: 'POST', body: formData }).then(data => {
-           $(test).remove();
-        }).catch();
-
+        setConfirmationModal(id + ' Are you sure you want to delete this test?', function() {
+            fetch('/delete', { method: 'POST', body: formData }).then(data => {
+                $('#dismiss-confirmation-modal-btn').click();
+                $(test).remove();
+             }).catch();
+        });
         return false;
     });
     if (stats != null){
@@ -258,6 +260,19 @@ function setUpCode(code){
     $('#code').text(code);
     // show code
     $('#code-modal-button').click(); 
+}
+
+function setConfirmationModal(message, func){
+    // set message
+    $('#confirm-message').text(message);
+    // unbind
+    $('#confirm-delete').off('click');
+    // bind
+    $('#confirm-delete').on('click', function(){
+        func();
+    });
+    // show
+    $('#confirmation-modal-button').click(); 
 }
 
 function isInteger(str) {

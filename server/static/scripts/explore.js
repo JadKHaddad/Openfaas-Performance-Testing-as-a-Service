@@ -71,13 +71,13 @@ window.onload = function () {
     deleteBtn.on("click", function(){
         let formData = new FormData();
         formData.append('ids', JSON.stringify(selectedTests));
-
-        fetch('/delete', { method: 'POST', body: formData }).then(data => {
-            location.reload();
-        }).catch();
-
+        setConfirmationModal('Are you sure you want to delete these test?', function() {
+             fetch('/delete', { method: 'POST', body: formData }).then(data => {
+                $('#dismiss-confirmation-modal-btn').click();
+                location.reload();
+            }).catch();
+        });
         return false;
-
     });
 
 }   

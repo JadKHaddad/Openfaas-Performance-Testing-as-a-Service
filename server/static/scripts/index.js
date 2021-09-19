@@ -1,5 +1,6 @@
 window.onload = function () {
     const deployBtn = $('#deploy-btn');
+    const dismissBtn = $('#dismiss-btn');
     var code = '';
     document.getElementById('file-input').onchange = function(evt) {
         if(!window.FileReader) return; // Browser is not compatible
@@ -61,6 +62,7 @@ window.onload = function () {
                 const id = data.id;
                 const test = CreateTest(id, users, spawnRate, host, 2, code, null);
                 document.getElementById('tests').appendChild(test);
+                dismissBtn.click();
             }
         }).catch();
         return false;

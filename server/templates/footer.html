@@ -1,3 +1,61 @@
+<!-- Button trigger info modal -->
+<div>
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Info-Modal" id="info-modal-button">
+   </button>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="Info-Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-body">
+            <h5 id="info-message">info</h5>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Button trigger code modal -->
+<div>
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Code-Modal" id="code-modal-button">
+   </button>
+</div>
+
+<!-- code Modal -->
+<div class="modal fade" id="Code-Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-body">
+            <pre>
+               <code class="python" id="code">
+               print('Hello World!')
+               </code>
+            </pre>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Button trigger confirmation modal -->
+<div>
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Confirmation-Modal" id="confirmation-modal-button"></button>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="Confirmation-Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-body">
+            <h7 id="confirm-message"></h7>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+            <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-confirmation-modal-btn"></button>
+         </div>
+      </div>
+   </div>
+</div>
+
 <footer class="bg-light text-center text-white footer">
    <!-- Copyright -->
    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
