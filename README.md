@@ -12,7 +12,6 @@ Openfaas function:
 
 server:
     front:
-        whats wrong with the buttons?,
         handle elapsed
     back:
         fix waitress.queue

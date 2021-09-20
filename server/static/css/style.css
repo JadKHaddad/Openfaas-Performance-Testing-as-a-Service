@@ -4,26 +4,31 @@ html, body {
   }
 
 body {
-display: flex;
-flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
   
 .content {
-flex: 1 0 auto;
-padding-top: 70px;
-padding-bottom: 50px;
-margin-left:auto;
-margin-right:auto;
+  flex: 1 0 auto;
+  padding-top: 70px;
+  padding-bottom: 50px;
+  margin-left:auto;
+  margin-right:auto;
 }
 
 .footer {
-flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .card{
-    margin-top:10px;
-    margin-bottom:10px;
-    min-width: 1500px;
+  margin-top:30px;
+  margin-bottom:10px;
+  min-width: 1500px;
+}
+
+.list-group{
+  margin-top:20px;
+  margin-bottom:10px;
 }
 
 .row {
@@ -53,4 +58,14 @@ flex-shrink: 0;
 
 .orange{
   color:#FFA726;
+}
+
+.btn-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btn-container button{
+  margin-left:5px;
+  margin-right:5px;
 }

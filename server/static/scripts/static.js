@@ -45,7 +45,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats){
 
         </div>
     </div>
-    <div class="buttons">
+    <div class="buttons btn-container">
         <button type="button" class="btn btn-primary start-test">
             Start
         </button>

@@ -34,12 +34,12 @@ function createTestsList(tests){
                 $('#delete').prop("disabled",false);
                 // add test to selected tests
                 selectedTests.push(tests[i].id);
-                
             } else {
                 // remove test from selected tests
-                const index = selectedTests.indexOf(tests[i]);
+                const index = selectedTests.indexOf(tests[i].id);
+                console.log(index)
                 if (index > -1) {
-                    selectedTests.splice(index, 1);
+                    selectedTests = selectedTests.splice(index + 1, 1);
                 }
                 if (selectedTests.length < 1){
                     $('#delete').prop("disabled",true);
