@@ -43,7 +43,8 @@ class Test():
        
     def start(self):
         self.running = True
-        self.process = subprocess.call(self.command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,shell=True)
+        self.process = subprocess.Popen(self.command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,shell=True)
+        self.process.wait()
         self.running = False
 
     def stop(self):
