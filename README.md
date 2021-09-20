@@ -11,8 +11,6 @@ Openfaas function:
     enable download,
 
 server:
-    front:
-        handle elapsed
     back:
         fix waitress.queue
 

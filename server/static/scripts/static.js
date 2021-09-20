@@ -1,4 +1,4 @@
-function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid){
+function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid, startedAt){
     var test = document.createElement('div');
     test.setAttribute('id', id);
     if (host == null) host = '';
@@ -15,7 +15,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 <div class="col-1">
                     <i class="far fa-file-alt code"></i>
                 </div>
-                <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text">pending</label></div>
+                <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text"></label></div>
                 <div class="col-1">
                     <div class="spinner-border text-primary spinner hidden"></div>
                     <i class="fas fa-check check hidden"></i>
@@ -77,7 +77,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     const footer = $(test).find('.card-footer');
     var intv;
     var eventSource;
-    var elapsedTime = 0;
+    var intvSet = false;
+
 
     if (status == 0){ // not deployed
         if (valid === false){
@@ -96,6 +97,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         startBtn.prop("disabled",true);
         stopBtn.prop("disabled",false);
         downloadBtn.prop("disabled",true);
+        elapsed.removeClass('hidden');
         spinner.removeClass('hidden');
         // get updates
 
@@ -118,9 +120,13 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         idCol.removeClass('orange').addClass('green');
         spinner.removeClass('hidden');
         elapsed.removeClass('hidden');
+        elapsedText.text('pending');
         $(this).prop("disabled",true);
         stopBtn.prop("disabled",false);
 
+        if (startedAt == null){
+            startedAt = Date.now()/1000;
+        }
         eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
             if(!IsJsonString(e.data)) return;
@@ -179,11 +185,11 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 eventSource.close();
                 return;
             }
-            if (elapsedTime == 0){
+            if (!intvSet){
                 intv = setInterval(function(){ 
-                    elapsedText.text(elapsedTime);
-                    elapsedTime = elapsedTime + 1;
+                    elapsedText.text(parseInt((Date.now()/1000) - startedAt));
                 }, 1000);
+                intvSet = true;
             }
             const jData = JSON.parse(message.data)
             update(jData);
