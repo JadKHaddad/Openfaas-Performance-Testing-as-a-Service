@@ -1,6 +1,8 @@
-function CreateTest(id, users, spawnRate, host, status, code, stats){
+function CreateTest(id, users, spawnRate, host, time, status, code, stats){
     var test = document.createElement('div');
     test.setAttribute('id', id);
+    if (host == null) host = '';
+    if (time == null) time = '';
     const template = `
     <div class="card">
         <div class="card-header">
@@ -9,10 +11,11 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                 <div class="col-2">Users: ${users}</div>
                 <div class="col-2">Spawn rate: ${spawnRate}</div>
                 <div class="col-2">Host: ${host}</div>
+                <div class="col-1">Time: ${time}</div>
                 <div class="col-1">
                     <i class="far fa-file-alt code"></i>
                 </div>
-                <div class="col-2 elapsed hidden">elapsed: <label class="elapsed-text">pending</label></div>
+                <div class="col-1 elapsed hidden">elapsed: <label class="elapsed-text">pending</label></div>
                 <div class="col-1">
                     <div class="spinner-border text-primary spinner hidden"></div>
                 </div>

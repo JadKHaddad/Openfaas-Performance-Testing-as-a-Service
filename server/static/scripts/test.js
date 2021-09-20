@@ -12,8 +12,9 @@ window.onload = function () {
                 spawn_rate = info.spawn_rate;
                 host = info.host;
                 date = info.date;
+                time = info.time;
             }
-            const test = CreateTest(data.data.id, users, spawn_rate, host, data.data.status, data.data.code, data.data.data);
+            const test = CreateTest(data.data.id, users, spawn_rate, host,time, data.data.status, data.data.code, data.data.data);
             document.getElementById('content').appendChild(test);
         }
     }).catch();

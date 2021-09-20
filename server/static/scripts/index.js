@@ -60,8 +60,8 @@ window.onload = function () {
         fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
             if (data.success){
                 const id = data.id;
-                const test = CreateTest(id, users, spawnRate, host, 2, code, null);
-                document.getElementById('tests').appendChild(test);
+                const test = CreateTest(id, users, spawnRate, host, time, 2, code, null);
+                document.getElementById('tests').prepend(test);
                 dismissBtn.click();
             }
         }).catch();
@@ -84,8 +84,9 @@ window.onload = function () {
                         spawn_rate = info.spawn_rate;
                         host = info.host;
                         date = info.date;
+                        time = info.time;
                     }
-                    const test = CreateTest(tests[i].id, users, spawn_rate, host, tests[i].status, tests[i].code, tests[i].data);
+                    const test = CreateTest(tests[i].id, users, spawn_rate, host, time, tests[i].status, tests[i].code, tests[i].data);
                     document.getElementById('tests').appendChild(test);
 
                 })(i);

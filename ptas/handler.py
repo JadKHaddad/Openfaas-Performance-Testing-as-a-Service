@@ -115,8 +115,6 @@ def handle(req):
             time = data.get("time") or None
             code = data.get("code") or None
 
-            # TODO
-            # handle None values
             if users is None or spawn_rate is None or code is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
@@ -195,7 +193,6 @@ def handle(req):
 
             # zip files
             zip_files(id)
-
 
             return jsonify(success=True,exit_code=0,message="download"), headers
         if command == 6: # get tests -> sync
