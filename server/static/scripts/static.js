@@ -83,6 +83,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
         var elapsedTime = 0;
         eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
+            if(!IsJsonString(e.data)) return;
             message = JSON.parse(e.data)
             if (message.success){
                 if (message.status == 0){
@@ -161,6 +162,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
 
         eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
+            if(!IsJsonString(e.data)) return;
             message = JSON.parse(e.data)
             if (message.success){
                 if (message.status == 0){
@@ -281,4 +283,13 @@ function setConfirmationModal(message, func){
 function isInteger(str) {
     var pattern = /^\d+$/;
     return pattern.test(str);
+}
+
+function IsJsonString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
