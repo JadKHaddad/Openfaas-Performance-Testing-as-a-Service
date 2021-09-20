@@ -13,6 +13,9 @@ function createTestsList(tests){
         if(tests[i].status == 2){
             labelClass = "orange"
         }
+        if(tests[i].valid === false){
+            labelClass = "red"
+        }
         const template = `
             <div class="form-check">
             <input

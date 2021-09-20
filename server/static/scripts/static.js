@@ -1,4 +1,4 @@
-function CreateTest(id, users, spawnRate, host, time, status, code, stats){
+function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid){
     var test = document.createElement('div');
     test.setAttribute('id', id);
     if (host == null) host = '';
@@ -18,6 +18,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats){
                 <div class="col-1 elapsed hidden">elapsed: <label class="elapsed-text">pending</label></div>
                 <div class="col-1">
                     <div class="spinner-border text-primary spinner hidden"></div>
+                    <i class="fas fa-check check hidden"></i>
+                    <i class="fas fa-times not-valid hidden"></i>
                 </div>
 
             </div>
@@ -60,107 +62,62 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats){
     `;
 
     test.innerHTML = template;
+    const idCol = $(test).find('.test-id');
     const startBtn = $(test).find('.start-test');
     const stopBtn = $(test).find('.stop-test');
     const downloadBtn = $(test).find('.download-test');
     const deleteBtn = $(test).find('.delete-test');
     const spinner = $(test).find('.spinner');
+    const check = $(test).find('.check');
+    const notValid = $(test).find('.not-valid');
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
     const codeLink = $(test).find('.code');
+    const results = $(test).find('.card-body > .results');
+    const footer = $(test).find('.card-footer');
     var intv;
     var eventSource;
+    var elapsedTime = 0;
 
     if (status == 0){ // not deployed
+        if (valid === false){
+            notValid.removeClass('hidden');
+            idCol.addClass('red');
+        }else{
+            check.removeClass('hidden');
+        }
         startBtn.prop("disabled",true);
         stopBtn.prop("disabled",true);
         downloadBtn.prop("disabled",false);
     }
 
     if (status == 1){ // running 
+        idCol.addClass('green');
         startBtn.prop("disabled",true);
         stopBtn.prop("disabled",false);
         downloadBtn.prop("disabled",true);
         spinner.removeClass('hidden');
         // get updates
-        var elapsedTime = 0;
+
         eventSource = new EventSource('/stream/' + id);
         eventSource.onmessage = function (e) {
             if(!IsJsonString(e.data)) return;
             message = JSON.parse(e.data)
-            if (message.success){
-                if (message.status == 0){
-                    // test is not running
-                    clearInterval(intv);
-                    spinner.addClass('hidden');
-                    stopBtn.prop("disabled",true);
-                    downloadBtn.prop("disabled",false);
-                    eventSource.close();
-                    return;
-                }
-                if (elapsedTime == 0){
-                    intv = setInterval(function(){ 
-                        elapsedText.text(elapsedTime);
-                        elapsedTime = elapsedTime + 1;
-                    }, 1000);
-                }
-                const jData = JSON.parse(message.data);
-                update(jData);
-            }else{
-                if(message.exit_code == 4){
-                    showInfo(id + ' There was an error running your locust file');
-                    clearInterval(intv);
-                    spinner.addClass('hidden');
-                    elapsed.addClass('hidden');
-                    startBtn.prop("disabled",true);
-                    stopBtn.prop("disabled",true);
-                    downloadBtn.prop("disabled",true);
-                    eventSource.close();
-                    return;
-                }
-            }
+            interpretMessage(message);
         };
     }
     if (status == 2){ // deployed
+        idCol.addClass('orange');
         startBtn.prop("disabled",false);
         stopBtn.prop("disabled",true);
         downloadBtn.prop("disabled",true);
     }
 
-    const results = $(test).find('.card-body > .results');
-    const footer = $(test).find('.card-footer');
-
-    // update results
-    function update(jData){
-        footer.children().remove();
-        results.children().remove();
-        for (var i = 0; i < jData.length; i++){
-            var type = jData[i]["Type"];
-            const name = jData[i]["Name"];
-            const requests = jData[i]["Request Count"];
-            const fails = jData[i]["Failure Count"];
-            const med = jData[i]["Median Response Time"];
-            const avg =  jData[i]["Average Response Time"].toString().slice(0, 8);
-            const min =  jData[i]["Min Response Time"].toString().slice(0, 8);
-            const max =  jData[i]["Max Response Time"].toString().slice(0, 8);
-            const avgSize =  jData[i]["Average Content Size"].toString().slice(0, 8);
-            const rps =  jData[i]["Requests/s"].toString().slice(0, 8);
-            const fps =  jData[i]["Failures/s"].toString().slice(0, 8);
-            if (i == jData.length -1){
-                type = '';
-                footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
-            }else{
-                results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
-            }
-        }
-    }
-
     startBtn.on('click', function(){
         fetch('/start/'+ id, {method: 'POST'});
+        idCol.removeClass('orange').addClass('green');
         spinner.removeClass('hidden');
         elapsed.removeClass('hidden');
-        var elapsedTime = 0;
-
         $(this).prop("disabled",true);
         stopBtn.prop("disabled",false);
 
@@ -168,42 +125,15 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats){
         eventSource.onmessage = function (e) {
             if(!IsJsonString(e.data)) return;
             message = JSON.parse(e.data)
-            if (message.success){
-                if (message.status == 0){
-                    // test is not running
-                    spinner.addClass('hidden');
-                    clearInterval(intv);
-                    stopBtn.prop("disabled",true);
-                    downloadBtn.prop("disabled",false);
-                    eventSource.close();
-                    return;
-                }
-                if (elapsedTime == 0){
-                    intv = setInterval(function(){ 
-                        elapsedText.text(elapsedTime);
-                        elapsedTime = elapsedTime + 1;
-                    }, 1000);
-                }
-                const jData = JSON.parse(message.data)
-                update(jData);
-            }else{
-                if(message.exit_code == 4){
-                    showInfo(id + 'There was an error running your locust file');
-                    clearInterval(intv);
-                    spinner.addClass('hidden');
-                    startBtn.prop("disabled",true);
-                    stopBtn.prop("disabled",true);
-                    downloadBtn.prop("disabled",true);
-                    eventSource.close();
-                    return;
-                }
-            }
+            interpretMessage(message);
         };
     });
 
     stopBtn.on('click', function(){
         fetch('/stop/'+ id, {method: 'POST'});
+        idCol.removeClass('orange').removeClass('green').removeClass('red');
         clearInterval(intv);
+        check.removeClass('hidden');
         spinner.addClass('hidden');
         $(this).prop("disabled",true);
         downloadBtn.prop("disabled",false);
@@ -235,6 +165,68 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats){
     codeLink.on('click', function(){
         setUpCode(code);
     });
+
+    function interpretMessage(message){
+        if (message.success){
+            if (message.status == 0){
+                // test is not running
+                clearInterval(intv);
+                idCol.removeClass('orange').removeClass('green').removeClass('red');
+                check.removeClass('hidden');
+                spinner.addClass('hidden');
+                stopBtn.prop("disabled",true);
+                downloadBtn.prop("disabled",false);
+                eventSource.close();
+                return;
+            }
+            if (elapsedTime == 0){
+                intv = setInterval(function(){ 
+                    elapsedText.text(elapsedTime);
+                    elapsedTime = elapsedTime + 1;
+                }, 1000);
+            }
+            const jData = JSON.parse(message.data)
+            update(jData);
+        }else{
+            if(message.exit_code == 4){
+                showInfo(id + 'There was an error running your locust file');
+                clearInterval(intv);
+                idCol.removeClass('orange').removeClass('green').addClass('red');
+                notValid.removeClass('hidden');
+                spinner.addClass('hidden');
+                startBtn.prop("disabled",true);
+                stopBtn.prop("disabled",true);
+                downloadBtn.prop("disabled",true);
+                eventSource.close();
+                return;
+            }
+        }
+    }
+    // update results
+    function update(jData){
+        footer.children().remove();
+        results.children().remove();
+        for (var i = 0; i < jData.length; i++){
+            var type = jData[i]["Type"];
+            const name = jData[i]["Name"];
+            const requests = jData[i]["Request Count"];
+            const fails = jData[i]["Failure Count"];
+            const med = jData[i]["Median Response Time"];
+            const avg =  jData[i]["Average Response Time"].toString().slice(0, 8);
+            const min =  jData[i]["Min Response Time"].toString().slice(0, 8);
+            const max =  jData[i]["Max Response Time"].toString().slice(0, 8);
+            const avgSize =  jData[i]["Average Content Size"].toString().slice(0, 8);
+            const rps =  jData[i]["Requests/s"].toString().slice(0, 8);
+            const fps =  jData[i]["Failures/s"].toString().slice(0, 8);
+            if (i == jData.length -1){
+                type = '';
+                footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+            }else{
+                results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+            }
+        }
+    }
+
     return test;
 }
 

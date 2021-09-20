@@ -56,6 +56,7 @@ def get_test_info(id):
     csv_file_path = join(test_dir, f'{id}_stats.csv')
     info_file_path = join(test_dir, f'{id}_info.txt')
     code_file_path = join(test_dir, f'{id}.py')
+    valid = True
 
     if Path(csv_file_path).exists():
         pd_data = pd.read_csv(csv_file_path) 
@@ -72,13 +73,17 @@ def get_test_info(id):
             code = file.read()
     else:
         code = None
+
+    if id in not_valid_tests:
+        valid = False
+
     if id in tests:
         if tests[id].running:
-            data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code} # status 1 -> test is running 
+            data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
         else:
-            data = {"id":id, "status":2, "data":j,"info":info, "code":code}# status 2 -> test is deployed
+            data = {"id":id, "status":2, "data":j,"info":info, "code":code, "valid":valid}# status 2 -> test is deployed
     else:
-        data = {"id":id, "status":0, "data":j, "info":info, "code":code} # status 0 -> test is no longer deployed
+        data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is no longer deployed
     return data 
 
 def clean_up_cache(id):
@@ -168,7 +173,6 @@ def handle(req):
             if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id in not_valid_tests:
-                del not_valid_tests[id]
                 return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
             test_dir = join(tests_dir, id)
             csv_file_path = join(test_dir, f'{id}_stats.csv')
@@ -216,6 +220,8 @@ def handle(req):
                     if id in tests: # stop the test if running 
                         tests[id].stop()
                         del tests[id]
+                    if id in not_valid_tests:
+                        del not_valid_tests[id]
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
