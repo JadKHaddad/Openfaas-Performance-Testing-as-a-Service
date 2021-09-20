@@ -37,7 +37,6 @@ function createTestsList(tests){
             } else {
                 // remove test from selected tests
                 const index = selectedTests.indexOf(tests[i].id);
-                console.log(index)
                 if (index > -1) {
                     selectedTests = selectedTests.splice(index + 1, 1);
                 }
