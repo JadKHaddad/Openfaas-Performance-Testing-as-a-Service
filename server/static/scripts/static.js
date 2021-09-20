@@ -182,18 +182,18 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                 }
                 const jData = JSON.parse(message.data)
                 update(jData);
-        }else{
-            if(message.exit_code == 4){
-                showInfo(id + 'There was an error running your locust file');
-                clearInterval(intv);
-                spinner.addClass('hidden');
-                startBtn.prop("disabled",true);
-                stopBtn.prop("disabled",true);
-                downloadBtn.prop("disabled",true);
-                eventSource.close();
-                return;
+            }else{
+                if(message.exit_code == 4){
+                    showInfo(id + 'There was an error running your locust file');
+                    clearInterval(intv);
+                    spinner.addClass('hidden');
+                    startBtn.prop("disabled",true);
+                    stopBtn.prop("disabled",true);
+                    downloadBtn.prop("disabled",true);
+                    eventSource.close();
+                    return;
+                }
             }
-        }
         };
     });
 
