@@ -42,17 +42,27 @@ def deploy():
     users = request.form.get('users') or None
     spawn_rate = request.form.get('spawn_rate') or None
     host = request.form.get('host') or None
-    time = int(request.form.get('time')) or None
+    time = request.form.get('time') or None
     code = request.form.get('code') or None
-    data = {'command':1,'users': int(users), 'spawn_rate': int(spawn_rate), 'host': host, 'time':time, 'code':code}
+    if time is not None:
+        time = int(time)
+    if users is not None:
+        users = int(users)
+    if spawn_rate is not None:
+        spawn_rate = int(spawn_rate)
+    data = {'command':1,'users': users, 'spawn_rate': spawn_rate, 'host': host, 'time':time, 'code':code}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
 @app.route('/start/<id>', methods=['POST'])
 def start(id):
     data = {'command':2,'id': id}
-    requests.post(ASYNCFUNCTIONURL, data=json.dumps(data))
-    return json.dumps({"status": "sent"})
+    try:
+        requests.post(FUNCTIONURL, data=json.dumps(data), timeout=0.0000000001)
+    except requests.exceptions.ReadTimeout as e:
+        pass
+    finally:
+        return json.dumps({"status": "sent"})
 
 @app.route('/stop/<id>', methods=['POST'])
 def stop(id):

@@ -5,7 +5,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
     <div class="card">
         <div class="card-header">
             <div class="row">
-                <div class="col-2">${id}</div>
+                <div class="col-2 test-id">${id}</div>
                 <div class="col-2">Users: ${users}</div>
                 <div class="col-2">Spawn rate: ${spawnRate}</div>
                 <div class="col-2">Host: ${host}</div>
@@ -88,8 +88,8 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
             if (message.success){
                 if (message.status == 0){
                     // test is not running
-                    spinner.addClass('hidden');
                     clearInterval(intv);
+                    spinner.addClass('hidden');
                     stopBtn.prop("disabled",true);
                     downloadBtn.prop("disabled",false);
                     eventSource.close();
@@ -105,9 +105,10 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                 update(jData);
             }else{
                 if(message.exit_code == 4){
-                    showInfo(id + 'There was an error running your locust file');
+                    showInfo(id + ' There was an error running your locust file');
                     clearInterval(intv);
                     spinner.addClass('hidden');
+                    elapsed.addClass('hidden');
                     startBtn.prop("disabled",true);
                     stopBtn.prop("disabled",true);
                     downloadBtn.prop("disabled",true);
@@ -219,6 +220,7 @@ function CreateTest(id, users, spawnRate, host, status, code, stats){
                 $(test).remove();
              }).catch();
         });
+        eventSource.close();
         return false;
     });
 

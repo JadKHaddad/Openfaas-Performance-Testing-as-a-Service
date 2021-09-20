@@ -28,14 +28,18 @@ class Test():
         self.started_at = t.time()
 
         time_command = ''
-        if self.time:
+        if self.time is not None:
             time_command = f'-t {str(self.time)}s'
+        
+        host_command = ''
+        if self.host is not None:
+            host_command = f'--host {self.host}'
 
         test_dir = join(tests_dir, self.id)
         file_path = join(test_dir, f'{self.id}.py')
         csv_name = join(test_dir, self.id)
 
-        self.command = f'locust -f {file_path} --host {self.host} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
+        self.command = f'locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
        
     def start(self):
         self.running = True
@@ -43,7 +47,7 @@ class Test():
         self.running = False
 
     def stop(self):
-        if self.process:
+        if self.process is not None:
             self.process.terminate()
         self.running = False
 
@@ -101,7 +105,7 @@ def handle(req):
     try:
         data = json.loads(req)
         command = data.get("command") or None
-        if not command:
+        if command is None:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
         
         if command == 1: # deploy -> sync
@@ -113,7 +117,7 @@ def handle(req):
 
             # TODO
             # handle None values
-            if not users or not spawn_rate or not code:
+            if users is None or spawn_rate is None or code is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
             # create test id
@@ -137,7 +141,7 @@ def handle(req):
 
         if command == 2: # start -> async
             id = data.get("id") or None
-            if not id:
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id not in tests:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
@@ -153,7 +157,7 @@ def handle(req):
 
         if command == 3: # stop -> sync
             id = data.get("id") or None
-            if not id:
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id not in tests:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
@@ -163,7 +167,7 @@ def handle(req):
 
         if command == 4: # stats -> sync
             id = data.get("id") or None
-            if not id:
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id in not_valid_tests:
                 del not_valid_tests[id]
@@ -184,7 +188,7 @@ def handle(req):
 
         if command == 5: # download -> sync
             id = data.get("id") or None
-            if not id:
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             # TODO
             # create plots
@@ -204,7 +208,7 @@ def handle(req):
 
         if command == 7: # delete tests folders -> sync
             ids = data.get("ids") or None
-            if not ids:
+            if ids is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
             for id in ids:
@@ -220,7 +224,7 @@ def handle(req):
 
         if command == 8: # get test
             id = data.get("id") or None
-            if not id:
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
