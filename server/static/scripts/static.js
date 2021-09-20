@@ -7,15 +7,15 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     <div class="card">
         <div class="card-header">
             <div class="row">
-                <div class="col-2 test-id">${id}</div>
-                <div class="col-2">Users: ${users}</div>
-                <div class="col-2">Spawn rate: ${spawnRate}</div>
-                <div class="col-2">Host: ${host}</div>
-                <div class="col-1">Time: ${time}</div>
+                <div class="col-2 test-id"> ${id}</div>
+                <div class="col-2"><i class="fas fa-user-alt"></i>  ${users}</div>
+                <div class="col-2"><i class="fas fa-users"></i>  ${spawnRate}</div>
+                <div class="col-2"><i class="fas fa-globe"></i>  ${host}</div>
+                <div class="col-1"><i class="fas fa-clock"></i>  ${time}</div>
                 <div class="col-1">
                     <i class="far fa-file-alt code"></i>
                 </div>
-                <div class="col-1 elapsed hidden">elapsed: <label class="elapsed-text">pending</label></div>
+                <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text">pending</label></div>
                 <div class="col-1">
                     <div class="spinner-border text-primary spinner hidden"></div>
                     <i class="fas fa-check check hidden"></i>
@@ -193,6 +193,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 clearInterval(intv);
                 idCol.removeClass('orange').removeClass('green').addClass('red');
                 notValid.removeClass('hidden');
+                elapsed.addClass('hidden');
                 spinner.addClass('hidden');
                 startBtn.prop("disabled",true);
                 stopBtn.prop("disabled",true);
