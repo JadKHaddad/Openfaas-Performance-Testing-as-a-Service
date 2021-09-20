@@ -77,6 +77,25 @@ def get_test_info(id):
         data = {"id":id, "status":0, "data":j, "info":info, "code":code} # status 0 -> test is no longer deployed
     return data 
 
+def clean_up_cache(id):
+    test_dir = join(tests_dir, id)
+    cache = join(test_dir, f'__pycache__')
+    if Path(cache).exists():
+        shutil.rmtree(cache)
+
+def zip_files(id):
+    clean_up_cache(id)
+    test_dir = join(tests_dir, id)
+    if not Path(test_dir).exists():
+        return False
+    shutil.make_archive((test_dir), 'zip', tests_dir)
+    return True
+
+def delete_zip_file(id):
+    zip_file = join(tests_dir, f'{id}.zip')
+    if Path(zip_file).exists():
+        os.remove(zip_file)
+
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
@@ -164,9 +183,16 @@ def handle(req):
             return jsonify(success=True,exit_code=0,status=0,data=j,message="test is no longer deployed"), headers # status 0 -> test not running
 
         if command == 5: # download -> sync
+            id = data.get("id") or None
+            if not id:
+               return jsonify(success=False,exit_code=1,message="bad request"), headers 
             # TODO
             # create plots
+
             # zip files
+            zip_files(id)
+
+
             return jsonify(success=True,exit_code=0,message="download"), headers
         if command == 6: # get tests -> sync
             tests_folders = []
@@ -176,7 +202,7 @@ def handle(req):
                     tests_folders.append(get_test_info(id))
             return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
-        if command == 7: # delete a test folder -> sync
+        if command == 7: # delete tests folders -> sync
             ids = data.get("ids") or None
             if not ids:
                return jsonify(success=False,exit_code=1,message="bad request"), headers
@@ -184,7 +210,8 @@ def handle(req):
             for id in ids:
                 test_dir = join(tests_dir, id)
                 if Path(test_dir).exists():
-                    shutil.rmtree(test_dir)
+                    shutil.rmtree(test_dir) # remove test_dir
+                    delete_zip_file(id) # delete zip file
                     if id in tests: # stop the test if running 
                         tests[id].stop()
                         del tests[id]
