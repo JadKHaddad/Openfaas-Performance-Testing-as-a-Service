@@ -117,6 +117,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
 
     startBtn.on('click', function(){
         fetch('/start/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+            console.log(data);
             if (data.success){
                 idCol.removeClass('orange').addClass('green');
                 spinner.removeClass('hidden');

@@ -2,6 +2,7 @@ window.onload = function () {
     const deployBtn = $('#deploy-btn');
     const dismissBtn = $('#dismiss-btn');
     var code = '';
+    var requirements = '';
     document.getElementById('file-input').onchange = function(evt) {
         if(!window.FileReader) return; // Browser is not compatible
         var reader = new FileReader();
@@ -12,6 +13,19 @@ window.onload = function () {
                 return;
             }
             code = evt.target.result;
+        };
+        reader.readAsText(evt.target.files[0]);
+    };
+    document.getElementById('requirements-input').onchange = function(evt) {
+        if(!window.FileReader) return; // Browser is not compatible
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+            if(evt.target.readyState != 2) return;
+            if(evt.target.error) {
+                alert('Error while reading file');
+                return;
+            }
+            requirements = evt.target.result;
         };
         reader.readAsText(evt.target.files[0]);
     };
@@ -56,6 +70,7 @@ window.onload = function () {
         formData.append('host', host);
         formData.append('time', time);
         formData.append('code', code);
+        formData.append('requirements', requirements);
 
         fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
             if (data.success){

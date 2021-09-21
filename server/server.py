@@ -44,13 +44,14 @@ def deploy():
     host = request.form.get('host') or None
     time = request.form.get('time') or None
     code = request.form.get('code') or None
+    requirements = request.form.get('requirements') or None
     if time is not None:
         time = int(time)
     if users is not None:
         users = int(users)
     if spawn_rate is not None:
         spawn_rate = int(spawn_rate)
-    data = {'command':1,'users': users, 'spawn_rate': spawn_rate, 'host': host, 'time':time, 'code':code}
+    data = {'command':1,'users': users, 'spawn_rate': spawn_rate, 'host': host, 'time':time, 'code':code, 'requirements':requirements}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 

@@ -36,8 +36,9 @@ class Test():
         test_dir = join(tests_dir, self.id)
         file_path = join(test_dir, f'{self.id}.py')
         csv_name = join(test_dir, self.id)
+        requirements_path = join(test_dir, f'requirements.txt')
 
-        self.command = f'locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
+        self.command = f'pip install -r {requirements_path} && locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
        
     def start(self):
         self.started_at = t.time()
@@ -125,6 +126,7 @@ def handle(req):
             host = data.get("host") or None
             time = data.get("time") or None
             code = data.get("code") or None
+            requirements = data.get("requirements") or None
 
             if users is None or spawn_rate is None or code is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
@@ -138,6 +140,11 @@ def handle(req):
             file_path = join(test_dir, f'{id}.py')
             with open(file_path, "w", encoding="UTF-8") as file:
                 file.write(code)
+            # save requirements
+            if requirements is not None:
+                requirements_file_path = join(test_dir, f'requirements.txt')
+                with open(requirements_file_path, "w", encoding="UTF-8") as file:
+                    file.write(requirements)
             
             info_file_path = join(test_dir, f'{id}_info.txt')
             with open(info_file_path, "w", encoding="UTF-8") as file:
@@ -161,7 +168,12 @@ def handle(req):
             if id not in tests:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
             tests[id].start()
-            return jsonify(success=True,exit_code=0,message="test started and finished successfully"), headers
+            #debugging
+            poll = 'undefined'
+            if tests[id].process is not None:
+                poll = tests[id].process.poll()
+            #end of debugging
+            return jsonify(success=True,exit_code=0,message="test started successfully", poll=poll), headers
 
         if command == 3: # stop -> sync
             id = data.get("id") or None
