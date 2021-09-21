@@ -1,4 +1,4 @@
-window.onload = function () {
+document.addEventListener("DOMContentLoaded", function () {
     const id = document.getElementById('test-id').innerText;
     fetch('/test-info/'+id, { method: 'POST'}).then(res => res.json()).then(res => {
         if (res.success){
@@ -19,4 +19,4 @@ window.onload = function () {
             document.getElementById('content').appendChild(test);
         }
     }).catch();
-}
+});

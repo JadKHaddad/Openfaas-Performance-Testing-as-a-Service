@@ -1,3 +1,5 @@
+FUNCTIONCALL = '';
+
 function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid, startedAt){
     var test = document.createElement('div');
     test.setAttribute('id', id);
@@ -146,18 +148,35 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     });
 
     stopBtn.on('click', function(){
-        fetch('/stop/'+ id, {method: 'POST'});
-        idCol.removeClass('orange').removeClass('green').removeClass('red');
-        clearInterval(intv);
-        check.removeClass('hidden');
-        spinner.addClass('hidden');
-        $(this).prop("disabled",true);
-        downloadBtn.prop("disabled",false);
-        eventSource.close();
+        fetch('/stop/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+            if (data.success){
+                idCol.removeClass('orange').removeClass('green').removeClass('red');
+                clearInterval(intv);
+                check.removeClass('hidden');
+                spinner.addClass('hidden');
+                $(this).prop("disabled",true);
+                downloadBtn.prop("disabled",false);
+                eventSource.close();
+            }else{
+                showInfo('There was an error stopping the test');
+            }
+
+        });
+
     });
 
     downloadBtn.on('click', function(){
-        console.log('download')
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", FUNCTIONCALL);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function () {
+            if (this.status === 200) {
+                var blob = new Blob([xhr.response], {type: "application/zip"});
+                var objectUrl = URL.createObjectURL(blob);
+                window.location.href = objectUrl;
+            }
+        };
+        xhr.send('{"command":5 ,"id":"'+id+'"}');
     });
 
     deleteBtn.on('click', function(){
@@ -167,9 +186,9 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             fetch('/delete', { method: 'POST', body: formData }).then(data => {
                 $('#dismiss-confirmation-modal-btn').click();
                 $(test).remove();
+                if (eventSource != null) eventSource.close();
              }).catch();
         });
-        eventSource.close();
         return false;
     });
 
@@ -307,3 +326,7 @@ function IsJsonString(str) {
     }
     return true;
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    FUNCTIONCALL = document.getElementById('function-call').innerText
+});

@@ -7,12 +7,7 @@ Run server; python server.py --host <host> --port <port> --url <openfaas url> --
 TODO:
 
 Openfaas function:
-    create plots,
-    enable download,
-
-server:
-    back:
-        fix waitress.queue
+    create plots
 
 ![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/img.jpg?raw=true)
     

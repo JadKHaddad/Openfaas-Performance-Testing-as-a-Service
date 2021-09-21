@@ -1,5 +1,5 @@
 import json
-from flask import jsonify
+from flask import jsonify, send_from_directory
 from os.path import join, dirname, realpath
 import time as t
 from pathlib import Path
@@ -94,7 +94,8 @@ def zip_files(id):
     test_dir = join(tests_dir, id)
     if not Path(test_dir).exists():
         return False
-    shutil.make_archive((test_dir), 'zip', tests_dir)
+    if not Path(join(tests_dir, f'{id}.zip')).exists(): #create zip file if it does not exist
+        shutil.make_archive(test_dir, 'zip', test_dir)
     return True
 
 def delete_zip_file(id):
@@ -141,9 +142,10 @@ def handle(req):
             with open(file_path, "w", encoding="UTF-8") as file:
                 file.write(code)
             # save requirements
-            if requirements is not None:
-                requirements_file_path = join(test_dir, f'requirements.txt')
-                with open(requirements_file_path, "w", encoding="UTF-8") as file:
+            
+            requirements_file_path = join(test_dir, f'requirements.txt')
+            with open(requirements_file_path, "w", encoding="UTF-8") as file:
+                if requirements is not None:
                     file.write(requirements)
             
             info_file_path = join(test_dir, f'{id}_info.txt')
@@ -212,9 +214,11 @@ def handle(req):
             # create plots
 
             # zip files
-            zip_files(id)
+            if zip_files(id):
+                return send_from_directory(tests_dir, f'{id}.zip'), headers
+            else:
+                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
 
-            return jsonify(success=True,exit_code=0,message="download"), headers
         if command == 6: # get tests -> sync
             tests_folders = []
             for f in os.scandir(tests_dir):
@@ -247,8 +251,9 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
+        
         else:
             return jsonify(success=False,exit_code=1,message="bad request"), headers
-            
+
     except Exception as e:
         return jsonify(success=False,exit_code=-1,message=str(e)), headers

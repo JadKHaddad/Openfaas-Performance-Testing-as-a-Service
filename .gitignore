@@ -4,3 +4,4 @@ cloud-config.txt
 basic-auth-password
 seq.vsdx
 ~$$seq.~vsdx
+*.junk

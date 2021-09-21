@@ -1,4 +1,4 @@
-window.onload = function () {
+document.addEventListener("DOMContentLoaded", function () {
     const deployBtn = $('#deploy-btn');
     const dismissBtn = $('#dismiss-btn');
     var code = '';
@@ -108,4 +108,4 @@ window.onload = function () {
             } 
         }
     }).catch();
-}   
+});   

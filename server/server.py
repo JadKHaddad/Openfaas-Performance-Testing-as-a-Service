@@ -6,7 +6,7 @@ import gevent
 import argparse
 from urllib.parse import urljoin
 
-OPENFASSULR = None
+OPENFAASULR = None
 FUNCTION = None
 FUNCTIONURL = None
 ASYNCFUNCTIONURL = None
@@ -15,11 +15,11 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', function_call=FUNCTIONURL)
 
 @app.route('/explore')
 def explore():
-    return render_template('explore.html')
+    return render_template('explore.html', function_call=FUNCTIONURL)
 
 @app.route('/tests')
 def tests():
@@ -29,7 +29,7 @@ def tests():
 
 @app.route('/test/<id>')
 def test(id):
-    return render_template('test.html', id=id)
+    return render_template('test.html', id=id, function_call=FUNCTIONURL)
 
 @app.route('/test-info/<id>', methods=['POST'])
 def test_info(id):
@@ -104,14 +104,14 @@ if __name__ == '__main__':
         print('all arguments are required --host <host> --port <port> --url <openfaas url> --function <funcion name>')
         exit()
 
-    OPENFASSULR = url
+    OPENFAASULR = url
     FUNCTION = function
-    SYNC = urljoin(OPENFASSULR, 'function/')
-    ASYNC = urljoin(OPENFASSULR, 'async-function/')
+    SYNC = urljoin(OPENFAASULR, 'function/')
+    ASYNC = urljoin(OPENFAASULR, 'async-function/')
     FUNCTIONURL = urljoin(SYNC, FUNCTION)
     ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
 
-    print(f'openfaas url {OPENFASSULR}')
+    print(f'openfaas url {OPENFAASULR}')
     print(f'sync function call {FUNCTIONURL}')
     print(f'async function call {ASYNCFUNCTIONURL}')
     print(f'server running on {host}:{port}')

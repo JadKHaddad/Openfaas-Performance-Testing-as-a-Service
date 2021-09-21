@@ -59,7 +59,7 @@ function createTestsList(tests){
 
 var selectedTests = [];
 
-window.onload = function () {
+document.addEventListener("DOMContentLoaded", function () {
     fetch('/tests').then(data => data.json()).then(data => {
         if (data.success){
             const tests = data.tests;
@@ -82,4 +82,4 @@ window.onload = function () {
         return false;
     });
 
-}   
+});   
