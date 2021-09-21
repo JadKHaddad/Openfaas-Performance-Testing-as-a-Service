@@ -24,6 +24,7 @@ class Test():
         self.host = host
         self.time = time
         self.process = None
+        self.running = False
         self.started_at = 0
         time_command = ''
         if self.time is not None:
@@ -41,11 +42,15 @@ class Test():
        
     def start(self):
         self.started_at = t.time()
+        self.running = True
         self.process = subprocess.Popen(self.command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,shell=True)
+        self.process.wait()
+        self.running = False
 
     def stop(self):
         if self.process is not None:
             self.process.terminate()
+        self.running = False
 
 def get_test_info(id):
     test_dir = join(tests_dir, id)
@@ -74,7 +79,7 @@ def get_test_info(id):
         valid = False
 
     if id in tests:
-        if tests[id].process is not None and tests[id].process.poll() is None: # process not finished
+        if tests[id].running:
             data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
         else:
             data = {"id":id, "status":2, "data":j,"info":info, "code":code, "valid":valid}# status 2 -> test is deployed
@@ -104,16 +109,6 @@ def delete_zip_file(id):
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
-        # clean up
-        for id in tests:
-            if tests[id].process is not None:
-                if tests[id].process.poll() is not None: # process finished
-                    test_dir = join(tests_dir, id)
-                    csv_file_path = join(test_dir, f'{id}_stats.csv')
-                    if not Path(csv_file_path).exists(): # test is not valid
-                        not_valid_tests[id] = None
-                    del tests[id]
-
         data = json.loads(req)
         command = data.get("command") or None
         if command is None:
@@ -151,16 +146,17 @@ def handle(req):
         if command == 2: # start -> async
             id = data.get("id") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers
-            running_tets = 0
-            for id in tests:
-                if tests[id].process is not None and tests[id].process.poll() is None: # process is running
-                    running_tets = running_tets + 1
-            if running_tets > 3: 
-                return jsonify(success=False,exit_code=5,message="too many tests"), headers
+               return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id not in tests:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
             tests[id].start()
+            # remove the test from the tests if not stopped via request
+            if id in tests:
+                del tests[id]
+            test_dir = join(tests_dir, id)
+            csv_file_path = join(test_dir, f'{id}_stats.csv')
+            if not Path(csv_file_path).exists(): # test is not valid
+                not_valid_tests[id] = None
             return jsonify(success=True,exit_code=0,message="test started and finished successfully"), headers
 
         if command == 3: # stop -> sync
@@ -187,7 +183,7 @@ def handle(req):
             j = pd_data.to_json(orient='records')
             # check if test is runnig
             if id in tests:
-                if tests[id].process is not None and tests[id].process.poll() is None: # process not finished
+                if tests[id].running:
                     return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
                 else:
                     return jsonify(success=True,exit_code=0,status=2,data=j,message="test is deployed"), headers # status 1 -> test is deployed

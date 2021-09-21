@@ -116,23 +116,32 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     }
 
     startBtn.on('click', function(){
-        fetch('/start/'+ id, {method: 'POST'});
-        idCol.removeClass('orange').addClass('green');
-        spinner.removeClass('hidden');
-        elapsed.removeClass('hidden');
-        elapsedText.text('pending');
-        $(this).prop("disabled",true);
-        stopBtn.prop("disabled",false);
+        fetch('/start/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+            if (data.success){
+                idCol.removeClass('orange').addClass('green');
+                spinner.removeClass('hidden');
+                elapsed.removeClass('hidden');                                      
+                elapsedText.text('pending');
+                $(this).prop("disabled",true);
+                stopBtn.prop("disabled",false);
+    
+                if (startedAt == null){
+                    startedAt = Date.now()/1000;
+                }
+                eventSource = new EventSource('/stream/' + id);
+                eventSource.onmessage = function (e) {
+                    if(!IsJsonString(e.data)) return;
+                    message = JSON.parse(e.data)
+                    interpretMessage(message);
+                };  
+            }else{
+                if (data.exit_code == 5){
+                    showInfo('Too many tests are running. Pleas stop or delete a running test');
+                }
+            }
+                            
+        });
 
-        if (startedAt == null){
-            startedAt = Date.now()/1000;
-        }
-        eventSource = new EventSource('/stream/' + id);
-        eventSource.onmessage = function (e) {
-            if(!IsJsonString(e.data)) return;
-            message = JSON.parse(e.data)
-            interpretMessage(message);
-        };
     });
 
     stopBtn.on('click', function(){

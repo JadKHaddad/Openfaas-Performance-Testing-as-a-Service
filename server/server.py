@@ -57,12 +57,8 @@ def deploy():
 @app.route('/start/<id>', methods=['POST'])
 def start(id):
     data = {'command':2,'id': id}
-    try:
-        requests.post(FUNCTIONURL, data=json.dumps(data), timeout=0.0000000001)
-    except requests.exceptions.ReadTimeout as e:
-        pass
-    finally:
-        return json.dumps({"status": "sent"})
+    response = requests.post(FUNCTIONURL, data=json.dumps(data))#, timeout=0.0000000001)
+    return response.text
 
 @app.route('/stop/<id>', methods=['POST'])
 def stop(id):
@@ -118,4 +114,4 @@ if __name__ == '__main__':
     print(f'sync function call {FUNCTIONURL}')
     print(f'async function call {ASYNCFUNCTIONURL}')
     print(f'server running on {host}:{port}')
-    serve(app, host=host, port=port)
+    serve(app, host=host, port=port,threads=8)
