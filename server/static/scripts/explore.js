@@ -60,7 +60,7 @@ function createTestsList(tests){
 var selectedTests = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-    fetch('/tests').then(data => data.json()).then(data => {
+    fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 6})}).then(data => data.json()).then(data => {
         if (data.success){
             const tests = data.tests;
             $('#content').append(createTestsList(tests));
@@ -71,10 +71,11 @@ document.addEventListener("DOMContentLoaded", function () {
     deleteBtn.prop("disabled",true);
     //handle delete button
     deleteBtn.on("click", function(){
-        let formData = new FormData();
-        formData.append('ids', JSON.stringify(selectedTests));
+        // let formData = new FormData();
+        // formData.append('ids', JSON.stringify(selectedTests));
         setConfirmationModal('Are you sure you want to delete these test?', function() {
-             fetch('/delete', { method: 'POST', body: formData }).then(data => {
+            //  fetch('/delete', { method: 'POST', body: formData }).then(data => {
+            fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 7, ids:selectedTests})}).then(data => data.json()).then(data => {
                 $('#dismiss-confirmation-modal-btn').click();
                 location.reload();
             }).catch();

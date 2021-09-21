@@ -64,27 +64,41 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        let formData = new FormData();
-        formData.append('users', users);
-        formData.append('spawn_rate', spawnRate);
-        formData.append('host', host);
-        formData.append('time', time);
-        formData.append('code', code);
-        formData.append('requirements', requirements);
+        // server call
+        // let formData = new FormData();
+        // formData.append('users', users);
+        // formData.append('spawn_rate', spawnRate);
+        // formData.append('host', host);
+        // formData.append('time', time);
+        // formData.append('code', code);
+        // formData.append('requirements', requirements);
 
-        fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
-            if (data.success){
-                const id = data.id;
-                const test = CreateTest(id, users, spawnRate, host, time, 2, code, null, null, null);
-                document.getElementById('tests').prepend(test);
-                dismissBtn.click();
-            }
-        }).catch();
+        // fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
+        //     if (data.success){
+        //         const id = data.id;
+        //         const test = CreateTest(id, users, spawnRate, host, time, 2, code, null, null, null);
+        //         document.getElementById('tests').prepend(test);
+        //         dismissBtn.click();
+        //     }
+        // }).catch();
+
+        //direct openfaas
+        fetch(FUNCTIONCALL, {method: 'POST', body: JSON.stringify({command: 1, users: parseInt(users), spawn_rate: parseInt(spawnRate), host: host, time: parseInt(time), code:code, requirements:requirements})}).then(data => data.json()).then(data => 
+            {
+                if (data.success){
+                    const id = data.id;
+                    const test = CreateTest(id, users, spawnRate, host, time, 2, code, null, null, null);
+                    document.getElementById('tests').prepend(test);
+                    dismissBtn.click();
+                }
+            }).catch();
+
         return false;
     });
 
     // get all tests
-    fetch('/tests').then(data => data.json()).then(data => {
+    // fetch('/tests').then(data => data.json()).then(data => { //server call
+    fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 6})}).then(data => data.json()).then(data => { // direct openfaas
         if (data.success){
             const tests = data.tests;
             if (tests != null){

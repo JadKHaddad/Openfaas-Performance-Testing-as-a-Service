@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const id = document.getElementById('test-id').innerText;
-    fetch('/test-info/'+id, { method: 'POST'}).then(res => res.json()).then(res => {
+    // fetch('/test-info/'+id, { method: 'POST'}).then(res => res.json()).then(res => {
+    fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 8, id: id})}).then(res => res.json()).then(res => {
         if (res.success){
             const data = res.data;
             var users = null;

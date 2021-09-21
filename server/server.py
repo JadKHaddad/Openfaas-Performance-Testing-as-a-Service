@@ -21,22 +21,35 @@ def index():
 def explore():
     return render_template('explore.html', function_call=FUNCTIONURL)
 
+@app.route('/test/<id>')
+def test(id):
+    return render_template('test.html', id=id, function_call=FUNCTIONURL)
+
+@app.route('/stream/<id>')
+def stream(id):
+    data = {'command':4,'id': id}
+    def stats_stream():
+        while True:
+            response = requests.post(FUNCTIONURL, data=json.dumps(data))
+            yield f'data: {response.text}\n\n'
+            gevent.sleep(1)
+    return Response(stats_stream(), mimetype="text/event-stream")
+
+# can be removed
 @app.route('/tests')
 def tests():
     data = {'command':6}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-@app.route('/test/<id>')
-def test(id):
-    return render_template('test.html', id=id, function_call=FUNCTIONURL)
-
+# can be removed
 @app.route('/test-info/<id>', methods=['POST'])
 def test_info(id):
     data = {'command':8,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
+# can be removed
 @app.route('/deploy', methods=['POST'])
 def deploy():
     users = request.form.get('users') or None
@@ -55,35 +68,28 @@ def deploy():
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
+# can be removed
 @app.route('/start/<id>', methods=['POST'])
 def start(id):
     data = {'command':2,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))#, timeout=0.0000000001)
     return response.text
 
+# can be removed
 @app.route('/stop/<id>', methods=['POST'])
 def stop(id):
     data = {'command':3,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
+# can be removed
 @app.route('/delete', methods=['POST'])
 def delete():
     ids = request.form.get('ids')
     data = '{"command":7,"ids":'+ids+'}'
     response = requests.post(FUNCTIONURL, data)
     return response.text
-
-@app.route('/stream/<id>')
-def stream(id):
-    data = {'command':4,'id': id}
-    def stats_stream():
-        while True:
-            response = requests.post(FUNCTIONURL, data=json.dumps(data))
-            yield f'data: {response.text}\n\n'
-            gevent.sleep(1)
-    return Response(stats_stream(), mimetype="text/event-stream")
-
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help=False)

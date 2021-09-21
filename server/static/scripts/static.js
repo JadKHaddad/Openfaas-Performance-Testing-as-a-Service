@@ -118,8 +118,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     }
 
     startBtn.on('click', function(){
-        fetch('/start/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
-            console.log(data);
+        // fetch('/start/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 2, id:id})}).then(data => data.json()).then(data => {
             if (data.success){
                 idCol.removeClass('orange').addClass('green');
                 spinner.removeClass('hidden');
@@ -141,6 +141,9 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 if (data.exit_code == 5){
                     showInfo('Too many tests are running. Pleas stop or delete a running test');
                 }
+                else{
+                    showInfo('Something went wrong');
+                }
             }
                             
         });
@@ -148,7 +151,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     });
 
     stopBtn.on('click', function(){
-        fetch('/stop/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+        //fetch('/stop/'+ id, {method: 'POST'}).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 3, id:id})}).then(data => data.json()).then(data => {
             if (data.success){
                 idCol.removeClass('orange').removeClass('green').removeClass('red');
                 clearInterval(intv);
@@ -176,14 +180,15 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 window.location.href = objectUrl;
             }
         };
-        xhr.send('{"command":5 ,"id":"'+id+'"}');
+        xhr.send(JSON.stringify({command: 5, id:id}));
     });
 
     deleteBtn.on('click', function(){
-        let formData = new FormData();
-        formData.append('ids', '["'+id+'"]');
+        // let formData = new FormData();
+        // formData.append('ids', '["'+id+'"]');
         setConfirmationModal(id + ' Are you sure you want to delete this test?', function() {
-            fetch('/delete', { method: 'POST', body: formData }).then(data => {
+            // fetch('/delete', { method: 'POST', body: formData }).then(data => {
+            fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 7, ids:[id]})}).then(data => data.json()).then(data => {
                 $('#dismiss-confirmation-modal-btn').click();
                 $(test).remove();
                 if (eventSource != null) eventSource.close();
