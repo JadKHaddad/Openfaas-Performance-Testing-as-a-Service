@@ -100,11 +100,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
-    parser.add_argument('-s', '--host', help='server host',metavar='')
-    parser.add_argument('-p', '--port', help='server port',metavar='')
-    parser.add_argument('-u', '--url', help='openfaas url',metavar='')
-    parser.add_argument('-f','--function', help='function name',metavar='')
-    parser.add_argument('-d','--direct', help='can the browser connect to openfaas directly?',metavar='')
+    requiredNamed = parser.add_argument_group('required arguments')
+    requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
+    requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
+    requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='',required=True)
+    requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
+    requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
 
     args = parser.parse_args()
 
@@ -113,9 +114,6 @@ if __name__ == '__main__':
     url = args.url
     function = args.function
     direct = args.direct
-    if host is None or port is None or url is None or function is None or direct is None :
-        print('all arguments are required --host <host> --port <port> --url <openfaas url> --function <funcion name> --direct <true || false>')
-        exit()
 
     OPENFAASULR = url
     FUNCTION = function
