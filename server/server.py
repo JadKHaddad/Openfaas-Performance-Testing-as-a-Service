@@ -10,20 +10,21 @@ OPENFAASULR = None
 FUNCTION = None
 FUNCTIONURL = None
 ASYNCFUNCTIONURL = None
+DIRECT = None
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', function_call=FUNCTIONURL)
+    return render_template('index.html', function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/explore')
 def explore():
-    return render_template('explore.html', function_call=FUNCTIONURL)
+    return render_template('explore.html', function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/test/<id>')
 def test(id):
-    return render_template('test.html', id=id, function_call=FUNCTIONURL)
+    return render_template('test.html', id=id, function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/stream/<id>')
 def stream(id):
@@ -35,21 +36,18 @@ def stream(id):
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
 
-# can be removed
 @app.route('/tests')
 def tests():
     data = {'command':6}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-# can be removed
 @app.route('/test-info/<id>', methods=['POST'])
 def test_info(id):
     data = {'command':8,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-# can be removed
 @app.route('/deploy', methods=['POST'])
 def deploy():
     users = request.form.get('users') or None
@@ -68,27 +66,34 @@ def deploy():
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-# can be removed
 @app.route('/start/<id>', methods=['POST'])
 def start(id):
     data = {'command':2,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))#, timeout=0.0000000001)
     return response.text
 
-# can be removed
 @app.route('/stop/<id>', methods=['POST'])
 def stop(id):
     data = {'command':3,'id': id}
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-# can be removed
 @app.route('/delete', methods=['POST'])
 def delete():
     ids = request.form.get('ids')
     data = '{"command":7,"ids":'+ids+'}'
     response = requests.post(FUNCTIONURL, data)
     return response.text
+
+@app.route('/download/<id>', methods=['POST'])
+def download(id):
+    data = {'command':5,'id': id}
+    res = requests.post(FUNCTIONURL, data=json.dumps(data))
+    return Response(
+        response=res.content,
+        status=res.status_code,
+        headers=dict(res.headers)
+    )
     
 if __name__ == '__main__':
 
@@ -99,6 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', help='server port',metavar='')
     parser.add_argument('-u', '--url', help='openfaas url',metavar='')
     parser.add_argument('-f','--function', help='function name',metavar='')
+    parser.add_argument('-d','--direct', help='can the browser connect to openfaas directly?',metavar='')
 
     args = parser.parse_args()
 
@@ -106,8 +112,9 @@ if __name__ == '__main__':
     port = args.port
     url = args.url
     function = args.function
-    if not host or not port or not url or not function:
-        print('all arguments are required --host <host> --port <port> --url <openfaas url> --function <funcion name>')
+    direct = args.direct
+    if host is None or port is None or url is None or function is None or direct is None :
+        print('all arguments are required --host <host> --port <port> --url <openfaas url> --function <funcion name> --direct <true || false>')
         exit()
 
     OPENFAASULR = url
@@ -116,9 +123,11 @@ if __name__ == '__main__':
     ASYNC = urljoin(OPENFAASULR, 'async-function/')
     FUNCTIONURL = urljoin(SYNC, FUNCTION)
     ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
+    DIRECT = direct
 
-    print(f'openfaas url {OPENFAASULR}')
-    print(f'sync function call {FUNCTIONURL}')
-    print(f'async function call {ASYNCFUNCTIONURL}')
+    print(f'openfaas url: {OPENFAASULR}')
+    print(f'sync function call: {FUNCTIONURL}')
+    print(f'async function call: {ASYNCFUNCTIONURL}')
+    print(f'direct: {direct}')
     print(f'server running on {host}:{port}')
     serve(app, host=host, port=port,threads=8)

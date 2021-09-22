@@ -47,7 +47,8 @@ class Test():
     def stop(self):
         if self.process is not None:
             self.process.terminate()
-
+            
+# static functions
 def get_test_info(id):
     test_dir = join(tests_dir, id)
     csv_file_path = join(test_dir, f'{id}_stats.csv')
@@ -245,12 +246,31 @@ def handle(req):
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
-        if command == 8: # get test
+        if command == 8: # get test -> sync
             id = data.get("id") or None
             if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
+        
+        if command == 9: # clean up -> sync
+            for id in tests: # clear deployed tests
+                if tests[id].process is not None:
+                    tests[id].stop()
+                del tests[id]
+
+            for id in  not_valid_tests: # clear not valid tests
+                del not_valid_tests[id]
+
+            list_dir = os.listdir(tests_dir) # clean up tests folder
+            for filename in list_dir:
+                file_path = os.path.join(tests_dir, filename)
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            
+            return jsonify(success=True,exit_code=0,data=data,message="all clean"), headers
         
         else:
             return jsonify(success=False,exit_code=1,message="bad request"), headers

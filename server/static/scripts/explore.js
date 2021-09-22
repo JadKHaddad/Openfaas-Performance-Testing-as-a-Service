@@ -1,4 +1,4 @@
-function createTestsList(tests){
+function createTestsList(tests) {
     var list = document.createElement('div');
     list.classList.add('list-group');
     for (var i = 0; i < tests.length; i++)  (function (i) {
@@ -7,13 +7,13 @@ function createTestsList(tests){
         item.classList.add('list-group-item');
         item.classList.add('list-group-item-action');
         var labelClass = ''
-        if(tests[i].status == 1){
+        if (tests[i].status == 1) {
             labelClass = "green"
         }
-        if(tests[i].status == 2){
+        if (tests[i].status == 2) {
             labelClass = "orange"
         }
-        if(tests[i].valid === false){
+        if (tests[i].valid === false) {
             labelClass = "red"
         }
         const template = `
@@ -31,10 +31,10 @@ function createTestsList(tests){
         `;
         item.innerHTML = template;
         // handle check box events
-        $(item).find('input').change(function() {
- 
+        $(item).find('input').change(function () {
+
             if (this.checked) {
-                $('#delete').prop("disabled",false);
+                $('#delete').prop("disabled", false);
                 // add test to selected tests
                 selectedTests.push(tests[i].id);
             } else {
@@ -43,14 +43,14 @@ function createTestsList(tests){
                 if (index > -1) {
                     selectedTests = selectedTests.splice(index + 1, 1);
                 }
-                if (selectedTests.length < 1){
-                    $('#delete').prop("disabled",true);
+                if (selectedTests.length < 1) {
+                    $('#delete').prop("disabled", true);
                 }
             }
         });
 
-        $(item).find('label').on('click', function(){
-            window.location.href = '/test/'+tests[i].id;
+        $(item).find('label').on('click', function () {
+            window.location.href = '/test/' + tests[i].id;
         });
         list.appendChild(item);
     })(i);
@@ -60,27 +60,43 @@ function createTestsList(tests){
 var selectedTests = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-    fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 6})}).then(data => data.json()).then(data => {
-        if (data.success){
+    function callBack(data) {
+        if (data.success) {
             const tests = data.tests;
             $('#content').append(createTestsList(tests));
         }
-    }).catch();
+    }
+    if (DIRECT) {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => {
+            callBack(data);
+        }).catch();
+    } else {
+        fetch('/tests').then(data => data.json()).then(data => {
+            callBack(data);
+        }).catch();
+    }
 
     const deleteBtn = $('#delete');
-    deleteBtn.prop("disabled",true);
+    deleteBtn.prop("disabled", true);
     //handle delete button
-    deleteBtn.on("click", function(){
-        // let formData = new FormData();
-        // formData.append('ids', JSON.stringify(selectedTests));
-        setConfirmationModal('Are you sure you want to delete these test?', function() {
-            //  fetch('/delete', { method: 'POST', body: formData }).then(data => {
-            fetch(FUNCTIONCALL, {method:'POST', body: JSON.stringify({command: 7, ids:selectedTests})}).then(data => data.json()).then(data => {
-                $('#dismiss-confirmation-modal-btn').click();
-                location.reload();
-            }).catch();
+    deleteBtn.on("click", function () {
+        function callBack() {
+            $('#dismiss-confirmation-modal-btn').click();
+            location.reload();
+        }
+        setConfirmationModal('Are you sure you want to delete these test?', function () {
+            if (DIRECT) {
+                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: selectedTests }) }).then(data => data.json()).then(data => {
+                    callBack();
+                }).catch();
+            } else {
+                let formData = new FormData();
+                formData.append('ids', JSON.stringify(selectedTests));
+                fetch('/delete', { method: 'POST', body: formData }).then(data => {
+                    callBack();
+                }).catch();
+            }
         });
         return false;
     });
-
-});   
+});
