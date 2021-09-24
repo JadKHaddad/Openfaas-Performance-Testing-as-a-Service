@@ -139,7 +139,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 };
             } else {
                 if (data.exit_code == 5) {
-                    showInfo('Too many tests are running. Pleas stop or delete a running test');
+                    showInfo('Too many tests are running. Please stop or delete a running test');
                 }
                 else {
                     showInfo('Something went wrong');
@@ -369,5 +369,4 @@ function IsJsonString(str) {
 document.addEventListener("DOMContentLoaded", function () {
     FUNCTIONCALL = document.getElementById('function-call').innerText;
     DIRECT = (document.getElementById('direct').innerText === 'true');
-    console.log(DIRECT);
 });
