@@ -197,6 +197,19 @@ def handle(req):
             test.start()
 
             return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
+        if command == 2: # get plots -> sync
+            id = data.get("id") or None
+            type = data.get("type") or None
+            if id is None or (type != "lin" and type != "reg"):
+               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            test_dir = join(tests_dir, id)
+            if create_plots(id):
+                if type == "lin":
+                    return send_from_directory(test_dir, f'lin.png'), headers
+                if type == "reg":
+                    return send_from_directory(test_dir, f'reg.png'), headers
+            else:
+                return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
 
         if command == 3: # stop -> sync
             id = data.get("id") or None
@@ -237,7 +250,7 @@ def handle(req):
             if zip_files(id):
                 return send_from_directory(tests_dir, f'{id}.zip'), headers
             else:
-                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
+                return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
 
         if command == 6: # get tests -> sync
             tests_folders = []

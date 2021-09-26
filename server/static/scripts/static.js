@@ -59,6 +59,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         </button>
         <button type="button" class="btn btn-danger delete-test">Delete</button>
     </div>
+    <div class="img-container">
+    </div>
     `;
 
     test.innerHTML = template;
