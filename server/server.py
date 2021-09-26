@@ -66,12 +66,6 @@ def deploy():
     response = requests.post(FUNCTIONURL, data=json.dumps(data))
     return response.text
 
-@app.route('/start/<id>', methods=['POST'])
-def start(id):
-    data = {'command':2,'id': id}
-    response = requests.post(FUNCTIONURL, data=json.dumps(data))#, timeout=0.0000000001)
-    return response.text
-
 @app.route('/stop/<id>', methods=['POST'])
 def stop(id):
     data = {'command':3,'id': id}

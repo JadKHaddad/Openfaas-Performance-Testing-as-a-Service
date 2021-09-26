@@ -1,3 +1,5 @@
 gevent
 locust
 pandas
+matplotlib
+sklearn

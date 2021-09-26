@@ -51,9 +51,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         </div>
     </div>
     <div class="buttons btn-container">
-        <button type="button" class="btn btn-primary start-test">
-            Start
-        </button>
         <button type="button" class="btn btn-primary stop-test" disabled>
             Stop
         </button>
@@ -66,7 +63,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
 
     test.innerHTML = template;
     const idCol = $(test).find('.test-id');
-    const startBtn = $(test).find('.start-test');
     const stopBtn = $(test).find('.stop-test');
     const downloadBtn = $(test).find('.download-test');
     const deleteBtn = $(test).find('.delete-test');
@@ -90,14 +86,12 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         } else {
             check.removeClass('hidden');
         }
-        startBtn.prop("disabled", true);
         stopBtn.prop("disabled", true);
         downloadBtn.prop("disabled", false);
     }
 
     if (status == 1) { // running 
         idCol.addClass('green');
-        startBtn.prop("disabled", true);
         stopBtn.prop("disabled", false);
         downloadBtn.prop("disabled", true);
         elapsed.removeClass('hidden');
@@ -111,56 +105,11 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             interpretMessage(message);
         };
     }
-    if (status == 2) { // deployed
-        idCol.addClass('orange');
-        startBtn.prop("disabled", false);
-        stopBtn.prop("disabled", true);
-        downloadBtn.prop("disabled", true);
-    }
-
-    startBtn.on('click', function () {
-        function callBack(data) {
-            if (data.success) {
-                idCol.removeClass('orange').addClass('green');
-                spinner.removeClass('hidden');
-                elapsed.removeClass('hidden');
-                elapsedText.text('pending');
-                startBtn.prop("disabled", true);
-                stopBtn.prop("disabled", false);
-
-                if (startedAt == null) {
-                    startedAt = Date.now() / 1000;
-                }
-                eventSource = new EventSource('/stream/' + id);
-                eventSource.onmessage = function (e) {
-                    if (!IsJsonString(e.data)) return;
-                    message = JSON.parse(e.data)
-                    interpretMessage(message);
-                };
-            } else {
-                if (data.exit_code == 5) {
-                    showInfo('Too many tests are running. Please stop or delete a running test');
-                }
-                else {
-                    showInfo('Something went wrong');
-                }
-            }
-        }
-        if (DIRECT) {
-            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id }) }).then(data => data.json()).then(data => {
-                callBack(data);
-            });
-        } else {
-            fetch('/start/' + id, { method: 'POST' }).then(data => data.json()).then(data => {
-                callBack(data);
-            });
-        }
-    });
 
     stopBtn.on('click', function () {
         function callBack(data) {
             if (data.success) {
-                idCol.removeClass('orange').removeClass('green').removeClass('red');
+                idCol.removeClass('green').removeClass('red');
                 clearInterval(intv);
                 check.removeClass('hidden');
                 spinner.addClass('hidden');
@@ -245,7 +194,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             if (message.status == 0) {
                 // test is not running
                 clearInterval(intv);
-                idCol.removeClass('orange').removeClass('green').removeClass('red');
+                idCol.removeClass('green').removeClass('red');
                 check.removeClass('hidden');
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
@@ -265,11 +214,10 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             if (message.exit_code == 4) {
                 showInfo(id + 'There was an error running your locust file');
                 clearInterval(intv);
-                idCol.removeClass('orange').removeClass('green').addClass('red');
+                idCol.removeClass('green').addClass('red');
                 notValid.removeClass('hidden');
                 elapsed.addClass('hidden');
                 spinner.addClass('hidden');
-                startBtn.prop("disabled", true);
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", true);
                 eventSource.close();

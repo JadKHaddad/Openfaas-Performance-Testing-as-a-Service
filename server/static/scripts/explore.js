@@ -10,9 +10,6 @@ function createTestsList(tests) {
         if (tests[i].status == 1) {
             labelClass = "green"
         }
-        if (tests[i].status == 2) {
-            labelClass = "orange"
-        }
         if (tests[i].valid === false) {
             labelClass = "red"
         }

@@ -67,7 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
         function callBack(data){
             if (data.success){
                 const id = data.id;
-                const test = CreateTest(id, users, spawnRate, host, time, 2, code, null, null, null);
+                const started_at = data.started_at;
+                const test = CreateTest(id, users, spawnRate, host, time, 1, code, null, null, started_at);
                 document.getElementById('tests').prepend(test);
                 dismissBtn.click();
             }

@@ -7,6 +7,9 @@ import os
 import shutil
 import pandas as pd
 import subprocess
+from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
@@ -76,10 +79,7 @@ def get_test_info(id):
         valid = False
 
     if id in tests:
-        if tests[id].process is not None and tests[id].process.poll() is None: # process not finished
-            data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
-        else:
-            data = {"id":id, "status":2, "data":j,"info":info, "code":code, "valid":valid}# status 2 -> test is deployed
+        data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
     else:
         data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is no longer deployed
     return data 
@@ -90,12 +90,12 @@ def clean_up_cache(id):
     if Path(cache).exists():
         shutil.rmtree(cache)
 
-def zip_files(id):
+def zip_files(id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
     clean_up_cache(id)
     test_dir = join(tests_dir, id)
     if not Path(test_dir).exists():
         return False
-    if not Path(join(tests_dir, f'{id}.zip')).exists(): #create zip file if it does not exist
+    if not Path(join(tests_dir, f'{id}.zip')).exists(): # create zip file if it does not exist
         shutil.make_archive(test_dir, 'zip', test_dir)
     return True
 
@@ -103,6 +103,44 @@ def delete_zip_file(id):
     zip_file = join(tests_dir, f'{id}.zip')
     if Path(zip_file).exists():
         os.remove(zip_file)
+
+def create_plots(id): # creates plots if plots do no exist, returns True if plots are created or are already there
+    test_dir = join(tests_dir, id)
+    stats_history_file = join(test_dir, f'{id}_stats_history.csv')
+    if not Path(stats_history_file).exists():
+        return False
+    lin_path = join(test_dir, 'lin.png')
+    reg_path = join(test_dir, 'reg.png')
+
+    if not Path(lin_path).exists() or not Path(reg_path).exists():
+        df = pd.read_csv(stats_history_file) 
+
+        if not Path(lin_path).exists():
+            plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
+            plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
+            plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
+            plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
+            plt.ylabel("Time (milliseconds)")
+            plt.xlabel("Requests Count")
+            plt.legend(loc="upper right")
+            plt.savefig(lin_path,dpi=300)
+            plt.close()
+        if not Path(reg_path).exists():
+            X = df.iloc[:,17].values.reshape(-1, 1)
+            Y = df.iloc[:,20].values.reshape(-1, 1)
+            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+            linear_regressor = LinearRegression()  # create object for the class
+            linear_regressor.fit(X_train, Y_train)  # perform linear regression
+            Y_pred = linear_regressor.predict(X_test)  # make predictions
+            plt.scatter(X, Y, label="Acutuall average Response Time")
+            plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
+            plt.ylabel("Time (milliseconds)")
+            plt.xlabel("Requests Count")
+            plt.legend(loc="upper right")
+            plt.savefig(reg_path,dpi=300)
+            plt.close()
+
+    return True
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
@@ -155,28 +193,10 @@ def handle(req):
             # configure test
             test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time)
             # save test in tests
-            tests[id] = test 
-            return jsonify(success=True,exit_code=0,id=id,message="test deployed"), headers
+            tests[id] = test
+            test.start()
 
-        if command == 2: # start -> async
-            id = data.get("id") or None
-            if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers
-            running_tets = 0
-            for id in tests:
-                if tests[id].process is not None and tests[id].process.poll() is None: # process is running
-                    running_tets = running_tets + 1
-            if running_tets > 3: 
-                return jsonify(success=False,exit_code=5,message="too many tests"), headers
-            if id not in tests:
-                return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
-            tests[id].start()
-            #debugging
-            poll = 'undefined'
-            if tests[id].process is not None:
-                poll = tests[id].process.poll()
-            #end of debugging
-            return jsonify(success=True,exit_code=0,message="test started successfully", poll=poll), headers
+            return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
 
         if command == 3: # stop -> sync
             id = data.get("id") or None
@@ -202,17 +222,16 @@ def handle(req):
             j = pd_data.to_json(orient='records')
             # check if test is runnig
             if id in tests:
-                if tests[id].process is not None and tests[id].process.poll() is None: # process not finished
-                    return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-                else:
-                    return jsonify(success=True,exit_code=0,status=2,data=j,message="test is deployed"), headers # status 1 -> test is deployed
+                return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
             return jsonify(success=True,exit_code=0,status=0,data=j,message="test is no longer deployed"), headers # status 0 -> test not running
+            
         if command == 5: # download -> sync
             id = data.get("id") or None
             if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            # TODO
-            # create plots
+
+            #create plots
+            create_plots(id)
 
             # zip files
             if zip_files(id):
@@ -253,7 +272,13 @@ def handle(req):
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
         
-        if command == 9: # clean up -> sync
+        if command == 9: # get plots -> sync
+            id = data.get("id") or None
+            if id is None:
+               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            return jsonify(success=True,exit_code=0,message="plots"), headers 
+
+        if command == 10: # clean up -> sync
             for id in tests: # clear deployed tests
                 if tests[id].process is not None:
                     tests[id].stop()
