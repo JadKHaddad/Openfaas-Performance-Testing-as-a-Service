@@ -57,9 +57,14 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         <button type="button" class="btn btn-primary download-test" disabled>
             Download
         </button>
+        <button type="button" class="btn btn-primary show-test-results" disabled>
+        Show results
+        </button>
         <button type="button" class="btn btn-danger delete-test">Delete</button>
     </div>
     <div class="img-container">
+    <img class="lin" src="">
+    <img class="reg" src="">
     </div>
     `;
 
@@ -67,6 +72,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     const idCol = $(test).find('.test-id');
     const stopBtn = $(test).find('.stop-test');
     const downloadBtn = $(test).find('.download-test');
+    const resultsBtn = $(test).find('.show-test-results');
     const deleteBtn = $(test).find('.delete-test');
     const spinner = $(test).find('.spinner');
     const check = $(test).find('.check');
@@ -80,7 +86,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     var eventSource;
     var intvSet = false;
 
-
     if (status == 0) { // not deployed
         if (valid === false) {
             notValid.removeClass('hidden');
@@ -90,6 +95,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         }
         stopBtn.prop("disabled", true);
         downloadBtn.prop("disabled", false);
+        resultsBtn.prop("disabled", false);
     }
 
     if (status == 1) { // running 
@@ -117,6 +123,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", false);
+                resultsBtn.prop("disabled", false);
                 eventSource.close();
             } else {
                 showInfo('There was an error stopping the test');
@@ -153,6 +160,42 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             }
         };
         xhr.send(JSON.stringify({ command: 5, id: id }));
+    });
+
+    resultsBtn.on('click', function () {
+        var xhr = new XMLHttpRequest();
+        if(DIRECT){
+            xhr.open("POST", FUNCTIONCALL);
+        }
+        else{
+            xhr.open("POST", '/results/' + id);
+        }
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function() {
+            var arrayBufferView = new Uint8Array( this.response );
+            var blob = new Blob( [ arrayBufferView ], { type: "image/png" } );
+            var urlCreator = window.URL || window.webkitURL;
+            var imageUrl = urlCreator.createObjectURL( blob );
+            $(test).find('.reg').attr({"src":imageUrl});
+        };
+        xhr.send(JSON.stringify({ command: 2, id:id, type:"reg" }));
+
+        var xhr_ = new XMLHttpRequest();
+        if(DIRECT){
+            xhr_.open("POST", FUNCTIONCALL);
+        }
+        else{
+            xhr_.open("POST", '/results/' + id);
+        }
+        xhr_.responseType = "arraybuffer";
+        xhr_.onload = function() {
+            var arrayBufferView = new Uint8Array( this.response );
+            var blob = new Blob( [ arrayBufferView ], { type: "image/png" } );
+            var urlCreator = window.URL || window.webkitURL;
+            var imageUrl = urlCreator.createObjectURL( blob );
+            $(test).find('.lin').attr({"src":imageUrl});
+        };
+        xhr_.send(JSON.stringify({ command: 2, id:id, type:"lin" }));
     });
 
     deleteBtn.on('click', function () {
@@ -201,6 +244,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", false);
+                resultsBtn.prop("disabled", false);
                 eventSource.close();
                 return;
             }
