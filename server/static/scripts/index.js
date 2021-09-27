@@ -14,7 +14,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             code = evt.target.result;
         };
-        reader.readAsText(evt.target.files[0]);
+        if (evt.target.files.length > 0){
+            reader.readAsText(evt.target.files[0]);
+        }else{
+            code = '';
+        }
     };
     document.getElementById('requirements-input').onchange = function(evt) {
         if(!window.FileReader) return; // Browser is not compatible
@@ -27,7 +31,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             requirements = evt.target.result;
         };
-        reader.readAsText(evt.target.files[0]);
+        if (evt.target.files.length > 0){
+            reader.readAsText(evt.target.files[0]);
+        }else{
+            requirements = '';
+        }
+
     };
 
     deployBtn.on('click', function(){
@@ -65,17 +74,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function callBack(data){
+            
             if (data.success){
                 const id = data.id;
                 const started_at = data.started_at;
                 const test = CreateTest(id, users, spawnRate, host, time, 1, code, null, null, started_at);
                 document.getElementById('tests').prepend(test);
-                dismissBtn.click();
             }
         }
         if (DIRECT) {
         fetch(FUNCTIONCALL, {method: 'POST', body: JSON.stringify({command: 1, users: parseInt(users), spawn_rate: parseInt(spawnRate), host: host, time: parseInt(time), code:code, requirements:requirements})}).then(data => data.json()).then(data => 
-            {
+            {   
                 callBack(data);
             }).catch();
         }else{
@@ -90,6 +99,10 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch('/deploy', { method: 'POST', body: formData }).then(data => data.json()).then(data => {
                 callBack(data);
             }).catch();
+        }
+        dismissBtn.click();
+        if (requirements != ''){
+            showInfo("Test will start after installing requirments");
         }
         return false;
     });

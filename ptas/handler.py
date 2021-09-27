@@ -10,6 +10,7 @@ import subprocess
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+import shlex
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
@@ -26,8 +27,7 @@ class Test():
         self.spawn_rate = spawn_rate
         self.host = host
         self.time = time
-        self.process = None
-        self.started_at = 0
+
         time_command = ''
         if self.time is not None:
             time_command = f'-t {str(self.time)}s'
@@ -41,15 +41,15 @@ class Test():
         csv_name = join(test_dir, self.id)
         requirements_path = join(test_dir, f'requirements.txt')
 
-        self.command = f'pip install -r {requirements_path} && locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
-       
-    def start(self):
+        r_command= f'pip install -r {requirements_path}'
+        command = f'locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
+
+        self.r_process = subprocess.Popen(shlex.split(r_command), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
         self.started_at = t.time()
-        self.process = subprocess.Popen(self.command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,shell=True)
+        self.process = subprocess.Popen(shlex.split(command), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def stop(self):
-        if self.process is not None:
-            self.process.terminate()
+        self.process.terminate()
             
 # static functions
 def get_test_info(id):
@@ -108,53 +108,44 @@ def create_plots(id): # creates plots if plots do no exist, returns True if plot
     test_dir = join(tests_dir, id)
     stats_history_file = join(test_dir, f'{id}_stats_history.csv')
     if not Path(stats_history_file).exists():
-        return False
+        return 1
     lin_path = join(test_dir, 'lin.png')
     reg_path = join(test_dir, 'reg.png')
 
     if not Path(lin_path).exists() or not Path(reg_path).exists():
         df = pd.read_csv(stats_history_file) 
-
-        if not Path(lin_path).exists():
-            plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
-            plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
-            plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
-            plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
-            plt.ylabel("Time (milliseconds)")
-            plt.xlabel("Requests Count")
-            plt.legend(loc="upper right")
-            plt.savefig(lin_path,dpi=300)
-            plt.close()
-        if not Path(reg_path).exists():
-            X = df.iloc[:,17].values.reshape(-1, 1)
-            Y = df.iloc[:,20].values.reshape(-1, 1)
-            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
-            linear_regressor = LinearRegression()  # create object for the class
-            linear_regressor.fit(X_train, Y_train)  # perform linear regression
-            Y_pred = linear_regressor.predict(X_test)  # make predictions
-            plt.scatter(X, Y, label="Acutuall average Response Time")
-            plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
-            plt.ylabel("Time (milliseconds)")
-            plt.xlabel("Requests Count")
-            plt.legend(loc="upper right")
-            plt.savefig(reg_path,dpi=300)
-            plt.close()
-
-    return True
+        if len(df) > 4:
+            if not Path(lin_path).exists():
+                plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
+                plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
+                plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
+                plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
+                plt.ylabel("Time (milliseconds)")
+                plt.xlabel("Requests Count")
+                plt.legend(loc="upper right")
+                plt.savefig(lin_path,dpi=300)
+                plt.close()
+            if not Path(reg_path).exists():
+                X = df.iloc[:,17].values.reshape(-1, 1)
+                Y = df.iloc[:,20].values.reshape(-1, 1)
+                X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+                linear_regressor = LinearRegression()  # create object for the class
+                linear_regressor.fit(X_train, Y_train)  # perform linear regression
+                Y_pred = linear_regressor.predict(X_test)  # make predictions
+                plt.scatter(X, Y, label="Acutuall average Response Time")
+                plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
+                plt.ylabel("Time (milliseconds)")
+                plt.xlabel("Requests Count")
+                plt.legend(loc="upper right")
+                plt.savefig(reg_path,dpi=300)
+                plt.close()
+        else:
+            return 2
+    return 0
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
-        # clean up
-        for id in tests:
-            if tests[id].process is not None:
-                if tests[id].process.poll() is not None: # process finished
-                    test_dir = join(tests_dir, id)
-                    csv_file_path = join(test_dir, f'{id}_stats.csv')
-                    if not Path(csv_file_path).exists(): # test is not valid
-                        not_valid_tests[id] = None
-                    del tests[id]
-
         data = json.loads(req)
         command = data.get("command") or None
         if command is None:
@@ -194,22 +185,24 @@ def handle(req):
             test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time)
             # save test in tests
             tests[id] = test
-            test.start()
 
             return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
         if command == 2: # get plots -> sync
             id = data.get("id") or None
             type = data.get("type") or None
-            if id is None or (type != "lin" and type != "reg"):
+            if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             test_dir = join(tests_dir, id)
-            if create_plots(id):
-                if type == "lin":
-                    return send_from_directory(test_dir, f'lin.png'), headers
-                if type == "reg":
-                    return send_from_directory(test_dir, f'reg.png'), headers
+
+            if type == "create":
+                status_code = create_plots(id)
+                return jsonify(success=True,exit_code=0,status_code=status_code), headers 
+            if type == "lin":
+                return send_from_directory(test_dir, f'lin.png'), headers
+            if type == "reg":
+                return send_from_directory(test_dir, f'reg.png'), headers
             else:
-                return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 3: # stop -> sync
             id = data.get("id") or None
@@ -224,9 +217,16 @@ def handle(req):
         if command == 4: # stats -> sync
             id = data.get("id") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            if id in not_valid_tests:
-                return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
+               return jsonify(success=False,exit_code=1,message="bad request"), headers
+            if tests[id].process.poll() is not None: # process finished
+                test_dir = join(tests_dir, id)
+                csv_file_path = join(test_dir, f'{id}_stats.csv')
+                if not Path(csv_file_path).exists(): # test is not valid
+                    not_valid_tests[id] = None
+                    del tests[id]
+                    return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
+                del tests[id] 
+
             test_dir = join(tests_dir, id)
             csv_file_path = join(test_dir, f'{id}_stats.csv')
             if not Path(csv_file_path).exists():

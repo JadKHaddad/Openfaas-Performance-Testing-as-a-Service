@@ -132,7 +132,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         if (DIRECT) {
             fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3, id: id }) }).then(data => data.json()).then(data => {
                 callBack(data);
-
             });
         }
         else {
@@ -145,10 +144,10 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     downloadBtn.on('click', function () {
 
         var xhr = new XMLHttpRequest();
-        if(DIRECT){
+        if (DIRECT) {
             xhr.open("POST", FUNCTIONCALL);
         }
-        else{
+        else {
             xhr.open("POST", '/download/' + id);
         }
         xhr.responseType = "arraybuffer";
@@ -163,48 +162,57 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     });
 
     resultsBtn.on('click', function () {
-        var xhr = new XMLHttpRequest();
-        if(DIRECT){
-            xhr.open("POST", FUNCTIONCALL);
-        }
-        else{
-            xhr.open("POST", '/results/' + id);
-        }
-        xhr.responseType = "arraybuffer";
-        xhr.onload = function() {
-            var arrayBufferView = new Uint8Array( this.response );
-            var blob = new Blob( [ arrayBufferView ], { type: "image/png" } );
-            var urlCreator = window.URL || window.webkitURL;
-            var imageUrl = urlCreator.createObjectURL( blob );
-            $(test).find('.reg').attr({"src":imageUrl});
-        };
-        xhr.send(JSON.stringify({ command: 2, id:id, type:"reg" }));
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: "create" }) }).then(data => data.json()).then(data => {
+            if (data.success) {
+                if (data.status_code == 0) {
+                    var xhr = new XMLHttpRequest();
+                    if (DIRECT) {
+                        xhr.open("POST", FUNCTIONCALL);
+                    }
+                    else {
+                        xhr.open("POST", '/results/' + id);
+                    }
+                    xhr.responseType = "arraybuffer";
+                    xhr.onload = function () {
+                        var arrayBufferView = new Uint8Array(this.response);
+                        var blob = new Blob([arrayBufferView], { type: "image/png" });
+                        var urlCreator = window.URL || window.webkitURL;
+                        var imageUrl = urlCreator.createObjectURL(blob);
+                        $(test).find('.reg').attr({ "src": imageUrl });
+                    };
+                    xhr.send(JSON.stringify({ command: 2, id: id, type: "reg" }));
 
-        var xhr_ = new XMLHttpRequest();
-        if(DIRECT){
-            xhr_.open("POST", FUNCTIONCALL);
-        }
-        else{
-            xhr_.open("POST", '/results/' + id);
-        }
-        xhr_.responseType = "arraybuffer";
-        xhr_.onload = function() {
-            var arrayBufferView = new Uint8Array( this.response );
-            var blob = new Blob( [ arrayBufferView ], { type: "image/png" } );
-            var urlCreator = window.URL || window.webkitURL;
-            var imageUrl = urlCreator.createObjectURL( blob );
-            $(test).find('.lin').attr({"src":imageUrl});
-        };
-        xhr_.send(JSON.stringify({ command: 2, id:id, type:"lin" }));
+                    var xhr_ = new XMLHttpRequest();
+                    if (DIRECT) {
+                        xhr_.open("POST", FUNCTIONCALL);
+                    }
+                    else {
+                        xhr_.open("POST", '/results/' + id);
+                    }
+                    xhr_.responseType = "arraybuffer";
+                    xhr_.onload = function () {
+                        var arrayBufferView = new Uint8Array(this.response);
+                        var blob = new Blob([arrayBufferView], { type: "image/png" });
+                        var urlCreator = window.URL || window.webkitURL;
+                        var imageUrl = urlCreator.createObjectURL(blob);
+                        $(test).find('.lin').attr({ "src": imageUrl });
+                    };
+                    xhr_.send(JSON.stringify({ command: 2, id: id, type: "lin" }));
+                }else if (data.status_code == 2){
+                    showInfo("Not enough data to analyse")
+                }
+            }
+        });
+
     });
 
     deleteBtn.on('click', function () {
         function callBack(data) {
-            if (data.success && data.deleted.includes(id)){
+            if (data.success && data.deleted.includes(id)) {
                 $('#dismiss-confirmation-modal-btn').click();
                 $(test).remove();
                 if (eventSource != null) eventSource.close();
-            }else{
+            } else {
                 showInfo('There was an error deleting the test');
             }
 

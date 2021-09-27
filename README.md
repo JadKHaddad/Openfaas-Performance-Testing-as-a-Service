@@ -5,10 +5,9 @@ Install requirements; pip install -r requirements.txt
 Run server; python server.py --host <host> --port <port> --url <openfaas url> --function <funcion name>
 
 TODO:
-
-Javascript:
-    on stop and on getting test if test is not running:
-        get plots and display them
+show results once
+show results if direct fix or not
+try to use fetch instead of xhr
 
 ![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/img.jpg?raw=true)
     
