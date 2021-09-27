@@ -108,7 +108,7 @@ def create_plots(id): # creates plots if plots do no exist, returns True if plot
     test_dir = join(tests_dir, id)
     stats_history_file = join(test_dir, f'{id}_stats_history.csv')
     if not Path(stats_history_file).exists():
-        return 1
+        return 1 # test does not exist
     lin_path = join(test_dir, 'lin.png')
     reg_path = join(test_dir, 'reg.png')
 
@@ -140,8 +140,8 @@ def create_plots(id): # creates plots if plots do no exist, returns True if plot
                 plt.savefig(reg_path,dpi=300)
                 plt.close()
         else:
-            return 2
-    return 0
+            return 2 # not enough data
+    return 0 # success
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
@@ -151,7 +151,7 @@ def handle(req):
         if command is None:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
         
-        if command == 1: # deploy -> sync
+        if command == 1: # deploy -> async
             users = data.get("users") or None
             spawn_rate = data.get("spawn_rate") or None
             host = data.get("host") or None
@@ -194,12 +194,12 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             test_dir = join(tests_dir, id)
 
-            if type == "create":
-                status_code = create_plots(id)
+            if type == 1: # create
+                status_code = create_plots(id) # 0: success, 1 test does not exist, 2 not enough data
                 return jsonify(success=True,exit_code=0,status_code=status_code), headers 
-            if type == "lin":
+            if type == 2: # linear
                 return send_from_directory(test_dir, f'lin.png'), headers
-            if type == "reg":
+            if type == 3: # regression 
                 return send_from_directory(test_dir, f'reg.png'), headers
             else:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 

@@ -1,5 +1,4 @@
-FUNCTIONCALL = '';
-DIRECT = false;
+FUNCTIONCALL = '/proxy';
 
 function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid, startedAt) {
     var test = document.createElement('div');
@@ -63,8 +62,8 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
         <button type="button" class="btn btn-danger delete-test">Delete</button>
     </div>
     <div class="img-container">
-    <img class="lin" src="">
-    <img class="reg" src="">
+    <img class="lin hidden" src="">
+    <img class="reg hidden" src="">
     </div>
     `;
 
@@ -82,20 +81,26 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     const codeLink = $(test).find('.code');
     const results = $(test).find('.card-body > .results');
     const footer = $(test).find('.card-footer');
+    const imgContainer = $(test).find('.img-container');
+    const lin = $(test).find('.lin');
+    const reg = $(test).find('.reg');
     var intv;
     var eventSource;
     var intvSet = false;
 
     if (status == 0) { // not deployed
-        if (valid === false) {
-            notValid.removeClass('hidden');
-            idCol.addClass('red');
-        } else {
-            check.removeClass('hidden');
-        }
         stopBtn.prop("disabled", true);
         downloadBtn.prop("disabled", false);
         resultsBtn.prop("disabled", false);
+        if (valid === false) {
+            notValid.removeClass('hidden');
+            idCol.addClass('red');
+            downloadBtn.prop("disabled", true);
+            resultsBtn.prop("disabled", true);
+        } else {
+            check.removeClass('hidden');
+        }
+
     }
 
     if (status == 1) { // running 
@@ -115,7 +120,7 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     }
 
     stopBtn.on('click', function () {
-        function callBack(data) {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3, id: id }) }).then(data => data.json()).then(data => {
             if (data.success) {
                 idCol.removeClass('green').removeClass('red');
                 clearInterval(intv);
@@ -128,107 +133,61 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             } else {
                 showInfo('There was an error stopping the test');
             }
-        }
-        if (DIRECT) {
-            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3, id: id }) }).then(data => data.json()).then(data => {
-                callBack(data);
-            });
-        }
-        else {
-            fetch('/stop/' + id, { method: 'POST' }).then(data => data.json()).then(data => {
-                callBack(data);
-            });
-        }
+        });
     });
 
     downloadBtn.on('click', function () {
-
-        var xhr = new XMLHttpRequest();
-        if (DIRECT) {
-            xhr.open("POST", FUNCTIONCALL);
-        }
-        else {
-            xhr.open("POST", '/download/' + id);
-        }
-        xhr.responseType = "arraybuffer";
-        xhr.onload = function () {
-            if (this.status === 200) {
-                var blob = new Blob([xhr.response], { type: "application/zip" });
-                var objectUrl = URL.createObjectURL(blob);
-                window.location.href = objectUrl;
-            }
-        };
-        xhr.send(JSON.stringify({ command: 5, id: id }));
-    });
-
-    resultsBtn.on('click', function () {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: "create" }) }).then(data => data.json()).then(data => {
-            if (data.success) {
-                if (data.status_code == 0) {
-                    var xhr = new XMLHttpRequest();
-                    if (DIRECT) {
-                        xhr.open("POST", FUNCTIONCALL);
-                    }
-                    else {
-                        xhr.open("POST", '/results/' + id);
-                    }
-                    xhr.responseType = "arraybuffer";
-                    xhr.onload = function () {
-                        var arrayBufferView = new Uint8Array(this.response);
-                        var blob = new Blob([arrayBufferView], { type: "image/png" });
-                        var urlCreator = window.URL || window.webkitURL;
-                        var imageUrl = urlCreator.createObjectURL(blob);
-                        $(test).find('.reg').attr({ "src": imageUrl });
-                    };
-                    xhr.send(JSON.stringify({ command: 2, id: id, type: "reg" }));
-
-                    var xhr_ = new XMLHttpRequest();
-                    if (DIRECT) {
-                        xhr_.open("POST", FUNCTIONCALL);
-                    }
-                    else {
-                        xhr_.open("POST", '/results/' + id);
-                    }
-                    xhr_.responseType = "arraybuffer";
-                    xhr_.onload = function () {
-                        var arrayBufferView = new Uint8Array(this.response);
-                        var blob = new Blob([arrayBufferView], { type: "image/png" });
-                        var urlCreator = window.URL || window.webkitURL;
-                        var imageUrl = urlCreator.createObjectURL(blob);
-                        $(test).find('.lin').attr({ "src": imageUrl });
-                    };
-                    xhr_.send(JSON.stringify({ command: 2, id: id, type: "lin" }));
-                }else if (data.status_code == 2){
-                    showInfo("Not enough data to analyse")
-                }
-            }
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, id: id }) }).then(response => response.blob()).then(blob => {
+            var objectUrl = URL.createObjectURL(blob);
+            window.location.href = objectUrl;
         });
 
     });
 
-    deleteBtn.on('click', function () {
-        function callBack(data) {
-            if (data.success && data.deleted.includes(id)) {
-                $('#dismiss-confirmation-modal-btn').click();
-                $(test).remove();
-                if (eventSource != null) eventSource.close();
-            } else {
-                showInfo('There was an error deleting the test');
+    resultsBtn.on('click', function () {
+        if(lin.hasClass('hidden') && reg.hasClass('hidden')){
+            if (lin.attr('src') == '' && reg.attr('src') == '') {
+                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 1 }) }).then(data => data.json()).then(data => {
+                    if (data.success) {
+                        if (data.status_code == 0) {
+                            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 2 }) }).then(response => response.blob()).then(blob => {
+                                var urlCreator = window.URL || window.webkitURL;
+                                const imageUrl = urlCreator.createObjectURL(blob);
+                                lin.attr({ "src": imageUrl });
+                                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 3 }) }).then(response => response.blob()).then(blob => {
+                                    var urlCreator = window.URL || window.webkitURL;
+                                    const imageUrl = urlCreator.createObjectURL(blob);
+                                    reg.attr({ "src": imageUrl });
+                                    resultsBtn.text('Hide results');
+                                });
+                            });
+                        } else if (data.status_code == 2) {
+                            showInfo("Not enough data to analyse");
+                            resultsBtn.prop("disabled", true);
+                        }
+                    }
+                });
             }
-
+            lin.removeClass('hidden');
+            reg.removeClass('hidden');
+        }else{
+            lin.addClass('hidden');
+            reg.addClass('hidden');
+            resultsBtn.text('Show results');
         }
+    });
+
+    deleteBtn.on('click', function () {
         setConfirmationModal(id + ' Are you sure you want to delete this test?', function () {
-            if (DIRECT) {
-                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: [id] }) }).then(data => data.json()).then(data => {
-                    callBack(data);
-                }).catch();
-            } else {
-                let formData = new FormData();
-                formData.append('ids', '["' + id + '"]');
-                fetch('/delete', { method: 'POST', body: formData }).then(data => {
-                    callBack(data);
-                }).catch();
-            }
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: [id] }) }).then(data => data.json()).then(data => {
+                if (data.success && data.deleted.includes(id)) {
+                    $('#dismiss-confirmation-modal-btn').click();
+                    $(test).remove();
+                    if (eventSource != null) eventSource.close();
+                } else {
+                    showInfo('There was an error deleting the test');
+                }
+            }).catch();
         });
         return false;
     });
@@ -368,7 +327,8 @@ function IsJsonString(str) {
     return true;
 }
 
+
+
 document.addEventListener("DOMContentLoaded", function () {
-    FUNCTIONCALL = document.getElementById('function-call').innerText;
-    DIRECT = (document.getElementById('direct').innerText === 'true');
+    if (document.getElementById('direct').innerText === 'true') FUNCTIONCALL = document.getElementById('function-call').innerText;
 });

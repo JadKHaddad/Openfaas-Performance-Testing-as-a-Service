@@ -16,15 +16,15 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('index.html', async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/explore')
 def explore():
-    return render_template('explore.html', function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('explore.html', async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/test/<id>')
 def test(id):
-    return render_template('test.html', id=id, function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('test.html', id=id, async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
 
 @app.route('/stream/<id>')
 def stream(id):
@@ -36,59 +36,15 @@ def stream(id):
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
 
-@app.route('/tests')
-def tests():
-    data = {'command':6}
-    response = requests.post(FUNCTIONURL, data=json.dumps(data))
-    return response.text
-
-@app.route('/test-info/<id>', methods=['POST'])
-def test_info(id):
-    data = {'command':8,'id': id}
-    response = requests.post(FUNCTIONURL, data=json.dumps(data))
-    return response.text
-
-@app.route('/deploy', methods=['POST'])
-def deploy():
-    users = request.form.get('users') or None
-    spawn_rate = request.form.get('spawn_rate') or None
-    host = request.form.get('host') or None
-    time = request.form.get('time') or None
-    code = request.form.get('code') or None
-    requirements = request.form.get('requirements') or None
-    if time is not None:
-        time = int(time)
-    if users is not None:
-        users = int(users)
-    if spawn_rate is not None:
-        spawn_rate = int(spawn_rate)
-    data = {'command':1,'users': users, 'spawn_rate': spawn_rate, 'host': host, 'time':time, 'code':code, 'requirements':requirements}
-    response = requests.post(FUNCTIONURL, data=json.dumps(data))
-    return response.text
-
-@app.route('/stop/<id>', methods=['POST'])
-def stop(id):
-    data = {'command':3,'id': id}
-    response = requests.post(FUNCTIONURL, data=json.dumps(data))
-    return response.text
-
-@app.route('/delete', methods=['POST'])
-def delete():
-    ids = request.form.get('ids')
-    data = '{"command":7,"ids":'+ids+'}'
-    response = requests.post(FUNCTIONURL, data)
-    return response.text
-
-@app.route('/download/<id>', methods=['POST'])
-def download(id):
-    data = {'command':5,'id': id}
-    res = requests.post(FUNCTIONURL, data=json.dumps(data))
+@app.route('/proxy', methods=['POST'])
+def proxy():
+    res = requests.post(FUNCTIONURL, data=request.data.decode("utf-8"))
     return Response(
         response=res.content,
         status=res.status_code,
         headers=dict(res.headers)
     )
-    
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help=False)

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const id = document.getElementById('test-id').innerText;
-    function callBack(res) {
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, id: id }) }).then(res => res.json()).then(res => {
         if (res.success) {
             const data = res.data;
             var users = null;
@@ -18,14 +18,5 @@ document.addEventListener("DOMContentLoaded", function () {
             const test = CreateTest(data.id, users, spawn_rate, host, time, data.status, data.code, data.data, data.valid, data.started_at);
             document.getElementById('content').appendChild(test);
         }
-    }
-    if (DIRECT) {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, id: id }) }).then(res => res.json()).then(res => {
-            callBack(res);
-        }).catch();
-    } else {
-        fetch('/test-info/' + id, { method: 'POST' }).then(res => res.json()).then(res => {
-            callBack(res);
-        }).catch();
-    }
+    }).catch();
 });

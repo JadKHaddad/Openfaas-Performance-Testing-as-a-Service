@@ -57,42 +57,22 @@ function createTestsList(tests) {
 var selectedTests = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-    function callBack(data) {
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => {
         if (data.success) {
             const tests = data.tests;
             $('#content').append(createTestsList(tests));
         }
-    }
-    if (DIRECT) {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => {
-            callBack(data);
-        }).catch();
-    } else {
-        fetch('/tests').then(data => data.json()).then(data => {
-            callBack(data);
-        }).catch();
-    }
+    }).catch();
 
     const deleteBtn = $('#delete');
     deleteBtn.prop("disabled", true);
     //handle delete button
     deleteBtn.on("click", function () {
-        function callBack() {
-            $('#dismiss-confirmation-modal-btn').click();
-            location.reload();
-        }
         setConfirmationModal('Are you sure you want to delete these test?', function () {
-            if (DIRECT) {
-                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: selectedTests }) }).then(data => data.json()).then(data => {
-                    callBack();
-                }).catch();
-            } else {
-                let formData = new FormData();
-                formData.append('ids', JSON.stringify(selectedTests));
-                fetch('/delete', { method: 'POST', body: formData }).then(data => {
-                    callBack();
-                }).catch();
-            }
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: selectedTests }) }).then(data => data.json()).then(data => {
+                $('#dismiss-confirmation-modal-btn').click();
+                location.reload();
+            }).catch();
         });
         return false;
     });
