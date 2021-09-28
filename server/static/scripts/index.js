@@ -79,13 +79,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 const started_at = data.started_at;
                 const test = CreateTest(id, users, spawnRate, host, time, 1, code, null, null, started_at);
                 document.getElementById('tests').prepend(test);
+                dismissBtn.click();
             }
         }).catch();
-
-        dismissBtn.click();
-        if (requirements != '') {
-            showInfo("Test will start after installing requirments");
-        }
         return false;
     });
 
