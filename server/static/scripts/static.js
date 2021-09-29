@@ -81,7 +81,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
     const codeLink = $(test).find('.code');
     const results = $(test).find('.card-body > .results');
     const footer = $(test).find('.card-footer');
-    const imgContainer = $(test).find('.img-container');
     const lin = $(test).find('.lin');
     const reg = $(test).find('.reg');
     var intv;
@@ -262,7 +261,6 @@ function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid
             }
         }
     }
-
     return test;
 }
 
@@ -326,8 +324,6 @@ function IsJsonString(str) {
     }
     return true;
 }
-
-
 
 document.addEventListener("DOMContentLoaded", function () {
     if (document.getElementById('direct').innerText === 'true') FUNCTIONCALL = document.getElementById('function-call').innerText;

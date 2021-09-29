@@ -14,7 +14,6 @@ import signal
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
-not_valid_tests = {}
 
 tests_dir = join(dirname(realpath(__file__)), 'tests')
 if not Path(tests_dir).exists():
@@ -67,12 +66,12 @@ def get_test_info(id):
             code = file.read()
     else:
         code = None
-    if id in not_valid_tests:
+    if not Path(csv_file_path).exists(): # test is not valid
         valid = False
     if id in tests:
         data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
     else:
-        data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is no longer deployed
+        data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is not running
     return data 
 
 def clean_up_cache(id):
@@ -204,24 +203,21 @@ def handle(req):
             id = data.get("id") or None
             if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers
-            if tests[id].process.poll() is not None: # process finished
-                test_dir = join(tests_dir, id)
-                csv_file_path = join(test_dir, f'{id}_stats.csv')
-                if not Path(csv_file_path).exists(): # test is not valid
-                    not_valid_tests[id] = None
-                    del tests[id]
-                    return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
-                del tests[id] 
-            test_dir = join(tests_dir, id)
-            csv_file_path = join(test_dir, f'{id}_stats.csv')
-            if not Path(csv_file_path).exists():
-                return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
-            pd_data = pd.read_csv(csv_file_path) 
-            j = pd_data.to_json(orient='records')
             # check if test is runnig
             if id in tests:
+                test_dir = join(tests_dir, id)
+                csv_file_path = join(test_dir, f'{id}_stats.csv')
+                if tests[id].process.poll() is not None: # process finished
+                    if not Path(csv_file_path).exists(): # test is not valid
+                        del tests[id]
+                        return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
+                    del tests[id]
+                if not Path(csv_file_path).exists():
+                    return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
+                pd_data = pd.read_csv(csv_file_path) 
+                j = pd_data.to_json(orient='records') 
                 return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-            return jsonify(success=True,exit_code=0,status=0,data=j,message="test is no longer deployed"), headers # status 0 -> test not running
+            return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
             
         if command == 5: # download -> sync
             id = data.get("id") or None
@@ -256,8 +252,6 @@ def handle(req):
                     if id in tests: # stop the test if running 
                         tests[id].stop()
                         del tests[id]
-                    if id in not_valid_tests:
-                        del not_valid_tests[id]
                     deleted.append(id)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
@@ -279,8 +273,6 @@ def handle(req):
                 if tests[id].process is not None:
                     tests[id].stop()
                 del tests[id]
-            for id in  not_valid_tests: # clear not valid tests
-                del not_valid_tests[id]
             list_dir = os.listdir(tests_dir) # clean up tests folder
             for filename in list_dir:
                 file_path = os.path.join(tests_dir, filename)

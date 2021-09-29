@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dismissBtn = $('#dismiss-btn');
     var code = '';
     var requirements = '';
+
     document.getElementById('file-input').onchange = function (evt) {
         if (!window.FileReader) return; // Browser is not compatible
         var reader = new FileReader();
@@ -20,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
             code = '';
         }
     };
+
     document.getElementById('requirements-input').onchange = function (evt) {
         if (!window.FileReader) return; // Browser is not compatible
         var reader = new FileReader();
@@ -85,8 +87,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return false;
     });
 
-
-
     fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => { // direct openfaas
         if (data.success) {
             const tests = data.tests;
@@ -110,5 +110,5 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }).catch();
-
+    
 });
