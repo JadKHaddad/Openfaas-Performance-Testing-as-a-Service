@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return false;
     });
 
-    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => { // direct openfaas
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => {
         if (data.success) {
             const tests = data.tests;
             if (tests != null) {

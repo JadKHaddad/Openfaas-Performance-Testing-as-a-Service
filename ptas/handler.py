@@ -20,18 +20,15 @@ if not Path(tests_dir).exists():
     os.mkdir(tests_dir)
 
 class Test():
-    def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int):
-        time_command = ''
-        if time is not None:
-            time_command = f'-t {str(time)}s'
-        host_command = ''
-        if host is not None:
-            host_command = f'--host {host}'
+    def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
+        time_command = f'-t {str(time)}s' if time is not None else ''
+        host_command = f'--host {host}' if host is not None else ''
         test_dir = join(tests_dir, id)
         file_path = join(test_dir, f'{id}.py')
-        csv_name = join(test_dir, id)
+        results_name = join(test_dir, id)
         requirements_path = join(test_dir, f'requirements.txt')
-        command = f'pip install -r {requirements_path} && locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {csv_name}'
+        requirements_command = f'pip install -r {requirements_path} &&' if req else ''
+        command = f'{requirements_command} locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_name} --html {results_name}.html'
         self.started_at = t.time()
         self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
 
@@ -163,7 +160,7 @@ def handle(req):
             with open(info_file_path, "w", encoding="UTF-8") as file:
                 file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host, "time": time, "date":t.time()}))
             # configure test
-            test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time)
+            test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time, req=(requirements is not None))
             # save test in tests
             tests[id] = test
             return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
