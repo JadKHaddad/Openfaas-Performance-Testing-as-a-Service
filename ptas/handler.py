@@ -21,22 +21,17 @@ if not Path(tests_dir).exists():
 
 class Test():
     def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int):
-        self.id = id
-        self.users = users
-        self.spawn_rate = spawn_rate
-        self.host = host
-        self.time = time
         time_command = ''
-        if self.time is not None:
-            time_command = f'-t {str(self.time)}s'
+        if time is not None:
+            time_command = f'-t {str(time)}s'
         host_command = ''
-        if self.host is not None:
-            host_command = f'--host {self.host}'
-        test_dir = join(tests_dir, self.id)
-        file_path = join(test_dir, f'{self.id}.py')
-        csv_name = join(test_dir, self.id)
+        if host is not None:
+            host_command = f'--host {host}'
+        test_dir = join(tests_dir, id)
+        file_path = join(test_dir, f'{id}.py')
+        csv_name = join(test_dir, id)
         requirements_path = join(test_dir, f'requirements.txt')
-        command = f'pip install -r {requirements_path} && locust -f {file_path} {host_command} --users {self.users} --spawn-rate {self.spawn_rate} --headless {time_command} --csv {csv_name}'
+        command = f'pip install -r {requirements_path} && locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {csv_name}'
         self.started_at = t.time()
         self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
 
@@ -85,7 +80,7 @@ def zip_files(id): # creates zip file if zip file does not exist, returns True i
     test_dir = join(tests_dir, id)
     if not Path(test_dir).exists():
         return False
-    if not Path(join(tests_dir, f'{id}.zip')).exists(): # create zip file if it does not exist
+    if not Path(join(tests_dir, f'{id}.zip')).exists(): # creates zip file if it does not exist
         shutil.make_archive(test_dir, 'zip', test_dir)
     return True
 
@@ -261,17 +256,10 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
-        
-        if command == 9: # get plots -> sync
-            id = data.get("id") or None
-            if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            return jsonify(success=True,exit_code=0,message="plots"), headers 
 
         if command == 10: # clean up -> sync
             for id in tests: # clear deployed tests
-                if tests[id].process is not None:
-                    tests[id].stop()
+                tests[id].stop()
                 del tests[id]
             list_dir = os.listdir(tests_dir) # clean up tests folder
             for filename in list_dir:
