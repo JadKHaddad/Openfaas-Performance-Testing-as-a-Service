@@ -1,12 +1,12 @@
 version: 1.0
 provider:
   name: openfaas
-  gateway: <your gateway>
+  gateway: http://127.0.0.1:8080
 functions:
   ptas:
     lang: python3-flask-debian
     handler: ./ptas
-    image: <your prefix>/ptas:latest
+    image: localhost:5000/ptas:latest
     environment:
       write_timeout: "10000s"
       read_timeout: "10000s"
