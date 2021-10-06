@@ -16,15 +16,12 @@ import traceback
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
 
-tests_dir = join(dirname(realpath(__file__)), 'tests')
-if not Path(tests_dir).exists():
-    os.mkdir(tests_dir)
 
 class Test():
     def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
         time_command = f'-t {str(time)}s' if time is not None else ''
         host_command = f'--host {host}' if host is not None else ''
-        test_dir = join(tests_dir, id)
+        test_dir = id
         file_path = join(test_dir, f'{id}.py')
         results_name = join(test_dir, id)
         requirements_path = join(test_dir, f'requirements.txt')
@@ -38,7 +35,7 @@ class Test():
             
 # static functions
 def get_test_info(id):
-    test_dir = join(tests_dir, id)
+    test_dir = id
     csv_file_path = join(test_dir, f'{id}_stats.csv')
     info_file_path = join(test_dir, f'{id}_info.txt')
     code_file_path = join(test_dir, f'{id}.py')
@@ -75,20 +72,20 @@ def clean_up_cache(id):
 
 def zip_files(id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
     clean_up_cache(id)
-    test_dir = join(tests_dir, id)
+    test_dir = id
     if not Path(test_dir).exists():
         return False
-    if not Path(join(tests_dir, f'{id}.zip')).exists(): # creates zip file if it does not exist
+    if not Path(f'{id}.zip').exists(): # creates zip file if it does not exist
         shutil.make_archive(test_dir, 'zip', test_dir)
     return True
 
 def delete_zip_file(id):
-    zip_file = join(tests_dir, f'{id}.zip')
+    zip_file = f'{id}.zip'
     if Path(zip_file).exists():
         os.remove(zip_file)
 
 def create_plots(id): # creates plots if plots do no exist, returns True if plots are created or are already there
-    test_dir = join(tests_dir, id)
+    test_dir = id
     stats_history_file = join(test_dir, f'{id}_stats_history.csv')
     if not Path(stats_history_file).exists():
         return 1 # test does not exist
@@ -146,7 +143,7 @@ def handle(req):
             # create test id
             id = str(t.time()).replace('.', '_')
             # save test in tests dir        
-            test_dir = join(tests_dir, id)
+            test_dir = id
             if not Path(test_dir).exists():
                 os.mkdir(test_dir)
             file_path = join(test_dir, f'{id}.py')
@@ -171,7 +168,7 @@ def handle(req):
             type = data.get("type") or None
             if id is None:
                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            test_dir = join(tests_dir, id)
+            test_dir = id
             if type == 1: # create
                 status_code = create_plots(id) # 0: success, 1 test does not exist, 2 not enough data
                 return jsonify(success=True,exit_code=0,status_code=status_code), headers 
@@ -198,7 +195,7 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request"), headers
             # check if test is runnig
             if id in tests:
-                test_dir = join(tests_dir, id)
+                test_dir = id
                 csv_file_path = join(test_dir, f'{id}_stats.csv')
                 if tests[id].process.poll() is not None: # process finished
                     if not Path(csv_file_path).exists(): # test is not valid
@@ -220,13 +217,13 @@ def handle(req):
             create_plots(id)
             # zip files
             if zip_files(id):
-                return send_from_directory(tests_dir, f'{id}.zip'), headers
+                return send_from_directory("/", f'{id}.zip'), headers
             else:
                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
 
         if command == 6: # get tests -> sync
             tests_folders = []
-            for f in os.scandir(tests_dir):
+            for f in os.scandir("/"):
                 if f.is_dir():
                     id = os.path.basename(f.path)
                     tests_folders.append(get_test_info(id))
@@ -238,7 +235,7 @@ def handle(req):
                return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
             for id in ids:
-                test_dir = join(tests_dir, id)
+                test_dir = id
                 if Path(test_dir).exists():
                     shutil.rmtree(test_dir) # remove test_dir
                     delete_zip_file(id) # delete zip file
@@ -259,9 +256,9 @@ def handle(req):
             for id in tests: # clear deployed tests
                 tests[id].stop()
                 del tests[id]
-            list_dir = os.listdir(tests_dir) # clean up tests folder
+            list_dir = os.listdir("/") # clean up tests folder
             for filename in list_dir:
-                file_path = os.path.join(tests_dir, filename)
+                file_path = filename
                 if os.path.isfile(file_path) or os.path.islink(file_path):
                     os.unlink(file_path)
                 elif os.path.isdir(file_path):
