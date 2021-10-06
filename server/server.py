@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+import sys
 from flask import Flask, render_template, request, Response
 from waitress import serve
 import requests
@@ -46,24 +49,30 @@ def proxy():
     )
 
 if __name__ == '__main__':
+    if not len(sys.argv) > 1:
+        host = '0.0.0.0'
+        port = 80
+        url = 'http://172.17.129.200:8080/'
+        function = 'ptas'
+        direct = 'true'
+    else:
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
+        parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
+        requiredNamed = parser.add_argument_group('required arguments')
+        requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
+        requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
+        requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='',required=True)
+        requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
+        requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
 
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
-    parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
-    requiredNamed = parser.add_argument_group('required arguments')
-    requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
-    requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
-    requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='',required=True)
-    requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
-    requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
+        args = parser.parse_args()
 
-    args = parser.parse_args()
-
-    host = args.host
-    port = args.port
-    url = args.url
-    function = args.function
-    direct = args.direct
+        host = args.host
+        port = args.port
+        url = args.url
+        function = args.function
+        direct = args.direct
 
     OPENFAASULR = url
     FUNCTION = function
