@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import signal
+import traceback
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
@@ -270,4 +271,4 @@ def handle(req):
             return jsonify(success=False,exit_code=1,message="bad request"), headers
 
     except Exception as e:
-        return jsonify(success=False,exit_code=-1,message=str(e)), headers
+        return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
