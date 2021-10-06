@@ -65,7 +65,7 @@ def get_test_info(id):
     return data 
 
 def clean_up_cache(id):
-    test_dir = join(tests_dir, id)
+    test_dir = id
     cache = join(test_dir, f'__pycache__')
     if Path(cache).exists():
         shutil.rmtree(cache)
