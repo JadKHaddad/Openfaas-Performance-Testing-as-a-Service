@@ -4,6 +4,6 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -s 0.0.0.0 -p 8070 -u http://127.0.0.1:8080/ -f ptas -d true
+ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -s 0.0.0.0 -p 80 -u http://127.0.0.1:8080/ -f ptas -d true
 [Install]
 WantedBy=multi-user.target
