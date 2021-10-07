@@ -4,8 +4,8 @@
 ## Installation
 
 Install Mulltipass from https://multipass.run/<br />
-Download **cloud.config** file to your environment<br />
-Replace the public key in **cloud.config** with your own public key<br /><br />
+Download **cloud-config.txt** file to your environment<br />
+Replace the public key in **cloud-config.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
 multipass launch --cloud-init cloud-config.txt  --name performance --cpus 4 --mem 4G --disk 20G
