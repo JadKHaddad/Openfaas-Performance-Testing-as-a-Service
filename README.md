@@ -12,14 +12,14 @@ curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Tes
 Replace the public key in **cloud-config.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
-multipass launch --cloud-init cloud-config.txt --name faasd --cpus 6 --mem 6G --disk 20G
+multipass launch --cloud-init cloud-config.txt --name performance --cpus 6 --mem 6G --disk 20G
 ```
 Get the VM's IP and connect with **ssh**:
 ```sh
- multipass info faasd
+ multipass info performance
 ```
 ```sh
-Name:           faasd
+Name:           performance
 State:          Running
 IPv4:           172.17.136.33
                 172.18.0.1
@@ -41,7 +41,8 @@ ssh ubuntu@$IP
 ```
 Once you are logged in, deploy the **OpenFaaS** function:
 ```sh
-sudo faas-cli up -f /etc/Openfaas-Performance-Testing-as-a-Service/ptas.yml
+cd /etc/Openfaas-Performance-Testing-as-a-Service/
+sudo faas-cli up -f ptas.yml
 ```
 ## Usage
 
@@ -66,7 +67,7 @@ sudo cat /var/lib/faasd/secrets/basic-auth-password
 ## Notes
 The VM's **IP** may change with time. View the VM's **IP** if needed:
 ```sh
- multipass info faasd
+ multipass info performance
 ```
 
 
