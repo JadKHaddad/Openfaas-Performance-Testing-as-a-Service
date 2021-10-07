@@ -1,4 +1,4 @@
-# multipass launch --cloud-init cloud-config.txt  --name faasd --cpus 4 --mem 4G --disk 20G --verbose
+# multipass launch --cloud-init cloud-config.txt  --name performance --cpus 4 --mem 4G --disk 20G
 #cloud-config
 ssh_authorized_keys:
 ## Note: Replace with your own public key
@@ -42,7 +42,6 @@ runcmd:
 - sudo systemctl enable performance-testing.service
 - sudo systemctl start performance-testing.service
 - sudo cat /var/lib/faasd/secrets/basic-auth-password | faas-cli login -s
-#- sudo faas-cli up -f /etc/Openfaas-Performance-Testing-as-a-Service/ptas.yml
 
 
 
