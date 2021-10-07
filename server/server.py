@@ -71,7 +71,7 @@ if __name__ == '__main__':
         requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
         requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
         requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
-        requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your linux machine')
+        requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
         requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
         requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
 
@@ -101,14 +101,16 @@ if __name__ == '__main__':
             subprocess = subprocess.Popen("echo $(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)d", shell=True, stdout=subprocess.PIPE)
             subprocess_return = subprocess.stdout.read()
             OPENFAASULR = ('http://'+subprocess_return.decode('UTF-8')+':8080/').replace('d','').replace('\n','')
-            if DIRECT == 'false':
-                PROXYOPENFAASULR = "http://127.0.0.1:8080/"
-            else:
-              PROXYOPENFAASULR = OPENFAASULR
-
         else:
-            print('if you are not using Linux please provide your external ip address manually')
-            exit()
+            if url is None:
+                print('if you are not using Linux please provide your external ip address manually')
+                exit()
+        if DIRECT == 'false':
+            PROXYOPENFAASULR = "http://127.0.0.1:8080/"
+        else:
+            PROXYOPENFAASULR = OPENFAASULR
+
+
 
     FUNCTION = function
     SYNC = urljoin(OPENFAASULR, 'function/')
@@ -121,13 +123,13 @@ if __name__ == '__main__':
     PROXYFUNCTIONURL = urljoin(PROXYSYNC, FUNCTION)
     PROXYASYNCFUNCTIONURL = urljoin(PROXYASYNC, FUNCTION)
     
-    print(f'openfaas url: {OPENFAASULR}')
+    print(f'\nopenfaas url: {OPENFAASULR}')
     print(f'sync function call: {FUNCTIONURL}')
     print(f'async function call: {ASYNCFUNCTIONURL}')
-    if direct == True:
-        print(f'proxy openfaas url: {PROXYOPENFAASULR}')
+    if direct == 'false':
+        print(f'\nproxy openfaas url: {PROXYOPENFAASULR}')
         print(f'proxy sync function call: {PROXYFUNCTIONURL}')
         print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
-    print(f'direct: {direct}')
+    print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
     serve(app, host=host, port=port,threads=8)
