@@ -2,4 +2,3 @@ flask
 waitress
 requests
 gevent
-subprocess
