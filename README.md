@@ -3,8 +3,12 @@
 
 ## Installation
 
-Install Mulltipass from https://multipass.run/<br />
-Download **cloud-config.txt** file to your environment<br />
+Get [multipass.run](https://multipass.run)<br /><br />
+Get **cloud-config.txt**<br />
+
+```sh
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config.txt
+```
 Replace the public key in **cloud-config.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
