@@ -87,11 +87,6 @@ if __name__ == '__main__':
             exit()
         
     OPENFAASULR = url
-    FUNCTION = function
-    SYNC = urljoin(OPENFAASULR, 'function/')
-    ASYNC = urljoin(OPENFAASULR, 'async-function/')
-    FUNCTIONURL = urljoin(SYNC, FUNCTION)
-    ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
     DIRECT = direct
 
     if extern == True:
@@ -104,6 +99,12 @@ if __name__ == '__main__':
         else:
             print('if you are not using Linux please provide your external ip address manually')
             exit()
+
+    FUNCTION = function
+    SYNC = urljoin(OPENFAASULR, 'function/')
+    ASYNC = urljoin(OPENFAASULR, 'async-function/')
+    FUNCTIONURL = urljoin(SYNC, FUNCTION)
+    ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
     
     print(f'openfaas url: {OPENFAASULR}')
     print(f'sync function call: {FUNCTIONURL}')
