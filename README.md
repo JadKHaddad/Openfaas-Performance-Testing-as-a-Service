@@ -59,5 +59,11 @@ or directly in the VM:
 sudo cat /var/lib/faasd/secrets/basic-auth-password
 ```
 
+## Notes
+The VM's **IP** may change with time. View the VM's **IP** if needed:
+```sh
+ multipass info performance
+```
+
 
 
