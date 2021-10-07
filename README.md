@@ -1,5 +1,5 @@
 # Performance Testing
-
+![alt text](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/logo.png?raw=true)
 
 ## Installation
 
