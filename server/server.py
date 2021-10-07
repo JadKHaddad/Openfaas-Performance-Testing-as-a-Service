@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import platform
+import subprocess
 import sys
 from flask import Flask, render_template, request, Response
 from waitress import serve
@@ -62,7 +64,8 @@ if __name__ == '__main__':
         requiredNamed = parser.add_argument_group('required arguments')
         requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
         requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
-        requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='',required=True)
+        requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
+        requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your linux machine')
         requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
         requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
 
@@ -71,9 +74,18 @@ if __name__ == '__main__':
         host = args.host
         port = args.port
         url = args.url
+        extern = args.extern
         function = args.function
         direct = args.direct
 
+        if direct != 'true' != 'false':
+            print('-d , --direct can only be true or false')
+            exit()
+
+        if url is None and extern == False:
+            print('please provide an openfaasurl using -u or -e')
+            exit()
+        
     OPENFAASULR = url
     FUNCTION = function
     SYNC = urljoin(OPENFAASULR, 'function/')
@@ -82,6 +94,17 @@ if __name__ == '__main__':
     ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
     DIRECT = direct
 
+    if extern == True:
+        if platform.system() == 'Linux':
+            subprocess = subprocess.Popen("echo $(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)d", shell=True, stdout=subprocess.PIPE)
+            subprocess_return = subprocess.stdout.read()
+            OPENFAASULR = ('http://'+subprocess_return.decode('UTF-8')+':8080/').replace('d','').replace('\n','')
+            if DIRECT == 'false':
+                OPENFAASULR = "http://127.0.0.1:8080/"
+        else:
+            print('if you are not using Linux please provide your external ip address manually')
+            exit()
+    
     print(f'openfaas url: {OPENFAASULR}')
     print(f'sync function call: {FUNCTIONURL}')
     print(f'async function call: {ASYNCFUNCTIONURL}')
