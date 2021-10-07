@@ -35,7 +35,7 @@ Connect to the VM listed via **ssh**:
 ```sh
 ssh ubuntu@$IP
 ```
-Once you are loggen in, deploy the Openfaas function:
+Once you are logged in, deploy the Openfaas function:
 ```sh
 sudo faas-cli up -f /etc/Openfaas-Performance-Testing-as-a-Service/ptas.yml
 ```
