@@ -5,4 +5,5 @@ seq.vsdx
 ~$$seq.~vsdx
 *.junk
 *.sh
-private-cloud-config.txt
+cloud-config-private.txt
+cloud-config-default.txt
