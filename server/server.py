@@ -103,6 +103,8 @@ if __name__ == '__main__':
             OPENFAASULR = ('http://'+subprocess_return.decode('UTF-8')+':8080/').replace('d','').replace('\n','')
             if DIRECT == 'false':
                 PROXYOPENFAASULR = "http://127.0.0.1:8080/"
+            else:
+              PROXYOPENFAASULR = OPENFAASULR
 
         else:
             print('if you are not using Linux please provide your external ip address manually')
