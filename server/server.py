@@ -11,6 +11,11 @@ import gevent
 import argparse
 from urllib.parse import urljoin
 
+PROXYOPENFAASULR = None
+PROXYFUNCTION = None
+PROXYFUNCTIONURL = None
+PROXYASYNCFUNCTIONURL = None
+
 OPENFAASULR = None
 FUNCTION = None
 FUNCTIONURL = None
@@ -36,14 +41,14 @@ def stream(id):
     data = {'command':4,'id': id}
     def stats_stream():
         while True:
-            response = requests.post(FUNCTIONURL, data=json.dumps(data))
+            response = requests.post(PROXYFUNCTIONURL, data=json.dumps(data))
             yield f'data: {response.text}\n\n'
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
-    res = requests.post(FUNCTIONURL, data=request.data.decode("utf-8"))
+    res = requests.post(PROXYFUNCTIONURL, data=request.data.decode("utf-8"))
     return Response(
         response=res.content,
         status=res.status_code,
@@ -51,10 +56,11 @@ def proxy():
     )
 
 if __name__ == '__main__':
+    extern = False
     if not len(sys.argv) > 1:
         host = '0.0.0.0'
         port = 80
-        url = 'http://172.17.129.200:8080/'
+        url = 'http://127.0.0.1:8080/'
         function = 'ptas'
         direct = 'true'
     else:
@@ -78,7 +84,7 @@ if __name__ == '__main__':
         function = args.function
         direct = args.direct
 
-        if direct != 'true' != 'false':
+        if direct != 'true' and direct != 'false':
             print('-d , --direct can only be true or false')
             exit()
 
@@ -87,6 +93,7 @@ if __name__ == '__main__':
             exit()
         
     OPENFAASULR = url
+    PROXYOPENFAASULR = url
     DIRECT = direct
 
     if extern == True:
@@ -95,7 +102,8 @@ if __name__ == '__main__':
             subprocess_return = subprocess.stdout.read()
             OPENFAASULR = ('http://'+subprocess_return.decode('UTF-8')+':8080/').replace('d','').replace('\n','')
             if DIRECT == 'false':
-                OPENFAASULR = "http://127.0.0.1:8080/"
+                PROXYOPENFAASULR = "http://127.0.0.1:8080/"
+
         else:
             print('if you are not using Linux please provide your external ip address manually')
             exit()
@@ -105,10 +113,19 @@ if __name__ == '__main__':
     ASYNC = urljoin(OPENFAASULR, 'async-function/')
     FUNCTIONURL = urljoin(SYNC, FUNCTION)
     ASYNCFUNCTIONURL = urljoin(ASYNC, FUNCTION)
+
+    PROXYSYNC = urljoin(PROXYOPENFAASULR, 'function/')
+    PROXYASYNC = urljoin(PROXYOPENFAASULR, 'async-function/')
+    PROXYFUNCTIONURL = urljoin(PROXYSYNC, FUNCTION)
+    PROXYASYNCFUNCTIONURL = urljoin(PROXYASYNC, FUNCTION)
     
     print(f'openfaas url: {OPENFAASULR}')
     print(f'sync function call: {FUNCTIONURL}')
     print(f'async function call: {ASYNCFUNCTIONURL}')
+    if direct == True:
+        print(f'proxy openfaas url: {PROXYOPENFAASULR}')
+        print(f'proxy sync function call: {PROXYFUNCTIONURL}')
+        print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
     print(f'direct: {direct}')
     print(f'server running on {host}:{port}')
     serve(app, host=host, port=port,threads=8)
