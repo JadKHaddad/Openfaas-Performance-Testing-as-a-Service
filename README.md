@@ -8,7 +8,7 @@ Download **cloud-config.txt** file to your environment<br />
 Replace the public key in **cloud-config.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
-multipass launch --cloud-init cloud-config.txt  --name performance --cpus 4 --mem 4G --disk 20G
+multipass launch --cloud-init cloud-config.txt  --name performance --cpus 6 --mem 6G --disk 20G
 ```
 Get the VM's IP and connect with **ssh**:
 ```sh
