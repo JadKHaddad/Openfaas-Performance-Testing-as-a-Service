@@ -8,14 +8,14 @@ Download **cloud-config.txt** file to your environment<br />
 Replace the public key in **cloud-config.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
-multipass launch --cloud-init cloud-config.txt --name performance --cpus 6 --mem 6G --disk 20G
+multipass launch --cloud-init cloud-config.txt --name faasd --cpus 6 --mem 6G --disk 20G
 ```
 Get the VM's IP and connect with **ssh**:
 ```sh
- multipass info performance
+ multipass info faasd
 ```
 ```sh
-Name:           performance
+Name:           faasd
 State:          Running
 IPv4:           172.17.136.33
                 172.18.0.1
@@ -62,7 +62,7 @@ sudo cat /var/lib/faasd/secrets/basic-auth-password
 ## Notes
 The VM's **IP** may change with time. View the VM's **IP** if needed:
 ```sh
- multipass info performance
+ multipass info faasd
 ```
 
 
