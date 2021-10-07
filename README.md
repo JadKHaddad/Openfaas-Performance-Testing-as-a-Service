@@ -35,7 +35,7 @@ Set the variable **IP**:
 ```sh
 export IP="172.17.136.33"
 ```
-Connect to the VM listed via **ssh**:
+Connect to the VM listed with **ssh**:
 ```sh
 ssh ubuntu@$IP
 ```
