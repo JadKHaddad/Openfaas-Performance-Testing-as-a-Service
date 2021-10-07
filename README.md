@@ -39,5 +39,25 @@ Once you are logged in, deploy the **OpenFaaS** function:
 ```sh
 sudo faas-cli up -f /etc/Openfaas-Performance-Testing-as-a-Service/ptas.yml
 ```
-Paste the VM's **IP** in your browser
+## Usage
+
+Paste the VM's **IP** in your browser<br /><br />
+
+## OpenFaaS REST API
+
+Use port 8080 for the **OpenFaaS REST API**<br />
+```sh
+username: admin
+password: ie9ZhJhq5aqoYXb6uPrKF4DbvIoonfwuxpmu2JnicmDMMJO8tOsnc9jOG730DuW
+```
+Get your password:
+```sh
+ssh ubuntu@$IP "sudo cat /var/lib/faasd/secrets/basic-auth-password"
+```
+or directly in the VM:
+```sh
+sudo cat /var/lib/faasd/secrets/basic-auth-password
+```
+
+
 
