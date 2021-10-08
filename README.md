@@ -1,5 +1,5 @@
 # Performance Testing
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Installation
 
@@ -82,5 +82,13 @@ sudo systemctl restart performance-testing.service
 * check extension of locust file before upload.
 * enable in browser locust code editing.
 * enable tests redeployment after editing.
+
+## Contributors
+* Jad K. Haddad <jadkhaddad@gmail.com>
+
+## License & copyright
+
+© 2021 Jad K. Haddad
+Licensed under the [MIT License](LICENSE).
 
 
