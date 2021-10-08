@@ -69,6 +69,13 @@ The VM's **IP** may change with time. View the VM's **IP** if needed:
 ```sh
  multipass info performance
 ```
-
+Restart the VM to handle **IP** changes:
+```sh
+ multipass restart performance
+```
+or restart the service in the VM: ```recommended```
+```sh
+sudo systemctl restart performance-testing.service
+```
 
 
