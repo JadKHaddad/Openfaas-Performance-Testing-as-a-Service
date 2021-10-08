@@ -1,5 +1,8 @@
 # Performance Testing
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![OpenFaaS](https://img.shields.io/static/v1?label=OpenFaaS&message=Serverless&color=blue)](https://www.openfaas.com/)
+[![Multipass](https://img.shields.io/static/v1?label=Multipass&message=VM&color=orange)](https://multipass.run/)
+[![Locust](https://img.shields.io/static/v1?label=Locust&message=Load-Testing&color=green)](https://locust.io/)
 
 ## Installation
 
