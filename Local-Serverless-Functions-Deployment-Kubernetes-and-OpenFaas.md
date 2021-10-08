@@ -3,11 +3,11 @@ Please read the notes at the end of the article<br /><br />
 
 * Get [docker](https://www.docker.com/)<br /><br />
 Linux users:<br />
-Create the docker group if it does not exist:
+Create the **docker** group if it does not exist:
 ```sh
 sudo groupadd docker
 ```
-Add your user to the docker group:
+Add your user to the **docker** group:
 ```sh
 sudo usermod -aG docker $USER
 ```
@@ -15,7 +15,7 @@ Run the following command or Logout and login again and run (that doesn't work y
 ```sh
 newgrp docker
 ```
-Check if docker can be run without root:
+Check if **docker** can be run without root:
 ```sh
 docker run hello-world
 ```
@@ -43,7 +43,7 @@ arkade get kind
 arkade get kubectl
 arkade get faas-cli
 ```
-* Set up a local docker registry
+* Set up a local **docker** registry
 ```sh
 curl -sSLO https://kind.sigs.k8s.io/examples/kind-with-registry.sh
 ```
@@ -51,7 +51,7 @@ Linux users: make **kind-with-registry** executable:
 ```sh
 chmod -x kind-with-registry.sh
 ```
-* Add **localhost:5000** to docker's insecure registries<br /><br />
+* Add **localhost:5000** to **docker**'s insecure registries<br /><br />
 Windows users:<br />
 image<br /><br />
 Linux users: create **/etc/docker/daemon.json** file:
@@ -99,7 +99,7 @@ docker logs -f kind-registry
 ```sh
 arkade install openfaas
 ```
-*  Wait until openfaas services are running:
+*  Wait until **openfaas** services are running:
 ```sh
 kubectl get pods -n openfaas
 
