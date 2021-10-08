@@ -52,8 +52,8 @@ Linux users: make **kind-with-registry** executable:
 chmod -x kind-with-registry.sh
 ```
 * Add **localhost:5000** to **docker**'s insecure registries<br /><br />
-Windows users:<br />
-![docker-settings](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/docker-settings.png?raw=true)
+Windows users:<br /><br />
+![docker-settings](https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/blob/main/assets/docker-settings.png?raw=true)<br /><br />
 Linux users: create **/etc/docker/daemon.json** file:
 ```sh
 sudo touch /etc/docker/daemon.json
