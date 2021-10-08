@@ -182,5 +182,5 @@ curl -i -d "input" -H "X-Callback-Url: http://some-request-bin.com/path" http://
 ```
 
 ## Notes
-Increase the number of **cpus** if you are using a virtuall machine
-
+Increase the number of **cpus** if you are using a virtuall machine.<br />
+Windows users: consider using a **username** without **spaces** to avoid problems while installing **openfaas**.
