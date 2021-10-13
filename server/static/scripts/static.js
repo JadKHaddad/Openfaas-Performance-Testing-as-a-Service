@@ -1,4 +1,4 @@
-FUNCTIONCALL = '/proxy';
+FUNCTIONCALL = '/proxy'
 
 function CreateTest(id, users, spawnRate, host, time, status, code, stats, valid, startedAt) {
     var test = document.createElement('div');
@@ -325,6 +325,73 @@ function IsJsonString(str) {
     return true;
 }
 
+function getHostName(urlStr){
+    var l = new URL(urlStr)
+    return l.hostname + ':' + l.port;
+}
+
+function setCookie(name, value, daysToLive) {
+    // Encode value in order to escape semicolons, commas, and whitespace
+    var cookie = name + "=" + encodeURIComponent(value);
+    
+    if(typeof daysToLive === "number") {
+        /* Sets the max-age attribute so that the cookie expires
+        after the specified number of days */
+        cookie += "; max-age=" + (daysToLive*24*60*60);
+        
+        document.cookie = cookie;
+    }
+}
+
+function getCookie(name) {
+    // Split cookie string and get all individual name=value pairs in an array
+    var cookieArr = document.cookie.split(";");
+    
+    // Loop through the array elements
+    for(var i = 0; i < cookieArr.length; i++) {
+        var cookiePair = cookieArr[i].split("=");
+        
+        /* Removing whitespace at the beginning of the cookie name
+        and compare it with the given string */
+        if(name == cookiePair[0].trim()) {
+            // Decode the cookie value and return
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    // Return null if not found
+    return null;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
-    if (document.getElementById('direct').innerText === 'true') FUNCTIONCALL = document.getElementById('function-call').innerText;
+    const functionName = document.getElementById('function-name').innerText;
+    var openfaasUrl = document.getElementById('openfaas-url').innerText;
+    if (getCookie('openfaasurl') != null){
+        openfaasUrl = getCookie('openfaasurl');
+    }
+    $('#url-input').val(openfaasUrl);
+    $('#url').text(openfaasUrl).on('click', function(){
+        $('#url-modal-button').click();
+        return false;
+    });
+
+    $('#set-url-btn').on('click',function(){
+        openfaasUrl = $('#url-input').val();
+        setCookie('openfaasurl', openfaasUrl, 365);
+        $('#url').text(openfaasUrl)
+        $('#dismiss-url-modal-btn').click();
+        if (document.getElementById('direct').innerText === 'true'){
+            if (openfaasUrl.slice(-1) == '/'){
+                openfaasUrl = openfaasUrl.slice(0, -1);
+            }
+            FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
+        }
+        location.reload();
+    });
+
+    if (document.getElementById('direct').innerText === 'true'){
+        if (openfaasUrl.slice(-1) == '/'){
+            openfaasUrl = openfaasUrl.slice(0, -1);
+        }
+        FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
+    } 
 });
