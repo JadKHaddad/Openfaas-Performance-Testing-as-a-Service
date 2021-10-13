@@ -9,7 +9,7 @@ import requests
 import json
 import gevent
 import argparse
-from urllib.parse import urljoin
+from urllib.parse import urljoin, unquote
 
 PROXYOPENFAASULR = None
 PROXYFUNCTION = None
@@ -26,29 +26,51 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html', async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
 
 @app.route('/explore')
 def explore():
-    return render_template('explore.html', async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('explore.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
+
+@app.route('/license')
+def license():
+    return render_template('license.html')
 
 @app.route('/test/<id>')
 def test(id):
-    return render_template('test.html', id=id, async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
+    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
 
 @app.route('/stream/<id>')
 def stream(id):
     data = {'command':4,'id': id}
+    url = request.cookies.get('openfaasurl')
+    if url is not None:
+        url = unquote(url)
+        url = urljoin(url, 'function/')
+        url = urljoin(url, FUNCTION)
+        if url == FUNCTIONURL:
+            url = PROXYFUNCTIONURL
+    else:
+        url = PROXYFUNCTIONURL
     def stats_stream():
         while True:
-            response = requests.post(PROXYFUNCTIONURL, data=json.dumps(data))
+            response = requests.post(url, data=json.dumps(data))
             yield f'data: {response.text}\n\n'
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
-    res = requests.post(PROXYFUNCTIONURL, data=request.data.decode("utf-8"))
+    url = request.cookies.get('openfaasurl')
+    if url is not None:
+        url = unquote(url)
+        url = urljoin(url, 'function/')
+        url = urljoin(url, FUNCTION)
+        if url == FUNCTIONURL:
+            url = PROXYFUNCTIONURL
+    else:
+        url = PROXYFUNCTIONURL
+    res = requests.post(url, data=request.data.decode("utf-8"))
     return Response(
         response=res.content,
         status=res.status_code,

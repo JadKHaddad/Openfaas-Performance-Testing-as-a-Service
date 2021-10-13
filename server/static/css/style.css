@@ -26,6 +26,10 @@ body {
   min-width: 1500px;
 }
 
+.license{
+  max-width: 500px !important;
+}
+
 .list-group{
   margin-top:20px;
   margin-bottom:10px;

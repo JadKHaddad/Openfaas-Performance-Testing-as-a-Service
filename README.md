@@ -85,7 +85,6 @@ sudo systemctl restart performance-testing.service
 * check extension of locust file before upload.
 * enable in browser locust code editing.
 * enable tests redeployment after editing.
-* enable (in browser) choosing different openfaas servers.  
 
 ## Contributors
 * Jad K. Haddad <jadkhaddad@gmail.com>
