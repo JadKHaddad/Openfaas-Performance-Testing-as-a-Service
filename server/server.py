@@ -32,6 +32,10 @@ def index():
 def explore():
     return render_template('explore.html', async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
 
+@app.route('/license')
+def license():
+    return render_template('license.html')
+
 @app.route('/test/<id>')
 def test(id):
     return render_template('test.html', id=id, async_function_call=ASYNCFUNCTIONURL, function_call=FUNCTIONURL, direct=DIRECT)
