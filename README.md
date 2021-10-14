@@ -82,7 +82,6 @@ sudo systemctl restart performance-testing.service
 ```
 
 ## TODO
-* check extension of locust file before upload.
 * enable in browser locust code editing.
 * enable tests redeployment after editing.
 
