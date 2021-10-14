@@ -369,7 +369,8 @@ document.addEventListener("DOMContentLoaded", function () {
         openfaasUrl = getCookie('openfaasurl');
     }
     $('#url-input').val(openfaasUrl);
-    $('#url').text(openfaasUrl).on('click', function(){
+    $('#url').text(openfaasUrl);
+    $('#nav-url').on('click', function(){
         $('#url-modal-button').click();
         return false;
     });
