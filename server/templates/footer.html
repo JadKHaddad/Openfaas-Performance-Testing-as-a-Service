@@ -1,6 +1,7 @@
 <!-- Button trigger info modal -->
 <div>
-   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Info-Modal" id="info-modal-button">
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Info-Modal"
+      id="info-modal-button">
    </button>
 </div>
 
@@ -17,7 +18,8 @@
 
 <!-- Button trigger code modal -->
 <div>
-   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Code-Modal" id="code-modal-button">
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Code-Modal"
+      id="code-modal-button">
    </button>
 </div>
 
@@ -38,7 +40,8 @@
 
 <!-- Button trigger confirmation modal -->
 <div>
-   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Confirmation-Modal" id="confirmation-modal-button"></button>
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Confirmation-Modal"
+      id="confirmation-modal-button"></button>
 </div>
 
 <!-- Confimation Modal -->
@@ -50,7 +53,8 @@
          </div>
          <div class="modal-footer">
             <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
-            <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-confirmation-modal-btn"></button>
+            <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal"
+               id="dismiss-confirmation-modal-btn"></button>
          </div>
       </div>
    </div>
@@ -58,7 +62,8 @@
 
 <!-- Button trigger confirmation modal -->
 <div>
-   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Url-Modal" id="url-modal-button"></button>
+   <button type="button" class="btn btn-primary hidden" data-mdb-toggle="modal" data-mdb-target="#Url-Modal"
+      id="url-modal-button"></button>
 </div>
 
 <!-- Confimation Modal -->
@@ -67,17 +72,25 @@
       <div class="modal-content">
          <div class="modal-body">
             <form>
-               <!-- Users input -->
+               <!-- input -->
                <div class="form-outline mb-4">
                   <input type="text" id="url-input" class="form-control" />
                   <label class="form-label" for="url-input">OpenFaaS url</label>
+               </div>
+               <!-- checkbox -->
+               <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="direct-checkbox" />
+                  <label class="form-check-label" for="direct-checkbox">
+                     Direct connection
+                  </label>
                </div>
             </form>
          </div>
          <div class="modal-footer">
             <button type="button" class="btn btn-primary" id="set-url-btn">Ok</button>
          </div>
-         <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-url-modal-btn"></button>
+         <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal"
+            id="dismiss-url-modal-btn"></button>
       </div>
    </div>
 </div>

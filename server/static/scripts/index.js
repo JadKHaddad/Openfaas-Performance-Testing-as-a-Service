@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             code = '';
         }
+
     };
 
     document.getElementById('requirements-input').onchange = function (evt) {
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const host = $('#host-input').val();
         const time = $('#time-input').val();
         const fileInput = $('#file-input')[0];
+        const reqInput = $('#requirements-input')[0];
         // handle false inputs
         if (users === '') {
             showInfo('Users cant be empty');
@@ -71,9 +73,22 @@ document.addEventListener("DOMContentLoaded", function () {
         if (time != '') {
             if (!isInteger(time)) {
                 showInfo('Time must be an integer');
-                return false
+                return false;
             }
         }
+        if (fileInput.files[0].name.split('.').pop() !== 'py') {
+            showInfo('Locust file can only be a python file');
+            fileInput.value = '';
+            return false;
+        }
+        if(reqInput.value !== ''){
+            if (reqInput.files[0].name.split('.').pop() !== 'txt') {
+                showInfo('Requirements file can only be a text file');
+                reqInput.value = '';
+                return false;
+            }
+        }
+
 
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, users: parseInt(users), spawn_rate: parseInt(spawnRate), host: host, time: parseInt(time), code: code, requirements: requirements }) }).then(data => data.json()).then(data => {
             if (data.success) {
@@ -110,5 +125,5 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }).catch();
-    
+
 });

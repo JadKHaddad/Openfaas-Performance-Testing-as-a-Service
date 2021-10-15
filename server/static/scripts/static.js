@@ -365,21 +365,34 @@ function getCookie(name) {
 document.addEventListener("DOMContentLoaded", function () {
     const functionName = document.getElementById('function-name').innerText;
     var openfaasUrl = document.getElementById('openfaas-url').innerText;
+    var direct = false;
+    if (document.getElementById('direct').innerText === 'true') direct = true;
+
     if (getCookie('openfaasurl') != null){
         openfaasUrl = getCookie('openfaasurl');
     }
+
+    if (getCookie('direct') != null){
+        direct = false;
+        if(getCookie('direct') === 'true') direct = true;
+    }
+
     $('#url-input').val(openfaasUrl);
-    $('#url').text(openfaasUrl).on('click', function(){
+    $('#url').text(openfaasUrl);
+    $('#nav-url').on('click', function(){
         $('#url-modal-button').click();
         return false;
     });
 
     $('#set-url-btn').on('click',function(){
         openfaasUrl = $('#url-input').val();
+        direct = false;
+        if($('#direct-checkbox').prop('checked') == true) direct = true; 
+        setCookie('direct', direct.toString(), 365);
         setCookie('openfaasurl', openfaasUrl, 365);
         $('#url').text(openfaasUrl)
         $('#dismiss-url-modal-btn').click();
-        if (document.getElementById('direct').innerText === 'true'){
+        if (direct){
             if (openfaasUrl.slice(-1) == '/'){
                 openfaasUrl = openfaasUrl.slice(0, -1);
             }
@@ -387,11 +400,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         location.reload();
     });
-
-    if (document.getElementById('direct').innerText === 'true'){
+    if (direct){
         if (openfaasUrl.slice(-1) == '/'){
             openfaasUrl = openfaasUrl.slice(0, -1);
         }
         FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
+        $('#direct-checkbox').prop('checked', true);
     } 
 });

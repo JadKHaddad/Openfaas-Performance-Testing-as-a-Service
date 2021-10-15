@@ -80,3 +80,7 @@ body {
 .img-container img{
   max-width: 500px;
 }
+
+#url:hover {
+  cursor: pointer;
+}
