@@ -390,8 +390,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         setCookie('direct', direct.toString(), 365);
         setCookie('openfaasurl', openfaasUrl, 365);
-        $('#url').text(openfaasUrl)
-        $('#dismiss-url-modal-btn').click();
         if (direct){
             if (openfaasUrl.slice(-1) == '/'){
                 openfaasUrl = openfaasUrl.slice(0, -1);
@@ -400,6 +398,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         location.reload();
     });
+
+    $('#restore-defaults-btn').on('click', function(){
+        setCookie('direct', direct.toString(), -1);
+        setCookie('openfaasurl', openfaasUrl, -1);
+        location.reload(); 
+    });
+
     if (direct){
         if (openfaasUrl.slice(-1) == '/'){
             openfaasUrl = openfaasUrl.slice(0, -1);
