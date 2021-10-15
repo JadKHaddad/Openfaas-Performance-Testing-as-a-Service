@@ -337,7 +337,7 @@ function setCookie(name, value, daysToLive) {
     if(typeof daysToLive === "number") {
         /* Sets the max-age attribute so that the cookie expires
         after the specified number of days */
-        cookie += "; max-age=" + (daysToLive*24*60*60);
+        cookie += "; max-age=" + (daysToLive*24*60*60) + ";SameSite=None; Secure";
         
         document.cookie = cookie;
     }
@@ -377,6 +377,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if(getCookie('direct') === 'true') direct = true;
     }
 
+    if (getCookie('theme') != null){
+        if(getCookie('theme') === 'dark') {
+            $('#dark-theme-checkbox').prop('checked', true);
+        };
+    }
+
     $('#url-input').val(openfaasUrl);
     $('#url').text(openfaasUrl);
     $('#nav-url').on('click', function(){
@@ -390,18 +396,22 @@ document.addEventListener("DOMContentLoaded", function () {
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         setCookie('direct', direct.toString(), 365);
         setCookie('openfaasurl', openfaasUrl, 365);
+        theme = 'light'
+        if($('#dark-theme-checkbox').prop('checked') == true) theme = 'dark'; 
+        setCookie('theme', theme, 365);
         if (direct){
             if (openfaasUrl.slice(-1) == '/'){
                 openfaasUrl = openfaasUrl.slice(0, -1);
             }
             FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
         }
-        location.reload();
+        location.reload(true);
     });
 
     $('#restore-defaults-btn').on('click', function(){
         setCookie('direct', direct.toString(), -1);
         setCookie('openfaasurl', openfaasUrl, -1);
+        setCookie('theme', 'light', -1);
         location.reload(); 
     });
 

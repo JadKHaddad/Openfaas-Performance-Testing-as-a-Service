@@ -24,21 +24,31 @@ DIRECT = None
 
 app = Flask(__name__)
 
+def get_theme():
+    theme = request.cookies.get('theme')
+    if theme is None:
+        theme = 'light'
+    return theme
+
 @app.route('/')
 def index():
-    return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
+    theme = get_theme()
+    return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 @app.route('/explore')
 def explore():
-    return render_template('explore.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
+    theme = get_theme()
+    return render_template('explore.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 @app.route('/license')
 def license():
-    return render_template('license.html')
+    theme = get_theme()
+    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 @app.route('/test/<id>')
 def test(id):
-    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT)
+    theme = get_theme()
+    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 @app.route('/stream/<id>')
 def stream(id):
