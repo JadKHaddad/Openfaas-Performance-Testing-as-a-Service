@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import signal
+import platform
 import traceback
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
@@ -31,10 +32,17 @@ class Test():
         requirements_command = f'pip install -r {requirements_path} &&' if req else ''
         command = f'{requirements_command} locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_name} --html {results_name}.html'
         self.started_at = t.time()
-        self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
+        if platform.system() == 'Windows':
+            self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
 
     def stop(self):
-        os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+        if platform.system() == 'Windows':
+            self.process.send_signal(signal.CTRL_BREAK_EVENT)
+            self.process.kill()
+        else:
+            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
             
 # static functions
 def get_test_info(id):
@@ -170,7 +178,7 @@ def handle(req):
             id = data.get("id") or None
             type = data.get("type") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             test_dir = join(tests_dir, id)
             if type == 1: # create
                 status_code = create_plots(id) # 0: success, 1 test does not exist, 2 not enough data
@@ -185,7 +193,7 @@ def handle(req):
         if command == 3: # stop -> sync
             id = data.get("id") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             if id not in tests:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
             tests[id].stop()
@@ -194,8 +202,11 @@ def handle(req):
 
         if command == 4: # stats -> sync
             id = data.get("id") or None
+            local = data.get('local') or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers
+                if local is not None:
+                    return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
             # check if test is runnig
             if id in tests:
                 test_dir = join(tests_dir, id)
@@ -203,19 +214,27 @@ def handle(req):
                 if tests[id].process.poll() is not None: # process finished
                     if not Path(csv_file_path).exists(): # test is not valid
                         del tests[id]
+                        if local is not None:
+                            return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
                         return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
                     del tests[id]
                 if not Path(csv_file_path).exists():
+                    if local is not None:
+                        return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
                     return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
                 pd_data = pd.read_csv(csv_file_path) 
-                j = pd_data.to_json(orient='records') 
+                j = pd_data.to_json(orient='records')
+                if local is not None:
+                    return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
                 return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
+            if local is not None:
+                return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
             return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
             
         if command == 5: # download -> sync
             id = data.get("id") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             #create plots
             create_plots(id)
             # zip files
@@ -235,7 +254,7 @@ def handle(req):
         if command == 7: # delete tests folders -> sync
             ids = data.get("ids") or None
             if ids is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
             for id in ids:
                 test_dir = join(tests_dir, id)
@@ -251,7 +270,7 @@ def handle(req):
         if command == 8: # get test -> sync
             id = data.get("id") or None
             if id is None:
-               return jsonify(success=False,exit_code=1,message="bad request"), headers 
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
             data = get_test_info(id)
             return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
 

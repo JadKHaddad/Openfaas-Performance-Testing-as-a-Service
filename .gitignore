@@ -1,4 +1,8 @@
 /build
+/tests
+/ptas/__pycache__
+/ptas/tests
+/server/tests
 private_ptas.yml
 basic-auth-password
 seq.vsdx

@@ -2,7 +2,6 @@
 
 import platform
 import subprocess
-import sys
 from flask import Flask, render_template, request, Response
 from waitress import serve
 import requests
@@ -10,6 +9,13 @@ import json
 import gevent
 import argparse
 from urllib.parse import urljoin, unquote
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+from ptas import handler
+
+LOCAL = False
 
 PROXYOPENFAASULR = None
 PROXYFUNCTION = None
@@ -52,16 +58,25 @@ def test(id):
 
 @app.route('/stream/<id>')
 def stream(id):
-    data = {'command':4,'id': id}
     url = request.cookies.get('openfaasurl')
     if url is not None:
-        url = unquote(url)
-        url = urljoin(url, 'function/')
-        url = urljoin(url, FUNCTION)
-        if url == FUNCTIONURL:
-            url = PROXYFUNCTIONURL
+        if url == 'None':
+            data = {'command':4,'id': id, 'local':True}
+            def stats_stream():
+                while True:
+                    response = handler.handle(json.dumps(data))
+                    yield f'data: {response}\n\n'
+                    gevent.sleep(1)
+            return Response(stats_stream(), mimetype="text/event-stream")
+        else:    
+            url = unquote(url)
+            url = urljoin(url, 'function/')
+            url = urljoin(url, FUNCTION)
+            if url == FUNCTIONURL:
+                url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
+    data = {'command':4,'id': id}
     def stats_stream():
         while True:
             response = requests.post(url, data=json.dumps(data))
@@ -86,43 +101,41 @@ def proxy():
         status=res.status_code,
         headers=dict(res.headers)
     )
+@app.route('/local', methods=['POST'])
+def local():
+    return handler.handle(request.data.decode("utf-8"))
 
 if __name__ == '__main__':
     extern = False
-    if not len(sys.argv) > 1:
-        host = '0.0.0.0'
-        port = 80
-        url = 'http://127.0.0.1:8080/'
-        function = 'ptas'
-        direct = 'true'
-    else:
-        parser = argparse.ArgumentParser(add_help=False)
-        parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
-        parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
-        requiredNamed = parser.add_argument_group('required arguments')
-        requiredNamed.add_argument('-s', '--host', help='server host',metavar='',required=True)
-        requiredNamed.add_argument('-p', '--port', help='server port',metavar='',required=True)
-        requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
-        requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
-        requiredNamed.add_argument('-f','--function', help='function name',metavar='',required=True)
-        requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='',required=True)
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
+    parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
+    requiredNamed = parser.add_argument_group('required arguments')
+    requiredNamed.add_argument('-s', '--host', help='server host',metavar='')
+    requiredNamed.add_argument('-p', '--port', help='server port',metavar='')
+    requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
+    requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
+    requiredNamed.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
+    requiredNamed.add_argument('-f','--function', help='function name',metavar='')
+    requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        host = args.host
-        port = args.port
-        url = args.url
-        extern = args.extern
-        function = args.function
-        direct = args.direct
+    host = args.host or '0.0.0.0'
+    port = args.port or 80
+    url = args.url
+    extern = args.extern
+    function = args.function or 'ptas'
+    direct = args.direct or 'true'
+    LOCAL = args.local
 
-        if direct != 'true' and direct != 'false':
-            print('-d , --direct can only be true or false')
-            exit()
+    if direct != 'true' and direct != 'false':
+        print('-d , --direct can only be true or false')
+        exit()
 
-        if url is None and extern == False:
-            print('please provide an openfaasurl using -u or -e')
-            exit()
+    if url is None and extern == False and LOCAL == False:
+        print('please provide an openfaasurl using -u or -e')
+        exit()
         
     OPENFAASULR = url
     PROXYOPENFAASULR = url
@@ -141,8 +154,6 @@ if __name__ == '__main__':
         else:
             PROXYOPENFAASULR = OPENFAASULR
 
-
-
     FUNCTION = function
     SYNC = urljoin(OPENFAASULR, 'function/')
     ASYNC = urljoin(OPENFAASULR, 'async-function/')
@@ -154,13 +165,14 @@ if __name__ == '__main__':
     PROXYFUNCTIONURL = urljoin(PROXYSYNC, FUNCTION)
     PROXYASYNCFUNCTIONURL = urljoin(PROXYASYNC, FUNCTION)
     
-    print(f'\nopenfaas url: {OPENFAASULR}')
-    print(f'sync function call: {FUNCTIONURL}')
-    print(f'async function call: {ASYNCFUNCTIONURL}')
-    if direct == 'false':
-        print(f'\nproxy openfaas url: {PROXYOPENFAASULR}')
-        print(f'proxy sync function call: {PROXYFUNCTIONURL}')
-        print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
-    print(f'\ndirect: {direct}')
+    if LOCAL == False:
+        print(f'\nopenfaas url: {OPENFAASULR}')
+        print(f'sync function call: {FUNCTIONURL}')
+        print(f'async function call: {ASYNCFUNCTIONURL}')
+        if direct == 'false':
+            print(f'\nproxy openfaas url: {PROXYOPENFAASULR}')
+            print(f'proxy sync function call: {PROXYFUNCTIONURL}')
+            print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
+        print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
     serve(app, host=host, port=port,threads=8)

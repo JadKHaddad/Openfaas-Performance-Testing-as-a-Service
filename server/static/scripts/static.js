@@ -399,7 +399,9 @@ document.addEventListener("DOMContentLoaded", function () {
         theme = 'light'
         if($('#dark-theme-checkbox').prop('checked') == true) theme = 'dark'; 
         setCookie('theme', theme, 365);
-        if (direct){
+        if (openfaasUrl === 'None'){
+            FUNCTIONCALL = '/local';
+        }else if (direct){
             if (openfaasUrl.slice(-1) == '/'){
                 openfaasUrl = openfaasUrl.slice(0, -1);
             }
@@ -415,11 +417,16 @@ document.addEventListener("DOMContentLoaded", function () {
         location.reload(); 
     });
 
-    if (direct){
+    if (openfaasUrl === 'None'){
+        FUNCTIONCALL = '/local';
+        $('#direct-checkbox').prop('disabled', true);
+    }else if (direct){
         if (openfaasUrl.slice(-1) == '/'){
             openfaasUrl = openfaasUrl.slice(0, -1);
         }
         FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
+        $('#direct-checkbox').prop('disabled', false);
         $('#direct-checkbox').prop('checked', true);
-    } 
+    }
+    console.log(FUNCTIONCALL)
 });
