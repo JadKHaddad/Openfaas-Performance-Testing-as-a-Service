@@ -130,9 +130,8 @@ if __name__ == '__main__':
 
     if extern == True:
         if platform.system() == 'Linux':
-            subprocess = subprocess.Popen("echo $(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)d", shell=True, stdout=subprocess.PIPE)
-            subprocess_return = subprocess.stdout.read()
-            OPENFAASULR = ('http://'+subprocess_return.decode('UTF-8')+':8080/').replace('d','').replace('\n','')
+            host = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1]
+            OPENFAASULR = ('http://'+host+':8080/')
         else:
             if url is None:
                 print('if you are not using Linux please provide your external ip address manually')
