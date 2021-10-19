@@ -59,9 +59,7 @@ def test(id):
 @app.route('/stream/<id>')
 def stream(id):
     url = request.cookies.get('openfaasurl')
-    print(url)
     if url is not None:
-        print('ha')
         if url == 'None':
             data = {'command':4,'id': id, 'local':True}
             def stats_stream():
