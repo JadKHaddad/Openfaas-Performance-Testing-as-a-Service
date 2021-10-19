@@ -2,6 +2,7 @@
 Description=Performance Testing Service
 After=multi-user.target
 [Service]
+WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/server/
 Type=simple
 Restart=always
 ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -l
