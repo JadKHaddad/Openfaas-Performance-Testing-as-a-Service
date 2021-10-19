@@ -394,11 +394,13 @@ document.addEventListener("DOMContentLoaded", function () {
         openfaasUrl = $('#url-input').val();
         direct = false;
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
+        if($('#no-openfaas-checkbox').prop('checked') == true) openfaasUrl = 'None';
         setCookie('direct', direct.toString(), 365);
         setCookie('openfaasurl', openfaasUrl, 365);
         theme = 'light'
         if($('#dark-theme-checkbox').prop('checked') == true) theme = 'dark'; 
         setCookie('theme', theme, 365);
+
         if (openfaasUrl === 'None'){
             FUNCTIONCALL = '/local';
         }else if (direct){
@@ -410,6 +412,16 @@ document.addEventListener("DOMContentLoaded", function () {
         location.reload(true);
     });
 
+    $('#no-openfaas-checkbox').change(function() {
+        if($(this).prop('checked') == true){
+            $('#url-input').prop('disabled', true);
+            $('#direct-checkbox').prop('disabled', true);
+        }else{
+            $('#url-input').prop('disabled', false);
+            $('#direct-checkbox').prop('disabled', false);
+        }
+    }); 
+
     $('#restore-defaults-btn').on('click', function(){
         setCookie('direct', direct.toString(), -1);
         setCookie('openfaasurl', openfaasUrl, -1);
@@ -417,11 +429,14 @@ document.addEventListener("DOMContentLoaded", function () {
         location.reload(); 
     });
 
+
+
     setCookie('openfaasurl', openfaasUrl, 365);
     
     if (openfaasUrl === 'None'){
         FUNCTIONCALL = '/local';
         $('#direct-checkbox').prop('disabled', true);
+        $('#no-openfaas-checkbox').prop('checked', true);
     }else if (direct){
         if (openfaasUrl.slice(-1) == '/'){
             openfaasUrl = openfaasUrl.slice(0, -1);
@@ -429,5 +444,12 @@ document.addEventListener("DOMContentLoaded", function () {
         FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
         $('#direct-checkbox').prop('disabled', false);
         $('#direct-checkbox').prop('checked', true);
+    }
+
+    if($('#no-openfaas-checkbox').prop('checked') == true){
+        openfaasUrl = 'None';
+        $('#url-input').prop('disabled', true);
+    }else{
+        $('#url-input').prop('disabled', false);
     }
 });
