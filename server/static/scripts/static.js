@@ -417,6 +417,8 @@ document.addEventListener("DOMContentLoaded", function () {
         location.reload(); 
     });
 
+    setCookie('openfaasurl', openfaasUrl, 365);
+    
     if (openfaasUrl === 'None'){
         FUNCTIONCALL = '/local';
         $('#direct-checkbox').prop('disabled', true);
@@ -428,5 +430,4 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#direct-checkbox').prop('disabled', false);
         $('#direct-checkbox').prop('checked', true);
     }
-    console.log(FUNCTIONCALL)
 });
