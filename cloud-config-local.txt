@@ -1,4 +1,4 @@
-# multipass launch --cloud-init cloud-config.txt --name performance --cpus 6 --mem 6G --disk 20G
+# multipass launch --cloud-init cloud-config.txt --name performance --cpus 2 --mem 2G --disk 10G
 # cloud-config
 ssh_authorized_keys:
 ## Note: Replace with your own public key
