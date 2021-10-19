@@ -15,7 +15,7 @@ curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Tes
 Replace the public key in **cloud-config-local.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
-multipass launch --cloud-init cloud-config.txt --name performance --cpus 2 --mem 2G --disk 10G
+multipass launch --cloud-init cloud-config-local.txt --name performance --cpus 2 --mem 2G --disk 10G
 ```
 Get the VM's IP:
 ```sh
