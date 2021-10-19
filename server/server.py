@@ -134,7 +134,7 @@ if __name__ == '__main__':
         exit()
 
     if url is None and extern == False and LOCAL == False:
-        print('please provide an openfaasurl using -u or -e')
+        print('please provide an openfaasurl using -u or -e or use -l if you dont want to use an openfaas server')
         exit()
         
     OPENFAASULR = url

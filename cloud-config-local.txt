@@ -1,0 +1,23 @@
+# multipass launch --cloud-init cloud-config.txt --name performance --cpus 6 --mem 6G --disk 20G
+# cloud-config
+ssh_authorized_keys:
+## Note: Replace with your own public key
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1UIx0/xmN3/czdaIAer27/WzqQsCbKFRx7OE1wvt1gK22XMkt4mwmTV873joayxzKkcXAxTMaoOtjapIt7g9cwL/k606kskAC4HaFLizNhsAVyDt9xwf8HRYY3QUblVfnXfrtE66BOaoPj+/KuCy+wOo28sxkWQmdOMO49lCp0psAxtgIqr8oW5OyrjfKqeag+hRH+vQesXPnH6gpLXA8BOt/TXsiWHh44iDtzNhdpcKUEORnjWQF47JEdZ74UeiOrq4BIGlS15NyWEIruHbzPk050KfkmMAJDnpmGFUSTCHCyopIhZUAU3m1ERteoMr1Pk7Axq3rpKsEyBAc6Y6LyhZKglJEP1f6W+oCww7maDWIr4KZKkx154EH8EuvQDYBee/NljY+zWu+Pei5zpqjSABb0q8uNQdc/gOHIzwyYkfh1m6A528P/scDR0Ys9j2x2eTAr/Gj89Cqh87rmkjGyyrS/TQ6SKMlVdL1Z98c2dkklNiXR3Kr9yY9Fr9pzS8= jadkhaddad@ROG
+
+package_update: true
+
+packages:
+ - runc
+ - git
+ - python3
+ - python3-pip
+
+runcmd:
+- sudo git clone https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service
+- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
+- sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/requirements.txt
+- sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/ptas/requirements.txt
+- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/performance-testing.service /etc/systemd/system/performance-testing.service
+- sudo systemctl daemon-reload
+- sudo systemctl enable performance-testing.service
+- sudo systemctl start performance-testing.service
