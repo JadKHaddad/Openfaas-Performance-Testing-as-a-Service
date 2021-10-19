@@ -73,14 +73,16 @@ This may take a few minutes<br /><br />
 * Wait until the nodes are ready:
 ```sh
 kubectl get nodes
-
+```
+```sh
 NAME                 STATUS   ROLES                  AGE    VERSION
 kind-control-plane   Ready    control-plane,master   4d3h   v1.21.1
 ```
 * Wait until the services are running:
 ```sh
 kubectl get pods -n kube-system
-
+```
+```sh
 NAME                                         READY   STATUS    RESTARTS   AGE
 coredns-558bd4d5db-cgwfr                     1/1     Running   9          4d3h
 coredns-558bd4d5db-tpvxr                     1/1     Running   9          4d3h
@@ -102,7 +104,8 @@ arkade install openfaas
 *  Wait until **openfaas** services are running:
 ```sh
 kubectl get pods -n openfaas
-
+```
+```sh
 NAME                                 READY   STATUS    RESTARTS   AGE
 alertmanager-68b4dbc886-n5j85        1/1     Running   9          4d3h
 basic-auth-plugin-86d54f7c5f-nlxdc   1/1     Running   9          4d3h
@@ -173,10 +176,12 @@ faas-cli up -f <function-name>.yml
 ```sh
 # sync:
 curl -i -d "input" http://127.0.0.1/function/<function-name>
-
+```
+```sh
 # async:
 curl -i -d "input" http://127.0.0.1/async-function/<function-name>
-
+```
+```sh
 # async with a callback:
 curl -i -d "input" -H "X-Callback-Url: http://some-request-bin.com/path" http://127.0.0.1/async-function/<function-name>
 ```
