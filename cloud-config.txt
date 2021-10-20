@@ -35,6 +35,7 @@ runcmd:
 - sudo git clone https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
 - sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/requirements.txt
+- sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/ptas/requirements.txt
 - sudo docker run -d -p 5000:5000 --restart=always --name registry registry:2
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon.json /etc/docker/daemon.json
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/performance-testing.service /etc/systemd/system/performance-testing.service
