@@ -392,6 +392,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $('#set-url-btn').on('click',function(){
         openfaasUrl = $('#url-input').val();
+        openfaasUrl = openfaasUrl.replace("http://", "").replace("https://", "");
+        openfaasUrl = "http://" + openfaasUrl;
         direct = false;
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         if($('#no-openfaas-checkbox').prop('checked') == true) openfaasUrl = 'None';
@@ -425,11 +427,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $('#restore-defaults-btn').on('click', function(){
         setCookie('direct', direct.toString(), -1);
         setCookie('openfaasurl', openfaasUrl, -1);
-        setCookie('theme', 'light', -1);
         location.reload(); 
     });
-
-
 
     setCookie('openfaasurl', openfaasUrl, 365);
     
