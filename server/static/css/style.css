@@ -82,6 +82,6 @@ body {
   max-width: 500px;
 }
 
-#url:hover {
+#url:hover , .code{
   cursor: pointer;
 }
