@@ -23,118 +23,118 @@ projects_dir = 'projects'
 if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
 
-class Test():
-    def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
-        time_command = f'-t {str(time)}s' if time is not None else ''
-        host_command = f'--host {host}' if host is not None else ''
-        test_dir = join(tests_dir, id)
-        file_path = join(test_dir, f'{id}.py')
-        results_name = join(test_dir, id)
-        requirements_path = join(test_dir, f'requirements.txt')
-        requirements_command = f'pip install -r {requirements_path} &&' if req else ''
-        command = f'{requirements_command} locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_name} --html {results_name}.html'
-        self.started_at = t.time()
-        if platform.system() == 'Windows':
-            self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-        else:
-            self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
+# class Test():
+#     def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
+#         time_command = f'-t {str(time)}s' if time is not None else ''
+#         host_command = f'--host {host}' if host is not None else ''
+#         test_dir = join(tests_dir, id)
+#         file_path = join(test_dir, f'{id}.py')
+#         results_name = join(test_dir, id)
+#         requirements_path = join(test_dir, f'requirements.txt')
+#         requirements_command = f'pip install -r {requirements_path} &&' if req else ''
+#         command = f'{requirements_command} locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_name} --html {results_name}.html'
+#         self.started_at = t.time()
+#         if platform.system() == 'Windows':
+#             self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+#         else:
+#             self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
 
-    def stop(self):
-        if platform.system() == 'Windows':
-            self.process.send_signal(signal.CTRL_BREAK_EVENT)
-            self.process.kill()
-        else:
-            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+#     def stop(self):
+#         if platform.system() == 'Windows':
+#             self.process.send_signal(signal.CTRL_BREAK_EVENT)
+#             self.process.kill()
+#         else:
+#             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
             
-# static functions
-def get_test_info(id):
-    test_dir = join(tests_dir, id)
-    csv_file_path = join(test_dir, f'{id}_stats.csv')
-    info_file_path = join(test_dir, f'{id}_info.txt')
-    code_file_path = join(test_dir, f'{id}.py')
-    valid = True
+# # static functions
+# def get_test_info(id):
+#     test_dir = join(tests_dir, id)
+#     csv_file_path = join(test_dir, f'{id}_stats.csv')
+#     info_file_path = join(test_dir, f'{id}_info.txt')
+#     code_file_path = join(test_dir, f'{id}.py')
+#     valid = True
 
-    if Path(csv_file_path).exists():
-        pd_data = pd.read_csv(csv_file_path) 
-        j = pd_data.to_json(orient='records')
-    else:
-        j = None
-    if Path(info_file_path).exists():
-        with open(info_file_path, 'r') as file:
-            info = file.read()
-    else:
-        info = None
-    if Path(code_file_path).exists():
-        with open(code_file_path, 'r') as file:
-            code = file.read()
-    else:
-        code = None
-    if not Path(csv_file_path).exists(): # test is not valid
-        valid = False
-    if id in tests:
-        data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
-    else:
-        data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is not running
-    return data 
+#     if Path(csv_file_path).exists():
+#         pd_data = pd.read_csv(csv_file_path) 
+#         j = pd_data.to_json(orient='records')
+#     else:
+#         j = None
+#     if Path(info_file_path).exists():
+#         with open(info_file_path, 'r') as file:
+#             info = file.read()
+#     else:
+#         info = None
+#     if Path(code_file_path).exists():
+#         with open(code_file_path, 'r') as file:
+#             code = file.read()
+#     else:
+#         code = None
+#     if not Path(csv_file_path).exists(): # test is not valid
+#         valid = False
+#     if id in tests:
+#         data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
+#     else:
+#         data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is not running
+#     return data 
 
-def clean_up_cache(id):
-    test_dir = join(tests_dir, id)
-    cache = join(test_dir, f'__pycache__')
-    if Path(cache).exists():
-        shutil.rmtree(cache)
+# def clean_up_cache(id):
+#     test_dir = join(tests_dir, id)
+#     cache = join(test_dir, f'__pycache__')
+#     if Path(cache).exists():
+#         shutil.rmtree(cache)
 
-def zip_files(id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
-    clean_up_cache(id)
-    test_dir = join(tests_dir, id)
-    if not Path(test_dir).exists():
-        return False
-    if not Path(join(tests_dir, f'{id}.zip')).exists(): # creates zip file if it does not exist
-        shutil.make_archive(test_dir, 'zip', test_dir)
-    return True
+# def zip_files(id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
+#     clean_up_cache(id)
+#     test_dir = join(tests_dir, id)
+#     if not Path(test_dir).exists():
+#         return False
+#     if not Path(join(tests_dir, f'{id}.zip')).exists(): # creates zip file if it does not exist
+#         shutil.make_archive(test_dir, 'zip', test_dir)
+#     return True
 
-def delete_zip_file(id):
-    zip_file = join(tests_dir, f'{id}.zip')
-    if Path(zip_file).exists():
-        os.remove(zip_file)
+# def delete_zip_file(id):
+#     zip_file = join(tests_dir, f'{id}.zip')
+#     if Path(zip_file).exists():
+#         os.remove(zip_file)
 
-def create_plots(id): # creates plots if plots do no exist, returns True if plots are created or are already there
-    test_dir = join(tests_dir, id)
-    stats_history_file = join(test_dir, f'{id}_stats_history.csv')
-    if not Path(stats_history_file).exists():
-        return 1 # test does not exist
-    lin_path = join(test_dir, 'lin.png')
-    reg_path = join(test_dir, 'reg.png')
+# def create_plots(id): # creates plots if plots do no exist, returns True if plots are created or are already there
+#     test_dir = join(tests_dir, id)
+#     stats_history_file = join(test_dir, f'{id}_stats_history.csv')
+#     if not Path(stats_history_file).exists():
+#         return 1 # test does not exist
+#     lin_path = join(test_dir, 'lin.png')
+#     reg_path = join(test_dir, 'reg.png')
 
-    if not Path(lin_path).exists() or not Path(reg_path).exists():
-        df = pd.read_csv(stats_history_file) 
-        if len(df) > 4:
-            if not Path(lin_path).exists():
-                plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
-                plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
-                plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
-                plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
-                plt.ylabel("Time (milliseconds)")
-                plt.xlabel("Requests Count")
-                plt.legend(loc="upper right")
-                plt.savefig(lin_path,dpi=300)
-                plt.close()
-            if not Path(reg_path).exists():
-                X = df.iloc[:,17].values.reshape(-1, 1)
-                Y = df.iloc[:,20].values.reshape(-1, 1)
-                X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
-                linear_regressor = LinearRegression()  # create object for the class
-                linear_regressor.fit(X_train, Y_train)  # perform linear regression
-                Y_pred = linear_regressor.predict(X_test)  # make predictions
-                plt.scatter(X, Y, label="Acutuall average Response Time")
-                plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
-                plt.ylabel("Time (milliseconds)")
-                plt.xlabel("Requests Count")
-                plt.legend(loc="upper right")
-                plt.savefig(reg_path,dpi=300)
-                plt.close()
-        else:
-            return 2 # not enough data
-    return 0 # success
+#     if not Path(lin_path).exists() or not Path(reg_path).exists():
+#         df = pd.read_csv(stats_history_file) 
+#         if len(df) > 4:
+#             if not Path(lin_path).exists():
+#                 plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
+#                 plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
+#                 plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
+#                 plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
+#                 plt.ylabel("Time (milliseconds)")
+#                 plt.xlabel("Requests Count")
+#                 plt.legend(loc="upper right")
+#                 plt.savefig(lin_path,dpi=300)
+#                 plt.close()
+#             if not Path(reg_path).exists():
+#                 X = df.iloc[:,17].values.reshape(-1, 1)
+#                 Y = df.iloc[:,20].values.reshape(-1, 1)
+#                 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+#                 linear_regressor = LinearRegression()  # create object for the class
+#                 linear_regressor.fit(X_train, Y_train)  # perform linear regression
+#                 Y_pred = linear_regressor.predict(X_test)  # make predictions
+#                 plt.scatter(X, Y, label="Acutuall average Response Time")
+#                 plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
+#                 plt.ylabel("Time (milliseconds)")
+#                 plt.xlabel("Requests Count")
+#                 plt.legend(loc="upper right")
+#                 plt.savefig(reg_path,dpi=300)
+#                 plt.close()
+#         else:
+#             return 2 # not enough data
+#     return 0 # success
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
@@ -152,13 +152,17 @@ def handle(req):
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
             if Path(project_path).exists():
-                return jsonify(success=False,exit_code=2,message="project exists"), headers 
+                return jsonify(success=False,exit_code=2,message="project exists"), headers
+            # save project files 
             for uploaded_file in files:
                 uploaded_file_name = uploaded_file['name']
                 uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
                 pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
                 with open(f'{projects_dir}/{uploaded_file_name}', 'wb') as file:
                     file.write(str.encode(uploaded_file['content'], encoding='UTF-8'))
+            # check locust scripts in locust folder
+            # cerate a venv
+            # create database file for this project
             return jsonify(success=True,exit_code=0,message="project added"), headers
 
         
