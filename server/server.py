@@ -41,11 +41,6 @@ def index():
     theme = get_theme()
     return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
-@app.route('/explore')
-def explore():
-    theme = get_theme()
-    return render_template('explore.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
 @app.route('/license')
 def license():
     theme = get_theme()

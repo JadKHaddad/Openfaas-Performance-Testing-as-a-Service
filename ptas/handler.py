@@ -13,13 +13,15 @@ from sklearn.linear_model import LinearRegression
 import signal
 import platform
 import traceback
+import pathlib
+
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
 
-tests_dir = 'tests'
-if not Path(tests_dir).exists():
-    os.mkdir(tests_dir)
+projects_dir = 'projects'
+if not Path(projects_dir).exists():
+    os.mkdir(projects_dir)
 
 class Test():
     def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
@@ -141,153 +143,172 @@ def handle(req):
         command = data.get("command") or None
         if command is None:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
+
+        if command == 1: # add a new project
+            files = data.get('files') or None
+            if files is None :
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            project_name = files[0]['name'].split('/')[:-1][0]
+            project_path = f'{projects_dir}/{project_name}'
+            # check if project folder exists
+            if Path(project_path).exists():
+                return jsonify(success=False,exit_code=2,message="project exists"), headers 
+            for uploaded_file in files:
+                uploaded_file_name = uploaded_file['name']
+                uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
+                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+                with open(f'{projects_dir}/{uploaded_file_name}', 'wb') as file:
+                    file.write(str.encode(uploaded_file['content'], encoding='UTF-8'))
+            return jsonify(success=True,exit_code=0,message="project added"), headers
+
         
-        if command == 1: # deploy -> sync
-            users = data.get("users") or None
-            spawn_rate = data.get("spawn_rate") or None
-            host = data.get("host") or None
-            time = data.get("time") or None
-            code = data.get("code") or None
-            requirements = data.get("requirements") or None
-            if users is None or spawn_rate is None or code is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            # create test id
-            id = str(t.time()).replace('.', '_')
-            # save test in tests dir        
-            test_dir = join(tests_dir, id)
-            if not Path(test_dir).exists():
-                os.mkdir(test_dir)
-            file_path = join(test_dir, f'{id}.py')
-            with open(file_path, "w", encoding="UTF-8") as file:
-                file.write(code)
-            # save requirements
-            requirements_file_path = join(test_dir, f'requirements.txt')
-            with open(requirements_file_path, "w", encoding="UTF-8") as file:
-                if requirements is not None:
-                    file.write(requirements)
-            info_file_path = join(test_dir, f'{id}_info.txt')
-            with open(info_file_path, "w", encoding="UTF-8") as file:
-                file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host, "time": time, "date":t.time()}))
-            # configure test
-            test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time, req=(requirements is not None))
-            # save test in tests
-            tests[id] = test
-            return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
+        # if command == 1: # deploy -> sync
+        #     users = data.get("users") or None
+        #     spawn_rate = data.get("spawn_rate") or None
+        #     host = data.get("host") or None
+        #     time = data.get("time") or None
+        #     code = data.get("code") or None
+        #     requirements = data.get("requirements") or None
+        #     if users is None or spawn_rate is None or code is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        #     # create test id
+        #     id = str(t.time()).replace('.', '_')
+        #     # save test in tests dir        
+        #     test_dir = join(tests_dir, id)
+        #     if not Path(test_dir).exists():
+        #         os.mkdir(test_dir)
+        #     file_path = join(test_dir, f'{id}.py')
+        #     with open(file_path, "w", encoding="UTF-8") as file:
+        #         file.write(code)
+        #     # save requirements
+        #     requirements_file_path = join(test_dir, f'requirements.txt')
+        #     with open(requirements_file_path, "w", encoding="UTF-8") as file:
+        #         if requirements is not None:
+        #             file.write(requirements)
+        #     info_file_path = join(test_dir, f'{id}_info.txt')
+        #     with open(info_file_path, "w", encoding="UTF-8") as file:
+        #         file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host, "time": time, "date":t.time()}))
+        #     # configure test
+        #     test = Test(id=id, users=users, spawn_rate=spawn_rate, host=host, time=time, req=(requirements is not None))
+        #     # save test in tests
+        #     tests[id] = test
+        #     return jsonify(success=True,exit_code=0,id=id,started_at=test.started_at,message="test deployed and started"), headers
 
-        if command == 2: # get plots -> sync
-            id = data.get("id") or None
-            type = data.get("type") or None
-            if id is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            test_dir = join(tests_dir, id)
-            if type == 1: # create
-                status_code = create_plots(id) # 0: success, 1 test does not exist, 2 not enough data
-                return jsonify(success=True,exit_code=0,status_code=status_code), headers 
-            if type == 2: # linear
-                return send_from_directory(test_dir, f'lin.png'), headers
-            if type == 3: # regression 
-                return send_from_directory(test_dir, f'reg.png'), headers
-            else:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        # if command == 2: # get plots -> sync
+        #     id = data.get("id") or None
+        #     type = data.get("type") or None
+        #     if id is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        #     test_dir = join(tests_dir, id)
+        #     if type == 1: # create
+        #         status_code = create_plots(id) # 0: success, 1 test does not exist, 2 not enough data
+        #         return jsonify(success=True,exit_code=0,status_code=status_code), headers 
+        #     if type == 2: # linear
+        #         return send_from_directory(test_dir, f'lin.png'), headers
+        #     if type == 3: # regression 
+        #         return send_from_directory(test_dir, f'reg.png'), headers
+        #     else:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
-        if command == 3: # stop -> sync
-            id = data.get("id") or None
-            if id is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            if id not in tests:
-                return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
-            tests[id].stop()
-            del tests[id]
-            return jsonify(success=True,exit_code=0,message="test is stopped"), headers
+        # if command == 3: # stop -> sync
+        #     id = data.get("id") or None
+        #     if id is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        #     if id not in tests:
+        #         return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
+        #     tests[id].stop()
+        #     del tests[id]
+        #     return jsonify(success=True,exit_code=0,message="test is stopped"), headers
 
-        if command == 4: # stats -> sync
-            id = data.get("id") or None
-            local = data.get('local') or None
-            if id is None:
-                if local is not None:
-                    return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
-                return jsonify(success=False,exit_code=1,message="bad request"), headers
-            # check if test is runnig
-            if id in tests:
-                test_dir = join(tests_dir, id)
-                csv_file_path = join(test_dir, f'{id}_stats.csv')
-                if tests[id].process.poll() is not None: # process finished
-                    if not Path(csv_file_path).exists(): # test is not valid
-                        del tests[id]
-                        if local is not None:
-                            return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
-                        return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
-                    del tests[id]
-                if not Path(csv_file_path).exists():
-                    if local is not None:
-                        return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
-                    return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
-                pd_data = pd.read_csv(csv_file_path) 
-                j = pd_data.to_json(orient='records')
-                if local is not None:
-                    return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
-                return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-            if local is not None:
-                return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
-            return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
+        # if command == 4: # stats -> sync
+        #     id = data.get("id") or None
+        #     local = data.get('local') or None
+        #     if id is None:
+        #         if local is not None:
+        #             return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers
+        #     # check if test is runnig
+        #     if id in tests:
+        #         test_dir = join(tests_dir, id)
+        #         csv_file_path = join(test_dir, f'{id}_stats.csv')
+        #         if tests[id].process.poll() is not None: # process finished
+        #             if not Path(csv_file_path).exists(): # test is not valid
+        #                 del tests[id]
+        #                 if local is not None:
+        #                     return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
+        #                 return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
+        #             del tests[id]
+        #         if not Path(csv_file_path).exists():
+        #             if local is not None:
+        #                 return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
+        #             return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
+        #         pd_data = pd.read_csv(csv_file_path) 
+        #         j = pd_data.to_json(orient='records')
+        #         if local is not None:
+        #             return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
+        #         return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
+        #     if local is not None:
+        #         return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
+        #     return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
             
-        if command == 5: # download -> sync
-            id = data.get("id") or None
-            if id is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            #create plots
-            create_plots(id)
-            # zip files
-            if zip_files(id):
-                return send_from_directory(tests_dir, f'{id}.zip'), headers
-            else:
-                return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
+        # if command == 5: # download -> sync
+        #     id = data.get("id") or None
+        #     if id is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        #     #create plots
+        #     create_plots(id)
+        #     # zip files
+        #     if zip_files(id):
+        #         return send_from_directory(tests_dir, f'{id}.zip'), headers
+        #     else:
+        #         return jsonify(success=False,exit_code=6,message="test does not exist"), headers 
 
-        if command == 6: # get tests -> sync
-            tests_folders = []
-            for f in os.scandir(tests_dir):
-                if f.is_dir():
-                    id = os.path.basename(f.path)
-                    tests_folders.append(get_test_info(id))
-            return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
+        # if command == 6: # get tests -> sync
+        #     tests_folders = []
+        #     for f in os.scandir(tests_dir):
+        #         if f.is_dir():
+        #             id = os.path.basename(f.path)
+        #             tests_folders.append(get_test_info(id))
+        #     return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
-        if command == 7: # delete tests folders -> sync
-            ids = data.get("ids") or None
-            if ids is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers
-            deleted = []
-            for id in ids:
-                test_dir = join(tests_dir, id)
-                if Path(test_dir).exists():
-                    shutil.rmtree(test_dir) # remove test_dir
-                    delete_zip_file(id) # delete zip file
-                    if id in tests: # stop the test if running 
-                        tests[id].stop()
-                        del tests[id]
-                    deleted.append(id)
-            return jsonify(success=True,exit_code=0,deleted=deleted), headers
+        # if command == 7: # delete tests folders -> sync
+        #     ids = data.get("ids") or None
+        #     if ids is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers
+        #     deleted = []
+        #     for id in ids:
+        #         test_dir = join(tests_dir, id)
+        #         if Path(test_dir).exists():
+        #             shutil.rmtree(test_dir) # remove test_dir
+        #             delete_zip_file(id) # delete zip file
+        #             if id in tests: # stop the test if running 
+        #                 tests[id].stop()
+        #                 del tests[id]
+        #             deleted.append(id)
+        #     return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
-        if command == 8: # get test -> sync
-            id = data.get("id") or None
-            if id is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            data = get_test_info(id)
-            return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
+        # if command == 8: # get test -> sync
+        #     id = data.get("id") or None
+        #     if id is None:
+        #         return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        #     data = get_test_info(id)
+        #     return jsonify(success=True,exit_code=0,data=data,message="test info"), headers
 
-        if command == 10: # clean up -> sync
-            for id in tests: # clear deployed tests
-                tests[id].stop()
-                del tests[id]
-            list_dir = os.listdir(tests_dir) # clean up tests folder
-            for filename in list_dir:
-                file_path = os.path.join(tests_dir, filename)
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            return jsonify(success=True,exit_code=0,data=data,message="all clean"), headers
-        else:
-            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        # if command == 10: # clean up -> sync
+        #     for id in tests: # clear deployed tests
+        #         tests[id].stop()
+        #         del tests[id]
+        #     list_dir = os.listdir(tests_dir) # clean up tests folder
+        #     for filename in list_dir:
+        #         file_path = os.path.join(tests_dir, filename)
+        #         if os.path.isfile(file_path) or os.path.islink(file_path):
+        #             os.unlink(file_path)
+        #         elif os.path.isdir(file_path):
+        #             shutil.rmtree(file_path)
+        #     return jsonify(success=True,exit_code=0,data=data,message="all clean"), headers
+        # else:
+        #     return jsonify(success=False,exit_code=1,message="bad request"), headers
 
     except Exception as e:
+        print(traceback.format_exc())
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
