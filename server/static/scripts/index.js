@@ -38,8 +38,27 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log(data.message);
             if (data.success){
                 console.log("success");
+                const task_id = data.task_id;
+                var eventSource = new EventSource('/task/' + task_id);
+                eventSource.onmessage = function (e) {
+                    message = JSON.parse(e.data)
+                    if (!message.success){
+                        eventSource.close();
+                        console.log("Something went wrong");
+                    }else if(message.status_code === 0){
+                        console.log("Task is finished");
+                        eventSource.close();
+                    }else{
+                        console.log("installing project");
+                    }
+                    
+                };
             }
         }).catch();
         return false;
     });
+
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3 }) }).then(data => data.json()).then(data => {
+        console.log(data);
+    }).catch();
 });

@@ -41,6 +41,36 @@ def index():
     theme = get_theme()
     return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
+@app.route('/task/<task_id>')
+def task(task_id):
+    url = request.cookies.get('openfaasurl')
+    if url is not None:
+        if url == 'None':
+            data = {'command':2,'task_id': task_id}
+            def task_stream():
+                while True:
+                    response = handler.handle(json.dumps(data))
+                    yield f'data: {response}\n\n'
+                    gevent.sleep(1)
+            return Response(task_stream(), mimetype="text/event-stream")
+        else:    
+            url = unquote(url)
+            url = urljoin(url, 'function/')
+            url = urljoin(url, FUNCTION)
+            if url == FUNCTIONURL:
+                url = PROXYFUNCTIONURL
+    else:
+        url = PROXYFUNCTIONURL
+    data = {'command':2,'task_id': task_id}
+    def task_stream():
+        while True:
+            response = requests.post(url, data=json.dumps(data))
+            yield f'data: {response.text}\n\n'
+            gevent.sleep(1)
+    return Response(task_stream(), mimetype="text/event-stream")
+
+
+
 @app.route('/license')
 def license():
     theme = get_theme()

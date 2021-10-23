@@ -4,6 +4,7 @@
 /ptas/tests
 /server/tests
 /server/projects
+/server/__pycache__
 private_ptas.yml
 basic-auth-password
 seq.vsdx

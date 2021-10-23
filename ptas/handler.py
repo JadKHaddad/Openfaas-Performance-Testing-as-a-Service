@@ -18,7 +18,7 @@ import pathlib
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tests = {}
-
+tasks = {}
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
@@ -138,34 +138,75 @@ if not Path(projects_dir).exists():
 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
-    try:
-        data = json.loads(req)
-        command = data.get("command") or None
-        if command is None:
-            return  jsonify(success=False,exit_code=1,message="bad request"), headers
+    #try:
+    data = json.loads(req)
+    command = data.get("command") or None
+    if command is None:
+        return  jsonify(success=False,exit_code=1,message="bad request"), headers
 
-        if command == 1: # add a new project
-            files = data.get('files') or None
-            if files is None :
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
-            project_name = files[0]['name'].split('/')[:-1][0]
-            project_path = f'{projects_dir}/{project_name}'
-            # check if project folder exists
-            if Path(project_path).exists():
-                return jsonify(success=False,exit_code=2,message="project exists"), headers
-            # save project files 
-            for uploaded_file in files:
-                uploaded_file_name = uploaded_file['name']
-                uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-                with open(f'{projects_dir}/{uploaded_file_name}', 'wb') as file:
-                    file.write(str.encode(uploaded_file['content'], encoding='UTF-8'))
-            # check locust scripts in locust folder
-            # cerate a venv
-            # create database file for this project
-            return jsonify(success=True,exit_code=0,message="project added"), headers
+    if command == 1: # add a new project
+        files = data.get('files') or None
+        if files is None :
+            return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        # create an id for the project
+        project_id = 'p_' + str(t.time()).replace('.', '_')
+        project_name = files[0]['name'].split('/')[:-1][0]
+        project_path = f'{projects_dir}/{project_name}'
+        # check if project folder exists
+        if Path(project_path).exists():
+            return jsonify(success=False,exit_code=2,message="project exists"), headers
+        # save project files 
+        for uploaded_file in files:
+            uploaded_file_name = uploaded_file['name']
+            uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
+            pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+            with open(f'{projects_dir}/{uploaded_file_name}', 'wb') as file:
+                file.write(str.encode(uploaded_file['content'], encoding='UTF-8'))
+        # check locust scripts in locust folder
+        if not Path(f'{project_path}/locust').exists():
+            return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
+        project_tests = []
+        for f in os.scandir(f'{project_path}/locust'):
+            if f.is_file():
+                pass
 
-        
+        # create a virtual env and install req
+        # check if req exists
+        requierments_cmd = ''
+        if Path(f'{project_path}/requirements.txt').exists():
+            # windows
+            requierments_cmd = f' && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt'
+
+        # cerate a venv
+        tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env {requierments_cmd}', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
+
+
+        # create database file for this project
+        return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
+
+    if command == 2: # check task
+        task_id = data.get('task_id') or None
+        if task_id is None:
+            return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+        if task_id in tasks:
+            if tasks[task_id].poll() is not None: # process finished
+                return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
+            return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'task not finished'})
+        return json.dumps({'success':False,'exit_code':4,'message':'task not found'})
+
+    if command == 3: # get installed projects
+        projects = []
+        for f in os.scandir(projects_dir):
+            if f.is_dir():
+                project_name = os.path.basename(f.path)
+                if project_name in tasks:
+                    if tasks[project_name].poll() is not None:
+                        del tasks[project_name]
+                        projects.append(project_name)
+                else:
+                    projects.append(project_name)
+        return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
+
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None
         #     spawn_rate = data.get("spawn_rate") or None
@@ -313,6 +354,6 @@ def handle(req):
         # else:
         #     return jsonify(success=False,exit_code=1,message="bad request"), headers
 
-    except Exception as e:
-        print(traceback.format_exc())
-        return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
+    # except Exception as e:
+    #     print(traceback.format_exc())
+    #     return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
