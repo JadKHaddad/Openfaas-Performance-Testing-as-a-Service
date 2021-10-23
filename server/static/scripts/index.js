@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var myArray = [];
         var file = {};
         const files = input.files;
-
         for(var i = 0; i < files.length; i++){
             file = {
                 'size' : files[i].size,
@@ -35,9 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
             //add the file obj to your array
             myArray.push(file)
         }
-
-        const projectName = $('#name-input').val();
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, name: projectName, files: myArray}) }).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
             console.log(data.message);
             if (data.success){
                 console.log("success");
