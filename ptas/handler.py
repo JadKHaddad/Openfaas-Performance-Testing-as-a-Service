@@ -178,10 +178,14 @@ def handle(req):
         # create a virtual env and install req
         # check if req exists
         if Path(f'{project_path}/requirements.txt').exists():
-            # windows
+            
             # cerate a venv
-            tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
-
+            if platform.system() == 'Windows':
+                # windows
+                tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
+            else:
+                tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && projects/{project_name}/env/bin/pip3 install -r projects/{project_name}/requirements.txt', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
+                
         # create database file for this project
         return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
