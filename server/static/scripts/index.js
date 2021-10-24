@@ -35,23 +35,25 @@ document.addEventListener("DOMContentLoaded", function () {
             myArray.push(file)
         }
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
-            console.log(data.message);
+            console.log(data);
             if (data.success){
-                console.log("success");
                 const task_id = data.task_id;
                 var eventSource = new EventSource('/task/' + task_id);
                 eventSource.onmessage = function (e) {
                     message = JSON.parse(e.data)
+                    console.log(message);
                     if (!message.success){
-                        eventSource.close();
                         console.log("Something went wrong");
-                    }else if(message.status_code === 0){
-                        console.log("Task is finished");
+                        eventSource.close();
+                    }else if(message.status_code === 2){
+                        console.log("installing project");
+                    }else if(message.status_code === 1){
+                        console.log("installing failed");
                         eventSource.close();
                     }else{
-                        console.log("installing project");
+                        console.log("Task is finished");
+                        eventSource.close();
                     }
-                    
                 };
             }
         }).catch();

@@ -165,21 +165,22 @@ def handle(req):
         # check locust scripts in locust folder
         if not Path(f'{project_path}/locust').exists():
             return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
-        project_tests = []
-        for f in os.scandir(f'{project_path}/locust'):
-            if f.is_file():
-                pass
+
+        # check if locust tests exist
+        locust_tests_exist = False
+        for file in os.listdir(f'{project_path}/locust'):
+            if file.endswith('.py'):
+                locust_tests_exist = True
+                break
+        if not locust_tests_exist:
+            return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
 
         # create a virtual env and install req
         # check if req exists
-        requierments_cmd = ''
         if Path(f'{project_path}/requirements.txt').exists():
             # windows
-            requierments_cmd = f' && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt'
-
-        # cerate a venv
-        tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env {requierments_cmd}', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
-
+            # cerate a venv
+            tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
 
         # create database file for this project
         return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
@@ -190,9 +191,11 @@ def handle(req):
             return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
         if task_id in tasks:
             if tasks[task_id].poll() is not None: # process finished
+                if tasks[task_id].returncode != 0:
+                    return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}) 
                 return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
-            return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'task not finished'})
-        return json.dumps({'success':False,'exit_code':4,'message':'task not found'})
+            return json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'})
+        return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'})
 
     if command == 3: # get installed projects
         projects = []
