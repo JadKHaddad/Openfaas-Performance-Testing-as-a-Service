@@ -46,6 +46,28 @@ if not Path(projects_dir).exists():
 #             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
             
 # static functions
+def kill_running_tasks():
+    if platform.system() == 'Windows': # windows
+        for task_id in tasks:
+            tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+            tasks[task_id].kill()
+            del tasks[task_id]
+    else:
+        for task_id in tasks:
+            os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+            del tasks[task_id]
+
+def clean_up():
+    kill_running_tasks()
+    if Path(projects_dir).exists():
+        for f in os.scandir(projects_dir):
+            if f.is_dir():
+                shutil.rmtree(f.path)
+            if f.is_file():
+                os.remove(f.path)
+    if Path('env/').exists():
+        shutil.rmtree('env/')
+
 def get_test_info(project_name, script_name, id):
     test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
     csv_file_path = f'{test_dir}/results_stats.csv'
@@ -348,6 +370,15 @@ def handle(req):
             return jsonify(success=False,exit_code=6,message="test does not exist"), headers
         shutil.rmtree(test_dir) # remove test_dir
         return jsonify(success=True,exit_code=0,message="deleted"), headers
+
+    if command == 911: # kill all running tasks
+        kill_running_tasks()
+        return jsonify(success=True,exit_code=0,message="tasks killed"), headers
+
+    if command == 912: # clean up
+        clean_up()
+        return jsonify(success=True,exit_code=0,message="clean up"), headers
+
 
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None
