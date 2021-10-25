@@ -1,7 +1,57 @@
+function createProjectsList(projects) {
+    var list = document.createElement('div');
+    list.classList.add('list-group');
+    for (var i = 0; i < projects.length; i++)  (function (i) {
+        var item = document.createElement('a');
+        item.setAttribute('id', projects[i]);
+        item.classList.add('list-group-item');
+        item.classList.add('list-group-item-action');
+        const template = `
+            <div class="form-check">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheckDefault-${projects[i]}"
+            />
+            <label class="test-label">
+                ${projects[i]}
+            </label>
+            </div>
+        `;
+        item.innerHTML = template;
+        // handle check box events
+        $(item).find('input').change(function () {
+
+            if (this.checked) {
+                $('#delete-project').prop("disabled", false);
+                // add test to selected projects
+                selectedProjects.push(projects[i].id);
+            } else {
+                // remove test from selected projects
+                const index = selectedProjects.indexOf(projects[i].id);
+                if (index > -1) {
+                    selectedProjects = selectedProjects.splice(index + 1, 1);
+                }
+                if (selectedProjects.length < 1) {
+                    $('#delete-project').prop("disabled", true);
+                }
+            }
+        });
+
+        $(item).find('label').on('click', function () {
+            window.location.href = '/project/' + projects[i];
+        });
+        list.appendChild(item);
+    })(i);
+    return list;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const input = document.getElementById("project-input");
 
     var contents = []
+    var selectedProjects = [];
 
     input.onchange = function(evt) {
         if(!window.FileReader) return; // Browser is not compatible
@@ -61,6 +111,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3 }) }).then(data => data.json()).then(data => {
-        console.log(data);
+        if (data.success) {
+            const projects = data.projects;
+            $('#content').append(createProjectsList(projects));
+        }
     }).catch();
+
+    const deleteBtn = $('#delete-project');
+    deleteBtn.prop("disabled", true);
+    //handle delete button
+    deleteBtn.on("click", function () {
+        setConfirmationModal('Are you sure you want to delete these projects?', function () {
+            // fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: selectedprojects }) }).then(data => data.json()).then(data => {
+            //     $('#dismiss-confirmation-modal-btn').click();
+            //     location.reload();
+            // }).catch();
+        });
+        return false;
+    });
 });

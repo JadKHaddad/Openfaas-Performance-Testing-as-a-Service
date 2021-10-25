@@ -177,14 +177,16 @@ def handle(req):
 
         # create a virtual env and install req
         # check if req exists
-        if Path(f'{project_path}/requirements.txt').exists():
-            
+        if platform.system() == 'Windows': # windows
+            #if Path(f'{project_path}/requirements.txt').exists():
+                #tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , 
+            pass
             # cerate a venv
-            if platform.system() == 'Windows':
-                # windows
-                tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL ,     
-            else:
-                tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && projects/{project_name}/env/bin/pip3 install -r projects/{project_name}/requirements.txt', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
+        else:
+            req_cmd = '' 
+            if Path(f'{project_path}/requirements.txt').exists():    
+                req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
+            tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
                 
         # create database file for this project
         return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
@@ -213,6 +215,17 @@ def handle(req):
                 else:
                     projects.append(project_name)
         return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
+    
+    if command == 4: # get locust scripts of a project
+        project_name = data.get('project_name') or None
+        if project_name is None:
+            return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+        project_path = f'{projects_dir}/{project_name}'
+        locust_scripts = []
+        for file in os.listdir(f'{project_path}/locust'):
+            if file.endswith('.py'):
+                locust_scripts.append(file.split('.')[0])
+        return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None

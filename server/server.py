@@ -69,7 +69,10 @@ def task(task_id):
             gevent.sleep(1)
     return Response(task_stream(), mimetype="text/event-stream")
 
-
+@app.route('/project/<name>')
+def project(name):
+    theme = get_theme()
+    return render_template('project.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=name)
 
 @app.route('/license')
 def license():
