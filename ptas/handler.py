@@ -145,7 +145,6 @@ def handle(req):
         if files is None :
             return jsonify(success=False,exit_code=1,message="bad request"), headers 
         # create an id for the project
-        project_id = 'p_' + str(t.time()).replace('.', '_')
         project_name = files[0]['name'].split('/')[:-1][0]
         project_path = f'{projects_dir}/{project_name}'
         # check if project folder exists
@@ -187,7 +186,6 @@ def handle(req):
                 req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
             tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
 
-        # create database file for this project
         return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
     if command == 2: # check task
@@ -257,7 +255,6 @@ def handle(req):
         
         command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
         
-
         workers_count = workers if workers is not None else 0
         started_at = t.time()
         # save test info
