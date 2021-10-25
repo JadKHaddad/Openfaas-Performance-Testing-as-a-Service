@@ -106,12 +106,12 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
         spinner.removeClass('hidden');
         // get updates
 
-        eventSource = new EventSource('/stream/' + id);
-        eventSource.onmessage = function (e) {
-            if (!IsJsonString(e.data)) return;
-            message = JSON.parse(e.data)
-            interpretMessage(message);
-        };
+        // eventSource = new EventSource('/stream/' + id);
+        // eventSource.onmessage = function (e) {
+        //     if (!IsJsonString(e.data)) return;
+        //     message = JSON.parse(e.data)
+        //     interpretMessage(message);
+        // };
     }
 
     stopBtn.on('click', function () {

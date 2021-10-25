@@ -160,8 +160,11 @@ def handle(req):
             uploaded_file_name = uploaded_file['name']
             uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
             pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-            with open(f'{projects_dir}/{uploaded_file_name}', 'wb') as file:
-                file.write(str.encode(uploaded_file['content'], encoding='UTF-8'))
+            content = str(uploaded_file['content'])
+            if uploaded_file_name.endswith('.py'):
+                content = 'import os, sys\ncurrentdir = os.path.dirname(os.path.realpath(__file__))\nparentdir = os.path.dirname(currentdir)\nsys.path.append(parentdir)\n' + content
+            with open(f'{projects_dir}/{uploaded_file_name}', 'w', encoding='UTF-8') as file:
+                file.write(content)
         # check locust scripts in locust folder
         if not Path(f'{project_path}/locust').exists():
             return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
@@ -187,7 +190,7 @@ def handle(req):
             if Path(f'{project_path}/requirements.txt').exists():    
                 req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
             tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
-                
+
         # create database file for this project
         return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
@@ -239,7 +242,28 @@ def handle(req):
         if project_name is None or script_name is None or users is None or spawn_rate is None:
             return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
-        return jsonify(success=True,exit_code=0), headers
+        id = str(t.time()).replace('.', '_')
+
+        # create a test folder
+        test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+        pathlib.Path(test_dir).mkdir(parents=True, exist_ok=True) 
+        
+        file_path = f'{projects_dir}/{project_name}/locust/{script_name}.py'
+        results_path = f'{test_dir}/results'
+        time_command = f'-t {str(time)}s' if time is not None else ''
+        host_command = f'--host {host}' if host is not None else ''
+    
+        command = f'env/{project_name}/bin/locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --html {results_path}.html'
+        started_at = t.time()
+
+        task_id = f'{project_name}_{script_name}_{id}'
+        if platform.system() == 'Windows': # windows
+            #self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            pass        
+        else: # linux
+            tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid) # stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, 
+
+        return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
 
         # if command == 1: # deploy -> sync

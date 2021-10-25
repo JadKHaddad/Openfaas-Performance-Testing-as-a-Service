@@ -56,17 +56,20 @@ document.addEventListener("DOMContentLoaded", function () {
     input.onchange = function(evt) {
         if(!window.FileReader) return; // Browser is not compatible
         for (var i = 0; i < evt.target.files.length ; i ++){
-            var reader = new FileReader();
-            reader.onload = function(evt) {
-                if(evt.target.readyState != 2) return;
-                if(evt.target.error) {
-                    alert('Error while reading file');
-                    return;
-                }
-                contents.push(evt.target.result);
-            };
-            reader.readAsBinaryString(evt.target.files[i]);
+            if(evt.target.files[i].name.split('.').pop() === 'py' || evt.target.files[i].name.split('.').pop() === 'txt') {
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    if(evt.target.readyState != 2) return;
+                    if(evt.target.error) {
+                        alert('Error while reading file');
+                        return;
+                    }
+                    contents.push(evt.target.result);
+                };
+                reader.readAsText(evt.target.files[i]);
+            }
         }
+
     };
 
 
@@ -74,16 +77,21 @@ document.addEventListener("DOMContentLoaded", function () {
         var myArray = [];
         var file = {};
         const files = input.files;
+        var index = 0;
         for(var i = 0; i < files.length; i++){
-            file = {
-                'size' : files[i].size,
-                'type' : files[i].type,
-                'name' : files[i].webkitRelativePath,
-                'content' : contents[i]
-            } 
-            //add the file obj to your array
-            myArray.push(file)
+            if(files[i].name.split('.').pop() === 'py' || files[i].name.split('.').pop() === 'txt') {
+                file = {
+                    'size' : files[i].size,
+                    'type' : files[i].type,
+                    'name' : files[i].webkitRelativePath,
+                    'content' : contents[index]
+                } 
+                //add the file obj to your array
+                myArray.push(file)
+                index = index + 1;
+            }
         }
+
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
             console.log(data);
             if (data.success){
