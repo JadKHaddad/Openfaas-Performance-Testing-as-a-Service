@@ -74,6 +74,11 @@ def project(name):
     theme = get_theme()
     return render_template('project.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=name)
 
+@app.route('/project/<project_name>/<script_name>')
+def script(project_name, script_name):
+    theme = get_theme()
+    return render_template('script.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=project_name, script_name=script_name)
+
 @app.route('/license')
 def license():
     theme = get_theme()

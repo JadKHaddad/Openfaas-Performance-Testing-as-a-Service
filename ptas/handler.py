@@ -219,13 +219,28 @@ def handle(req):
     if command == 4: # get locust scripts of a project
         project_name = data.get('project_name') or None
         if project_name is None:
-            return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+            return jsonify(success=False,exit_code=1,message="bad request"), headers 
         project_path = f'{projects_dir}/{project_name}'
         locust_scripts = []
         for file in os.listdir(f'{project_path}/locust'):
             if file.endswith('.py'):
                 locust_scripts.append(file.split('.')[0])
         return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
+
+    if command == 5:  # start a test
+        project_name = data.get("project_name") or None
+        script_name = data.get("script_name") or None
+        users = data.get("users") or None
+        spawn_rate = data.get("spawn_rate") or None
+        workers = data.get("workers") or None
+        host = data.get("host") or None
+        time = data.get("time") or None
+
+        if project_name is None or script_name is None or users is None or spawn_rate is None:
+            return jsonify(success=False,exit_code=1,message="bad request"), headers 
+
+        return jsonify(success=True,exit_code=0), headers
+
 
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None

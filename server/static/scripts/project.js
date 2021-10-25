@@ -1,4 +1,4 @@
-function createTestsList(tests) {
+function createTestsList(tests, project_name) {
     var list = document.createElement('div');
     list.classList.add('list-group');
     for (var i = 0; i < tests.length; i++)  (function (i) {
@@ -15,7 +15,7 @@ function createTestsList(tests) {
 
 
         $(item).find('label').on('click', function () {
-            window.location.href = '/locust/' + tests[i];
+            window.location.href = '/project/' + project_name + '/' +  tests[i];
         });
         list.appendChild(item);
     })(i);
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 4 , project_name:project_name}) }).then(data => data.json()).then(data => {
         if (data.success) {
             const tests = data.locust_scripts;
-            $('#content').append(createTestsList(tests));
+            $('#content').append(createTestsList(tests, project_name));
         }
     }).catch();
 });
