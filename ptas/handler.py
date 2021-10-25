@@ -162,7 +162,7 @@ def handle(req):
             pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
             content = str(uploaded_file['content'])
             if uploaded_file_name.endswith('.py'):
-                content = 'import os, sys\ncurrentdir = os.path.dirname(os.path.realpath(__file__))\nparentdir = os.path.dirname(currentdir)\nsys.path.append(parentdir)\n' + content
+                content = '# automatically added lines to manage imports\nimport os, sys\ncurrentdir = os.path.dirname(os.path.realpath(__file__))\nparentdir = os.path.dirname(currentdir)\nsys.path.append(parentdir)\n# original content\n' + content
             with open(f'{projects_dir}/{uploaded_file_name}', 'w', encoding='UTF-8') as file:
                 file.write(content)
         # check locust scripts in locust folder
@@ -248,12 +248,18 @@ def handle(req):
         test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
         pathlib.Path(test_dir).mkdir(parents=True, exist_ok=True) 
         
-        file_path = f'{projects_dir}/{project_name}/locust/{script_name}.py'
-        results_path = f'{test_dir}/results'
+        # save test info
+        info_file = f'{test_dir}/info.txt'
+        with open(info_file, "w", encoding="UTF-8") as file:
+            file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers, "time": time, "date":t.time()}))
+
+        results_path = f'locust/{script_name}/{id}/results'
+        log_path = f'locust/{script_name}/{id}/log.log'
         time_command = f'-t {str(time)}s' if time is not None else ''
         host_command = f'--host {host}' if host is not None else ''
-    
-        command = f'env/{project_name}/bin/locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --html {results_path}.html'
+        
+
+        command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
         started_at = t.time()
 
         task_id = f'{project_name}_{script_name}_{id}'

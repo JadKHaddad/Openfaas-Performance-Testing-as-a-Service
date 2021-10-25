@@ -50,48 +50,42 @@ function createProjectsList(projects) {
 document.addEventListener("DOMContentLoaded", function () {
     const input = document.getElementById("project-input");
 
-    var contents = []
+
+    var myArray = [];
     var selectedProjects = [];
 
     input.onchange = function(evt) {
+        const files = evt.target.files;
+        myArray = []
         if(!window.FileReader) return; // Browser is not compatible
-        for (var i = 0; i < evt.target.files.length ; i ++){
-            if(evt.target.files[i].name.split('.').pop() === 'py' || evt.target.files[i].name.split('.').pop() === 'txt') {
-                var reader = new FileReader();
-                reader.onload = function(evt) {
-                    if(evt.target.readyState != 2) return;
-                    if(evt.target.error) {
-                        alert('Error while reading file');
-                        return;
-                    }
-                    contents.push(evt.target.result);
-                };
-                reader.readAsText(evt.target.files[i]);
-            }
-        }
-
-    };
-
-
-    $('#add-btn').on('click', function(){
-        var myArray = [];
-        var file = {};
-        const files = input.files;
-        var index = 0;
-        for(var i = 0; i < files.length; i++){
-            if(files[i].name.split('.').pop() === 'py' || files[i].name.split('.').pop() === 'txt') {
-                file = {
+        for (var i = 0; i < evt.target.files.length ; i ++)(function (i) {
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                if(evt.target.readyState != 2) return;
+                if(evt.target.error) {
+                    alert('Error while reading file');
+                    return;
+                }
+                var file = {
                     'size' : files[i].size,
                     'type' : files[i].type,
                     'name' : files[i].webkitRelativePath,
-                    'content' : contents[index]
+                    'content' : evt.target.result
                 } 
                 //add the file obj to your array
                 myArray.push(file)
-                index = index + 1;
-            }
-        }
+            };
+            reader.readAsText(files[i]);
+        })(i);
+        $('#add-btn').prop("disabled", false);
+    };
 
+    $('#add-btn-Modal').on('click', function(){
+        $('#add-btn').prop("disabled", true);
+
+    });
+    
+    $('#add-btn').on('click', function(){
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
             console.log(data);
             if (data.success){
