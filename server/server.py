@@ -79,22 +79,12 @@ def script(project_name, script_name):
     theme = get_theme()
     return render_template('script.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=project_name, script_name=script_name)
 
-@app.route('/license')
-def license():
-    theme = get_theme()
-    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
-@app.route('/test/<id>')
-def test(id):
-    theme = get_theme()
-    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
-@app.route('/stream/<id>')
-def stream(id):
+@app.route('/stream/<project_name>/<script_name>/<id>')
+def stream(project_name,script_name,id):
     url = request.cookies.get('openfaasurl')
     if url is not None:
         if url == 'None':
-            data = {'command':4,'id': id, 'local':True}
+            data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
             def stats_stream():
                 while True:
                     response = handler.handle(json.dumps(data))
@@ -109,13 +99,25 @@ def stream(id):
                 url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    data = {'command':4,'id': id}
+    data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
     def stats_stream():
         while True:
             response = requests.post(url, data=json.dumps(data))
             yield f'data: {response.text}\n\n'
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
+
+@app.route('/license')
+def license():
+    theme = get_theme()
+    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+
+@app.route('/test/<id>')
+def test(id):
+    theme = get_theme()
+    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+
+
 
 @app.route('/proxy', methods=['POST'])
 def proxy():

@@ -1,4 +1,4 @@
-function CreateTest(id, users, spawnRate, workers, host, time, status, stats, valid, startedAt) {
+function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt) {
     var test = document.createElement('div');
     test.setAttribute('id', id);
     if (host == null) host = '';
@@ -7,7 +7,7 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
     <div class="card">
         <div class="card-header">
             <div class="row">
-                <div class="col-2 test-id"> ${id}</div>
+                <div class="col-1 test-id"> ${id}</div>
                 <div class="col-2"><i class="fas fa-user-alt"></i>  ${users}</div>
                 <div class="col-2"><i class="fas fa-users"></i>  ${spawnRate}</div>
                 <div class="col-2">workers: </i>  ${workers}</div>
@@ -74,7 +74,6 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
     const notValid = $(test).find('.not-valid');
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
-    const codeLink = $(test).find('.code');
     const results = $(test).find('.card-body > .results');
     const footer = $(test).find('.card-footer');
     const lin = $(test).find('.lin');
@@ -83,7 +82,7 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
     var eventSource;
     var intvSet = false;
 
-    if (status == 0) { // not deployed
+    if (status == 0) { // not running
         stopBtn.prop("disabled", true);
         downloadBtn.prop("disabled", false);
         resultsBtn.prop("disabled", false);
@@ -106,12 +105,12 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
         spinner.removeClass('hidden');
         // get updates
 
-        // eventSource = new EventSource('/stream/' + id);
-        // eventSource.onmessage = function (e) {
-        //     if (!IsJsonString(e.data)) return;
-        //     message = JSON.parse(e.data)
-        //     interpretMessage(message);
-        // };
+        eventSource = new EventSource('/stream/' + project_name + "/" + script_name + "/"+ id);
+        eventSource.onmessage = function (e) {
+            if (!IsJsonString(e.data)) return;
+            message = JSON.parse(e.data)
+            interpretMessage(message);
+        };
     }
 
     stopBtn.on('click', function () {
@@ -191,10 +190,6 @@ function CreateTest(id, users, spawnRate, workers, host, time, status, stats, va
         const jData = JSON.parse(stats)
         update(jData);
     }
-
-    codeLink.on('click', function () {
-        setUpCode(code);
-    });
 
     function interpretMessage(message) {
         if (message.success) {
@@ -325,11 +320,41 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.success) {
                 const id = data.id;
                 const started_at = data.started_at;
-                const test = CreateTest(id, users, spawnRate, workers, host, time, 1, null, null, started_at);
+                const test = CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, 1, null, null, started_at);
                 document.getElementById('tests').prepend(test);
                 dismissBtn.click();
             }
         }).catch();
         return false;
     });
+
+    // get tests of this script
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7 , project_name:project_name, script_name:script_name}) }).then(data => data.json()).then(data => {
+        if (data.success) {
+            const tests = data.tests;
+            console.log(tests);
+            if (tests != null) {
+                for (var i = 0; i < tests.length; i++)(function (i) {
+                    var users = null;
+                    var spawn_rate = null;
+                    var host = null;
+                    var time = null;
+                    var workers = null;
+                    var started_at = null;
+                    const info = JSON.parse(tests[i].info);
+                    if (info != null) {
+                        users = info.users;
+                        spawn_rate = info.spawn_rate;
+                        host = info.host;
+                        time = info.time;
+                        workers = info.workers;
+                        started_at = info.started_at;
+                    }
+                    const test = CreateTest(project_name, script_name, tests[i].id, users, spawn_rate, workers, host, time, tests[i].status,tests[i].data ,tests[i].valid, started_at);
+
+                    document.getElementById('tests').appendChild(test);
+                })(i);
+            }
+        }
+    }).catch();
 });

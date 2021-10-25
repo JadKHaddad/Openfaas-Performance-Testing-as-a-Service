@@ -17,7 +17,6 @@ import pathlib
 
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
-tests = {}
 tasks = {}
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
@@ -46,36 +45,33 @@ if not Path(projects_dir).exists():
 #         else:
 #             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
             
-# # static functions
-# def get_test_info(id):
-#     test_dir = join(tests_dir, id)
-#     csv_file_path = join(test_dir, f'{id}_stats.csv')
-#     info_file_path = join(test_dir, f'{id}_info.txt')
-#     code_file_path = join(test_dir, f'{id}.py')
-#     valid = True
+# static functions
+def get_test_info(project_name, script_name, id):
+    test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+    csv_file_path = f'{test_dir}/results_stats.csv'
+    info_file_path = f'{test_dir}/info.txt'
+    task_id = f'{project_name}_{script_name}_{id}'
+        
+    valid = True
 
-#     if Path(csv_file_path).exists():
-#         pd_data = pd.read_csv(csv_file_path) 
-#         j = pd_data.to_json(orient='records')
-#     else:
-#         j = None
-#     if Path(info_file_path).exists():
-#         with open(info_file_path, 'r') as file:
-#             info = file.read()
-#     else:
-#         info = None
-#     if Path(code_file_path).exists():
-#         with open(code_file_path, 'r') as file:
-#             code = file.read()
-#     else:
-#         code = None
-#     if not Path(csv_file_path).exists(): # test is not valid
-#         valid = False
-#     if id in tests:
-#         data = {"id":id, "status":1, "started_at": tests[id].started_at, "data":j, "info":info, "code":code, "valid":valid} # status 1 -> test is running 
-#     else:
-#         data = {"id":id, "status":0, "data":j, "info":info, "code":code, "valid":valid} # status 0 -> test is not running
-#     return data 
+    if Path(csv_file_path).exists():
+        pd_data = pd.read_csv(csv_file_path) 
+        j = pd_data.to_json(orient='records')
+    else:
+        j = None
+    if Path(info_file_path).exists():
+        with open(info_file_path, 'r') as file:
+            info = file.read()
+    else:
+        info = None
+
+    if not Path(csv_file_path).exists(): # test is not valid
+        valid = False
+    if task_id in tasks:
+        data = {"id":id, "status":1, "data":j, "info":info,  "valid":valid} # status 1 -> test is running 
+    else:
+        data = {"id":id, "status":0, "data":j, "info":info, "valid":valid} # status 0 -> test is not running
+    return data 
 
 # def clean_up_cache(id):
 #     test_dir = join(tests_dir, id)
@@ -225,9 +221,11 @@ def handle(req):
             return jsonify(success=False,exit_code=1,message="bad request"), headers 
         project_path = f'{projects_dir}/{project_name}'
         locust_scripts = []
-        for file in os.listdir(f'{project_path}/locust'):
-            if file.endswith('.py'):
-                locust_scripts.append(file.split('.')[0])
+        # check if project exists
+        if Path(project_path).exists():
+            for file in os.listdir(f'{project_path}/locust'):
+                if file.endswith('.py'):
+                    locust_scripts.append(file.split('.')[0])
         return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
     if command == 5:  # start a test
@@ -242,25 +240,30 @@ def handle(req):
         if project_name is None or script_name is None or users is None or spawn_rate is None:
             return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
-        id = str(t.time()).replace('.', '_')
+        # check if script exists
+        script_path = f'{projects_dir}/{project_name}/locust/{script_name}.py'
+        if not Path(script_path).exists():
+            return jsonify(success=False,exit_code=5,message="script does not exist"), headers 
 
+        id = str(t.time()).replace('.', '_')
         # create a test folder
         test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
         pathlib.Path(test_dir).mkdir(parents=True, exist_ok=True) 
         
-        # save test info
-        info_file = f'{test_dir}/info.txt'
-        with open(info_file, "w", encoding="UTF-8") as file:
-            file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers, "time": time, "date":t.time()}))
-
         results_path = f'locust/{script_name}/{id}/results'
         log_path = f'locust/{script_name}/{id}/log.log'
         time_command = f'-t {str(time)}s' if time is not None else ''
         host_command = f'--host {host}' if host is not None else ''
         
-
         command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+        
+
+        workers_count = workers if workers is not None else 0
         started_at = t.time()
+        # save test info
+        info_file = f'{test_dir}/info.txt'
+        with open(info_file, "w", encoding="UTF-8") as file:
+            file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
 
         task_id = f'{project_name}_{script_name}_{id}'
         if platform.system() == 'Windows': # windows
@@ -271,6 +274,53 @@ def handle(req):
 
         return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
+    if command == 6: # get test stats
+        project_name = data.get("project_name") or None
+        script_name = data.get("script_name") or None
+        id = data.get("id") or None
+        local = data.get('local') or None
+        if project_name is None or script_name is None or id is None:
+            if local is not None:
+                return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        # check if test is runnig
+        task_id = f'{project_name}_{script_name}_{id}'
+        if task_id in tasks:
+            test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+            csv_file_path = f'{test_dir}/results_stats.csv'
+            if tasks[task_id].poll() is not None: # process finished
+                if not Path(csv_file_path).exists(): # test is not valid
+                    del tasks[task_id]
+                    if local is not None:
+                        return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
+                    return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
+                del tasks[task_id]
+            if not Path(csv_file_path).exists():
+                if local is not None:
+                    return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
+                return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
+            pd_data = pd.read_csv(csv_file_path) 
+            j = pd_data.to_json(orient='records')
+            if local is not None:
+                return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
+            return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
+        if local is not None:
+            return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
+        return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
+
+    if command == 7: # get test stats
+        project_name = data.get("project_name") or None
+        script_name = data.get("script_name") or None
+        if project_name is None or script_name is None :
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        tests_folders = []
+        scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
+        if Path(scrpit_folder_path).exists():
+            for f in os.scandir(scrpit_folder_path):
+                if f.is_dir():
+                    id = os.path.basename(f.path)
+                    tests_folders.append(get_test_info(project_name, script_name, id))
+        return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None
