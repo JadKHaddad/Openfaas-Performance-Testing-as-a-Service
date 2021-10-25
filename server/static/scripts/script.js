@@ -114,7 +114,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     }
 
     stopBtn.on('click', function () {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3, id: id }) }).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, project_name:project_name, script_name:script_name, id: id }) }).then(data => data.json()).then(data => {
             if (data.success) {
                 idCol.removeClass('green').removeClass('red');
                 clearInterval(intv);
@@ -173,8 +173,8 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
 
     deleteBtn.on('click', function () {
         setConfirmationModal(id + ' Are you sure you want to delete this test?', function () {
-            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: [id] }) }).then(data => data.json()).then(data => {
-                if (data.success && data.deleted.includes(id)) {
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 9, project_name:project_name, script_name:script_name, id: id }) }).then(data => data.json()).then(data => {
+                if (data.success) {
                     $('#dismiss-confirmation-modal-btn').click();
                     $(test).remove();
                     if (eventSource != null) eventSource.close();

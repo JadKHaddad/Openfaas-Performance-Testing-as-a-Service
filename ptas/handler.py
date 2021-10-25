@@ -319,6 +319,36 @@ def handle(req):
                     tests_folders.append(get_test_info(project_name, script_name, id))
         return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
+    if command == 8: # stop test
+        project_name = data.get("project_name") or None
+        script_name = data.get("script_name") or None
+        id = data.get("id") or None
+        if project_name is None or script_name is None or id is None:
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        task_id = f'{project_name}_{script_name}_{id}'
+
+        if task_id not in tasks:
+            return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
+        if platform.system() == 'Windows': # windows
+            tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+            tasks[task_id].kill()
+        else:
+            os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+        del tasks[task_id]
+        return jsonify(success=True,exit_code=0,message="test is stopped"), headers
+
+    if command == 9: # delete test
+        project_name = data.get("project_name") or None
+        script_name = data.get("script_name") or None
+        id = data.get("id") or None
+        if project_name is None or script_name is None or id is None:
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+        if not Path(test_dir).exists():
+            return jsonify(success=False,exit_code=6,message="test does not exist"), headers
+        shutil.rmtree(test_dir) # remove test_dir
+        return jsonify(success=True,exit_code=0,message="deleted"), headers
+
         # if command == 1: # deploy -> sync
         #     users = data.get("users") or None
         #     spawn_rate = data.get("spawn_rate") or None
