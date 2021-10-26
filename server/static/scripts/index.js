@@ -102,13 +102,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     }else if(message.status_code === 1){
                         console.log("installing failed");
                         eventSource.close();
+                        $('#spinner').addClass('hidden');
+                        showInfo('Installation failed');
                     }else{
                         console.log("Task is finished");
                         eventSource.close();
+                        window.location.href = '/project/' + task_id;
                     }
                 };
             }
         }).catch();
+        $('#dismiss-btn').click();
+        $('#spinner').removeClass('hidden');
         return false;
     });
 
