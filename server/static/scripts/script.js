@@ -4,48 +4,8 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     if (host == null) host = '';
     if (time == null) time = '';
     const template = `
-    <div class="card">
-        <div class="card-header">
-            <div class="row">
-                <div class="col-1 test-id"> ${id}</div>
-                <div class="col-2"><i class="fas fa-user-alt"></i>  ${users}</div>
-                <div class="col-2"><i class="fas fa-users"></i>  ${spawnRate}</div>
-                <div class="col-2">workers: </i>  ${workers}</div>
-                <div class="col-2"><i class="fas fa-globe"></i>  ${host}</div>
-                <div class="col-1"><i class="fas fa-clock"></i>  ${time}</div>
-                <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text"></label></div>
-                <div class="col-1">
-                    <div class="spinner-border text-primary spinner hidden"></div>
-                    <i class="fas fa-check check hidden"></i>
-                    <i class="fas fa-times not-valid hidden"></i>
-                </div>
-
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-1">Type</div>
-                    <div class="col-2">Name</div>
-                    <div class="col-1">Requests</div>
-                    <div class="col-1">Fails</div>
-                    <div class="col-1">Med</div>
-                    <div class="col-1">Avg (ms)</div>
-                    <div class="col-1">Min (ms)</div>
-                    <div class="col-1">Max (ms)</div>
-                    <div class="col-1">Avg size (bytes)</div>
-                    <div class="col-1">RPS</div>
-                    <div class="col-1">FPS</div>
-                </div>
-            </div>
-            <div class="container-fluid results">
-            </div>
-        </div>
-        <div class="card-footer">
-
-        </div>
-    </div>
-    <div class="buttons btn-container">
+    <div class="test-container">
+        <div class="buttons btn-container">
         <button type="button" class="btn btn-primary stop-test" disabled>
             Stop
         </button>
@@ -56,10 +16,52 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         Show results
         </button>
         <button type="button" class="btn btn-danger delete-test">Delete</button>
-    </div>
-    <div class="img-container">
-    <img class="lin hidden" src="">
-    <img class="reg hidden" src="">
+        </div>
+        <div class="img-container">
+        <img class="lin hidden" src="">
+        <img class="reg hidden" src="">
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-3 test-id"> ${id}</div>
+                    <div class="col-1"><i class="fas fa-user-alt"></i>  ${users}</div>
+                    <div class="col-1"><i class="fas fa-users"></i>  ${spawnRate}</div>
+                    <div class="col-1"><i class="fas fa-hard-hat"></i> ${workers}</div>
+                    <div class="col-3"><i class="fas fa-globe"></i>  ${host}</div>
+                    <div class="col-1"><i class="fas fa-clock"></i>  ${time}</div>
+                    <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text"></label></div>
+                    <div class="col-1">
+                        <div class="spinner-border text-primary spinner hidden"></div>
+                        <i class="fas fa-check check hidden"></i>
+                        <i class="fas fa-times not-valid hidden"></i>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-1">Type</div>
+                        <div class="col-2">Name</div>
+                        <div class="col-1">Requests</div>
+                        <div class="col-1">Fails</div>
+                        <div class="col-1">Med</div>
+                        <div class="col-1">Avg (ms)</div>
+                        <div class="col-1">Min (ms)</div>
+                        <div class="col-1">Max (ms)</div>
+                        <div class="col-1">Avg size (bytes)</div>
+                        <div class="col-1">RPS</div>
+                        <div class="col-1">FPS</div>
+                    </div>
+                </div>
+                <div class="container-fluid results">
+                </div>
+            </div>
+            <div class="card-footer">
+
+            </div>
+        </div>
     </div>
     `;
 
@@ -105,7 +107,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         spinner.removeClass('hidden');
         // get updates
 
-        eventSource = new EventSource('/stream/' + project_name + "/" + script_name + "/"+ id);
+        eventSource = new EventSource('/stream/' + project_name + "/" + script_name + "/" + id);
         eventSource.onmessage = function (e) {
             if (!IsJsonString(e.data)) return;
             message = JSON.parse(e.data)
@@ -114,7 +116,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     }
 
     stopBtn.on('click', function () {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, project_name:project_name, script_name:script_name, id: id }) }).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, project_name: project_name, script_name: script_name, id: id }) }).then(data => data.json()).then(data => {
             if (data.success) {
                 idCol.removeClass('green').removeClass('red');
                 clearInterval(intv);
@@ -139,7 +141,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     });
 
     resultsBtn.on('click', function () {
-        if(lin.hasClass('hidden') && reg.hasClass('hidden')){
+        if (lin.hasClass('hidden') && reg.hasClass('hidden')) {
             if (lin.attr('src') == '' && reg.attr('src') == '') {
                 fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 1 }) }).then(data => data.json()).then(data => {
                     if (data.success) {
@@ -164,7 +166,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
             }
             lin.removeClass('hidden');
             reg.removeClass('hidden');
-        }else{
+        } else {
             lin.addClass('hidden');
             reg.addClass('hidden');
             resultsBtn.text('Show results');
@@ -173,7 +175,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
 
     deleteBtn.on('click', function () {
         setConfirmationModal(id + ' Are you sure you want to delete this test?', function () {
-            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 9, project_name:project_name, script_name:script_name, id: id }) }).then(data => data.json()).then(data => {
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 9, project_name: project_name, script_name: script_name, id: id }) }).then(data => data.json()).then(data => {
                 if (data.success) {
                     $('#dismiss-confirmation-modal-btn').click();
                     $(test).remove();
@@ -215,7 +217,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
             update(jData);
         } else {
             if (message.exit_code == 4) {
-                showInfo(id + 'There was an error running your locust file');
+                showInfo(id + ' There was an error running your locust file');
                 clearInterval(intv);
                 idCol.removeClass('green').addClass('red');
                 notValid.removeClass('hidden');
@@ -316,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, project_name: project_name, script_name: script_name, users: parseInt(users), spawn_rate: parseInt(spawnRate), workers: parseInt(workers),host: host, time: parseInt(time)}) }).then(data => data.json()).then(data => {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, project_name: project_name, script_name: script_name, users: parseInt(users), spawn_rate: parseInt(spawnRate), workers: parseInt(workers), host: host, time: parseInt(time) }) }).then(data => data.json()).then(data => {
             if (data.success) {
                 const id = data.id;
                 const started_at = data.started_at;
@@ -329,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // get tests of this script
-    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7 , project_name:project_name, script_name:script_name}) }).then(data => data.json()).then(data => {
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, project_name: project_name, script_name: script_name }) }).then(data => data.json()).then(data => {
         if (data.success) {
             const tests = data.tests;
             console.log(tests);
@@ -350,7 +352,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         workers = info.workers;
                         started_at = info.started_at;
                     }
-                    const test = CreateTest(project_name, script_name, tests[i].id, users, spawn_rate, workers, host, time, tests[i].status,tests[i].data ,tests[i].valid, started_at);
+                    const test = CreateTest(project_name, script_name, tests[i].id, users, spawn_rate, workers, host, time, tests[i].status, tests[i].data, tests[i].valid, started_at);
 
                     document.getElementById('tests').appendChild(test);
                 })(i);

@@ -77,8 +77,11 @@ def get_test_info(project_name, script_name, id):
     valid = True
 
     if Path(csv_file_path).exists():
-        pd_data = pd.read_csv(csv_file_path) 
-        j = pd_data.to_json(orient='records')
+        try:
+            pd_data = pd.read_csv(csv_file_path) 
+            j = pd_data.to_json(orient='records')
+        except:
+            j = None
     else:
         j = None
     if Path(info_file_path).exists():
@@ -274,10 +277,14 @@ def handle(req):
         log_path = f'locust/{script_name}/{id}/log.log'
         time_command = f'-t {str(time)}s' if time is not None else ''
         host_command = f'--host {host}' if host is not None else ''
-        
-        command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
-        
         workers_count = workers if workers is not None else 0
+
+        if workers_count > 0:
+            command = f'python3 distribute_work.py {project_name} {script_name} {id} {users} {spawn_rate} {workers_count} {host} {time}'
+        else:
+            command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+        
+
         started_at = t.time()
         # save test info
         info_file = f'{test_dir}/info.txt'
@@ -289,7 +296,7 @@ def handle(req):
             #self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
             pass        
         else: # linux
-            tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid) # stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, 
+            tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
 
         return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
@@ -327,7 +334,7 @@ def handle(req):
             return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
         return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
 
-    if command == 7: # get test stats
+    if command == 7: # get tests
         project_name = data.get("project_name") or None
         script_name = data.get("script_name") or None
         if project_name is None or script_name is None :
@@ -348,7 +355,7 @@ def handle(req):
         if project_name is None or script_name is None or id is None:
             return jsonify(success=False,exit_code=1,message="bad request"), headers
         task_id = f'{project_name}_{script_name}_{id}'
-
+        #stop the task
         if task_id not in tasks:
             return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
         if platform.system() == 'Windows': # windows
@@ -365,6 +372,16 @@ def handle(req):
         id = data.get("id") or None
         if project_name is None or script_name is None or id is None:
             return jsonify(success=False,exit_code=1,message="bad request"), headers
+        task_id = f'{project_name}_{script_name}_{id}'
+        #stop the task    
+        if task_id in tasks:
+            if platform.system() == 'Windows': # windows
+                tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                tasks[task_id].kill()
+            else:
+                os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+            del tasks[task_id]
+
         test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
         if not Path(test_dir).exists():
             return jsonify(success=False,exit_code=6,message="test does not exist"), headers
