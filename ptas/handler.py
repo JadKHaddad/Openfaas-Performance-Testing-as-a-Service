@@ -18,32 +18,36 @@ import pathlib
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
+
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
 
-# class Test():
-#     def __init__(self, id:str, users:int, spawn_rate:int, host:str, time:int, req:bool):
-#         time_command = f'-t {str(time)}s' if time is not None else ''
-#         host_command = f'--host {host}' if host is not None else ''
-#         test_dir = join(tests_dir, id)
-#         file_path = join(test_dir, f'{id}.py')
-#         results_name = join(test_dir, id)
-#         requirements_path = join(test_dir, f'requirements.txt')
-#         requirements_command = f'pip install -r {requirements_path} &&' if req else ''
-#         command = f'{requirements_command} locust -f {file_path} {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_name} --html {results_name}.html'
-#         self.started_at = t.time()
-#         if platform.system() == 'Windows':
-#             self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-#         else:
-#             self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, preexec_fn=os.setsid)
-
-#     def stop(self):
-#         if platform.system() == 'Windows':
-#             self.process.send_signal(signal.CTRL_BREAK_EVENT)
-#             self.process.kill()
-#         else:
-#             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+if not Path('distribute_work.py').exists():
+    with open('distribute_work.py', 'w', encoding='UTF-8') as file:
+        file.write("\
+import os\n\
+import sys\n\
+if __name__ == '__main__':\n\
+    project_name = sys.argv[1]\n\
+    script_name = sys.argv[2]\n\
+    id = sys.argv[3]\n\
+    users = sys.argv[4]\n\
+    spawn_rate = sys.argv[5]\n\
+    workers = sys.argv[6]\n\
+    host = sys.argv[7]\n\
+    time = sys.argv[8]\n\
+    results_path = f'locust/{script_name}/{id}/results'\n\
+    log_path = f'locust/{script_name}/{id}/log.log'\n\
+    time_command = f'-t {str(time)}s' if time is not None else ''\n\
+    host_command = f'--host {host}' if host is not None else ''\n\
+    command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --expect-workers={workers}'\n\
+    for i in range(0, int(workers)):\n\
+        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'\n\
+        worker_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker &'\n\
+        os.system(worker_command)\n\
+    os.system(command)\n\
+")
             
 # static functions
 def kill_running_tasks():
@@ -282,7 +286,6 @@ def handle(req):
             else:
                 command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
             
-
             started_at = t.time()
             # save test info
             info_file = f'{test_dir}/info.txt'
@@ -323,8 +326,10 @@ def handle(req):
                     if local is not None:
                         return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
                     return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
-                pd_data = pd.read_csv(csv_file_path) 
-                j = pd_data.to_json(orient='records')
+                j = None
+                if not os.stat(csv_file_path).st_size == 0:
+                    pd_data = pd.read_csv(csv_file_path) 
+                    j = pd_data.to_json(orient='records')
                 if local is not None:
                     return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
                 return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
