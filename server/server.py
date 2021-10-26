@@ -118,7 +118,6 @@ def test(id):
     return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 
-
 @app.route('/proxy', methods=['POST'])
 def proxy():
     url = request.cookies.get('openfaasurl')

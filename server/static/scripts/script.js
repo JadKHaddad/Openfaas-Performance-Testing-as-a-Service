@@ -133,7 +133,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     });
 
     downloadBtn.on('click', function () {
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, id: id }) }).then(response => response.blob()).then(blob => {
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 11, project_name: project_name, script_name: script_name, id: id }) }).then(response => response.blob()).then(blob => {
             var objectUrl = URL.createObjectURL(blob);
             window.location.href = objectUrl;
         });

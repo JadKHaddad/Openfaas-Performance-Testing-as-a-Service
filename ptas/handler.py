@@ -50,6 +50,12 @@ if __name__ == '__main__':\n\
 ")
             
 # static functions
+def get_script_dir(project_name, script_name):
+    return f'{projects_dir}/{project_name}/locust/{script_name}'
+
+def get_test_dir(project_name, script_name, id):
+    return f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+
 def kill_running_tasks():
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
@@ -73,7 +79,7 @@ def clean_up():
         shutil.rmtree('env/')
 
 def get_test_info(project_name, script_name, id):
-    test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+    test_dir = get_test_dir(project_name, script_name, id)
     csv_file_path = f'{test_dir}/results_stats.csv'
     info_file_path = f'{test_dir}/info.txt'
     task_id = f'{project_name}_{script_name}_{id}'
@@ -100,25 +106,27 @@ def get_test_info(project_name, script_name, id):
         data = {"id":id, "status":0, "data":j, "info":info, "valid":valid} # status 0 -> test is not running
     return data 
 
-# def clean_up_cache(id):
-#     test_dir = join(tests_dir, id)
-#     cache = join(test_dir, f'__pycache__')
-#     if Path(cache).exists():
-#         shutil.rmtree(cache)
+def clean_up_cache(project_name, script_name, id):
+    test_dir = get_test_dir(project_name, script_name, id)
+    cache = f'{test_dir}/__pycache__'
+    if Path(cache).exists():
+        shutil.rmtree(cache)
 
-# def zip_files(id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
-#     clean_up_cache(id)
-#     test_dir = join(tests_dir, id)
-#     if not Path(test_dir).exists():
-#         return False
-#     if not Path(join(tests_dir, f'{id}.zip')).exists(): # creates zip file if it does not exist
-#         shutil.make_archive(test_dir, 'zip', test_dir)
-#     return True
+def zip_files(project_name, script_name, id): # creates zip file if zip file does not exist, returns True if zip file is created or is already there
+    clean_up_cache(project_name, script_name, id)
+    test_dir = get_test_dir(project_name, script_name, id)
+    if not Path(test_dir).exists():
+        return False
+    script_dir = get_script_dir(project_name,script_name)
+    if not Path(f'{script_dir}/{id}.zip').exists(): # creates zip file if it does not exist
+        shutil.make_archive(test_dir, 'zip', test_dir)
+    return True
 
-# def delete_zip_file(id):
-#     zip_file = join(tests_dir, f'{id}.zip')
-#     if Path(zip_file).exists():
-#         os.remove(zip_file)
+def delete_zip_file(project_name, script_name, id):
+    script_dir = get_script_dir(project_name,script_name)
+    zip_file = f'{script_dir}/{id}.zip'
+    if Path(zip_file).exists():
+        os.remove(zip_file)
 
 # def create_plots(id): # creates plots if plots do no exist, returns True if plots are created or are already there
 #     test_dir = join(tests_dir, id)
@@ -272,7 +280,7 @@ def handle(req):
 
             id = str(t.time()).replace('.', '_')
             # create a test folder
-            test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+            test_dir = get_test_dir(project_name, script_name, id)
             pathlib.Path(test_dir).mkdir(parents=True, exist_ok=True) 
             
             results_path = f'locust/{script_name}/{id}/results'
@@ -313,7 +321,7 @@ def handle(req):
             # check if test is runnig
             task_id = f'{project_name}_{script_name}_{id}'
             if task_id in tasks:
-                test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+                test_dir = get_test_dir(project_name, script_name, id)
                 csv_file_path = f'{test_dir}/results_stats.csv'
                 if tasks[task_id].poll() is not None: # process finished
                     if not Path(csv_file_path).exists(): # test is not valid
@@ -385,10 +393,11 @@ def handle(req):
                     os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
                 del tasks[task_id]
 
-            test_dir = f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
+            test_dir = get_test_dir(project_name, script_name, id)
             if not Path(test_dir).exists():
                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers
             shutil.rmtree(test_dir) # remove test_dir
+            delete_zip_file(project_name, script_name,id )
             return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects
@@ -408,6 +417,21 @@ def handle(req):
                     shutil.rmtree(project_env_path)
                 deleted.append(name)
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
+
+        if command == 11: # download a test
+            project_name = data.get("project_name") or None
+            script_name = data.get("script_name") or None
+            id = data.get("id") or None
+            if project_name is None or script_name is None or id is None:
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
+            #create plots
+            #create_plots(id)
+            # zip files
+            if zip_files(project_name,script_name,id):
+                script_dir = get_script_dir(project_name,script_name)
+                return send_from_directory(script_dir, f'{id}.zip'), headers
+            else:
+                return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
 
         if command == 911: # kill all running tasks
             kill_running_tasks()
