@@ -87,7 +87,6 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#dismiss-btn').click();
         $('#spinner').removeClass('hidden');
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
-            console.log(data);
             if (data.success){
                 const task_id = data.task_id;
                 var eventSource = new EventSource('/task/' + task_id);

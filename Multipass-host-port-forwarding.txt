@@ -15,11 +15,11 @@ sudo nano /etc/nginx/sites-available/default
 # /etc/nginx/sites-available/default should look like this:
 
 server {
-	listen 8080;
+	listen 8090;
 	server_name development;
 	location / {
 		proxy_pass http://localhost:9000;
 	}
 }
 
-# now you can access multipass instance on port 8000 from public ip address of the host on port 8080 or from localhost:9000
+# now you can access multipass instance on port 8000 from public ip address of the host on port 8090 or from localhost:9000
