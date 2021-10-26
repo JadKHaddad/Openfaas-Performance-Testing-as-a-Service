@@ -48,8 +48,7 @@ The VM's **IP** may change with time. View the VM's **IP** if needed:
 ```
 
 ## TODO
-* enable in browser locust code editing.
-* enable tests redeployment after editing.
+* Windows comp.
 
 ## Contributors
 * Jad K. Haddad <jadkhaddad@gmail.com>

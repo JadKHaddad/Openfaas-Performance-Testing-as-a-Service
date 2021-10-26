@@ -143,14 +143,14 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     resultsBtn.on('click', function () {
         if (lin.hasClass('hidden') && reg.hasClass('hidden')) {
             if (lin.attr('src') == '' && reg.attr('src') == '') {
-                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 1 }) }).then(data => data.json()).then(data => {
+                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 12, project_name: project_name, script_name: script_name, id: id , type: 1 }) }).then(data => data.json()).then(data => {
                     if (data.success) {
                         if (data.status_code == 0) {
-                            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 2 }) }).then(response => response.blob()).then(blob => {
+                            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 12, project_name: project_name, script_name: script_name, id: id, type: 2 }) }).then(response => response.blob()).then(blob => {
                                 var urlCreator = window.URL || window.webkitURL;
                                 const imageUrl = urlCreator.createObjectURL(blob);
                                 lin.attr({ "src": imageUrl });
-                                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 2, id: id, type: 3 }) }).then(response => response.blob()).then(blob => {
+                                fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 12, project_name: project_name, script_name: script_name, id: id, type: 3 }) }).then(response => response.blob()).then(blob => {
                                     var urlCreator = window.URL || window.webkitURL;
                                     const imageUrl = urlCreator.createObjectURL(blob);
                                     reg.attr({ "src": imageUrl });

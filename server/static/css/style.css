@@ -78,6 +78,7 @@ body {
 }
 
 .img-container{
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -85,10 +86,6 @@ body {
 
 .img-container img{
   max-width: 500px;
-}
-
-#url:hover , .code{
-  cursor: pointer;
 }
 
 h3 {
