@@ -96,6 +96,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log(message);
                     if (!message.success){
                         console.log("Something went wrong");
+                        $('#spinner').addClass('hidden');
+                        showInfo('Something went wrong');
                         eventSource.close();
                     }else if(message.status_code === 2){
                         console.log("installing project");
@@ -114,8 +116,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 $('#spinner').addClass('hidden');
                 showInfo(data.message);
             }
-        }).catch();
-
+        }).catch( e => {
+            $('#spinner').addClass('hidden');
+            showInfo('Something went wrong');
+        });
         return false;
     });
 

@@ -130,12 +130,13 @@ def proxy():
             url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    res = requests.post(url, data=request.data.decode("utf-8"))
+    res = requests.post(url, data=request.data)
     return Response(
         response=res.content,
         status=res.status_code,
         headers=dict(res.headers)
     )
+
 @app.route('/local', methods=['POST'])
 def local():
     return handler.handle(request.data.decode("utf-8"))
