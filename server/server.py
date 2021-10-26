@@ -41,27 +41,50 @@ def index():
     theme = get_theme()
     return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
-@app.route('/explore')
-def explore():
-    theme = get_theme()
-    return render_template('explore.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
-@app.route('/license')
-def license():
-    theme = get_theme()
-    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
-@app.route('/test/<id>')
-def test(id):
-    theme = get_theme()
-    return render_template('test.html', id=id, openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
-
-@app.route('/stream/<id>')
-def stream(id):
+@app.route('/task/<task_id>')
+def task(task_id):
     url = request.cookies.get('openfaasurl')
     if url is not None:
         if url == 'None':
-            data = {'command':4,'id': id, 'local':True}
+            data = {'command':2,'task_id': task_id}
+            def task_stream():
+                while True:
+                    response = handler.handle(json.dumps(data))
+                    yield f'data: {response}\n\n'
+                    gevent.sleep(1)
+            return Response(task_stream(), mimetype="text/event-stream")
+        else:    
+            url = unquote(url)
+            url = urljoin(url, 'function/')
+            url = urljoin(url, FUNCTION)
+            if url == FUNCTIONURL:
+                url = PROXYFUNCTIONURL
+    else:
+        url = PROXYFUNCTIONURL
+    data = {'command':2,'task_id': task_id}
+    def task_stream():
+        while True:
+            response = requests.post(url, data=json.dumps(data))
+            yield f'data: {response.text}\n\n'
+            gevent.sleep(1)
+    return Response(task_stream(), mimetype="text/event-stream")
+
+@app.route('/project/<name>')
+def project(name):
+    theme = get_theme()
+    return render_template('project.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=name)
+
+@app.route('/project/<project_name>/<script_name>')
+def script(project_name, script_name):
+    theme = get_theme()
+    return render_template('script.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=project_name, script_name=script_name)
+
+@app.route('/stream/<project_name>/<script_name>/<id>')
+def stream(project_name,script_name,id):
+    url = request.cookies.get('openfaasurl')
+    if url is not None:
+        if url == 'None':
+            data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
             def stats_stream():
                 while True:
                     response = handler.handle(json.dumps(data))
@@ -76,13 +99,18 @@ def stream(id):
                 url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    data = {'command':4,'id': id}
+    data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
     def stats_stream():
         while True:
             response = requests.post(url, data=json.dumps(data))
             yield f'data: {response.text}\n\n'
             gevent.sleep(1)
     return Response(stats_stream(), mimetype="text/event-stream")
+
+@app.route('/license')
+def license():
+    theme = get_theme()
+    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
@@ -95,12 +123,13 @@ def proxy():
             url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    res = requests.post(url, data=request.data.decode("utf-8"))
+    res = requests.post(url, data=request.data)
     return Response(
         response=res.content,
         status=res.status_code,
         headers=dict(res.headers)
     )
+
 @app.route('/local', methods=['POST'])
 def local():
     return handler.handle(request.data.decode("utf-8"))

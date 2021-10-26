@@ -2,12 +2,10 @@
 
 <!-- Button trigger modal -->
 <div class="btn-container">
-   <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal">
-      Deploy a new test
+   <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal" id="add-btn-Modal">
+      Add a new project
    </button>
-</div>
-<div class="tests" id="tests">
-
+   <button type="button" class="btn btn-danger" id="delete-project" disabled>Delete</button>
 </div>
 
 <!-- Modal -->
@@ -15,61 +13,26 @@
    <div class="modal-dialog">
       <div class="modal-content">
          <div class="modal-header">
-            <h5 class="modal-title" id="ModalLabel">Deploy a new test</h5>
+            <h5 class="modal-title" id="ModalLabel">Add a new Project</h5>
             <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
          </div>
          <div class="modal-body">
             <form>
-               <!-- Users input -->
                <div class="form-outline mb-4">
-                  <input type="text" id="users-input" class="form-control" />
-                  <label class="form-label" for="users-input">Users</label>
+                  <input type="file" webkitdirectory mozdirectory id="project-input"/>
                </div>
-               <!-- Spawn rate input -->
-               <div class="form-outline mb-4">
-                  <input type="text" id="spawn-rate-input" class="form-control" />
-                  <label class="form-label" for="spawn-rate-input">Spawn rate</label>
-               </div>
-               <div class="form-text" style="padding-bottom:10px;">
-                  This will overwrite all hosts in your file
-               </div>
-               <!-- Host input -->
-               <div class="form-outline mb-4">
-                  <input type="text" id="host-input" class="form-control" />
-                  <label class="form-label" for="host-input">Host</label>
-               </div>
-               <div class="form-text" style="padding-bottom:10px;">
-                  If time is not set, the test will not stop automatically
-               </div>
-               <!-- Time input -->
-               <div class="form-outline mb-4">
-                  <input type="text" id="time-input" class="form-control" />
-                  <label class="form-label" for="time-input">Time in seconds</label>
-               </div>
-               <div class="form-text" style="padding-bottom:10px;">
-                  Locust file.
-                  Do not use external custom imports
-               </div>
-               <!-- File input-->
-               <div class="form-outline mb-4">
-                  <input type="file" class="form-control" id="file-input" accept=".py"/>
-               </div>
-               <div class="form-text" style="padding-bottom:10px;">
-                  Requirements file
-               </div>
-               <!-- Requirements input-->
-               <div class="form-outline mb-4">
-                  <input type="file" class="form-control" id="requirements-input" accept=".txt"/>
-               </div>
+               
                <!-- Submit button -->
-               <button type="button" class="btn btn-primary btn-block" id="deploy-btn">Deploy</button>
+               <button type="button" class="btn btn-primary btn-block" id="add-btn">Add</button>
             </form>
             <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-btn"></button>
          </div>
       </div>
    </div>
 </div>
-
+<div class="btn-container">
+<div class="spinner-border text-primary hidden spinner" id="spinner"></div>
+</div>
 </div>
 <!-- close content-->
 <!-- Custom scripts -->

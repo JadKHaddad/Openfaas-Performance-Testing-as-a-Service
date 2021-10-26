@@ -1,129 +1,145 @@
+var selectedProjects = [];
+
+function createProjectsList(projects) {
+    var list = document.createElement('div');
+    list.classList.add('list-group');
+    for (var i = 0; i < projects.length; i++)  (function (i) {
+        var item = document.createElement('a');
+        item.setAttribute('id', projects[i]);
+        item.classList.add('list-group-item');
+        item.classList.add('list-group-item-action');
+        const template = `
+            <div class="form-check">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                value=""
+                id="flexCheckDefault-${projects[i]}"
+            />
+            <label class="test-label">
+                ${projects[i]}
+            </label>
+            </div>
+        `;
+        item.innerHTML = template;
+        // handle check box events
+        $(item).find('input').change(function () {
+
+            if (this.checked) {
+                $('#delete-project').prop("disabled", false);
+                // add test to selected projects
+                selectedProjects.push(projects[i]);
+            } else {
+                // remove test from selected projects
+                const index = selectedProjects.indexOf(projects[i]);
+                if (index > -1) {
+                    selectedProjects = selectedProjects.splice(index + 1, 1);
+                }
+                if (selectedProjects.length < 1) {
+                    $('#delete-project').prop("disabled", true);
+                }
+            }
+        });
+
+        $(item).find('label').on('click', function () {
+            window.location.href = '/project/' + projects[i];
+        });
+        list.appendChild(item);
+    })(i);
+    return list;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
-    const deployBtn = $('#deploy-btn');
-    const dismissBtn = $('#dismiss-btn');
-    var code = '';
-    var requirements = '';
-
-    document.getElementById('file-input').onchange = function (evt) {
-        if (!window.FileReader) return; // Browser is not compatible
-        var reader = new FileReader();
-        reader.onload = function (evt) {
-            if (evt.target.readyState != 2) return;
-            if (evt.target.error) {
-                alert('Error while reading file');
-                return;
-            }
-            code = evt.target.result;
-        };
-        if (evt.target.files.length > 0) {
-            reader.readAsText(evt.target.files[0]);
-        } else {
-            code = '';
-        }
-
+    const input = document.getElementById("project-input");
+    var myArray = [];
+    input.onchange = function(evt) {
+        const files = evt.target.files;
+        myArray = []
+        if(!window.FileReader) return; // Browser is not compatible
+        for (var i = 0; i < evt.target.files.length ; i ++)(function (i) {
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                if(evt.target.readyState != 2) return;
+                if(evt.target.error) {
+                    alert('Error while reading file');
+                    return;
+                }
+                var file = {
+                    'size' : files[i].size,
+                    'type' : files[i].type,
+                    'name' : files[i].webkitRelativePath,
+                    'content' : evt.target.result
+                } 
+                //add the file obj to your array
+                myArray.push(file)
+            };
+            reader.readAsText(files[i]);
+        })(i);
+        $('#add-btn').prop("disabled", false);
     };
 
-    document.getElementById('requirements-input').onchange = function (evt) {
-        if (!window.FileReader) return; // Browser is not compatible
-        var reader = new FileReader();
-        reader.onload = function (evt) {
-            if (evt.target.readyState != 2) return;
-            if (evt.target.error) {
-                alert('Error while reading file');
-                return;
-            }
-            requirements = evt.target.result;
-        };
-        if (evt.target.files.length > 0) {
-            reader.readAsText(evt.target.files[0]);
-        } else {
-            requirements = '';
-        }
+    $('#add-btn-Modal').on('click', function(){
+        $('#add-btn').prop("disabled", true);
 
-    };
-
-    deployBtn.on('click', function () {
-        const users = $('#users-input').val();
-        const spawnRate = $('#spawn-rate-input').val();
-        const host = $('#host-input').val();
-        const time = $('#time-input').val();
-        const fileInput = $('#file-input')[0];
-        const reqInput = $('#requirements-input')[0];
-        // handle false inputs
-        if (users === '') {
-            showInfo('Users cant be empty');
-            return false
-        }
-        if (!isInteger(users)) {
-            showInfo('Users must be an integer');
-            return false
-        }
-        if (spawnRate === '') {
-            showInfo('Spawn rate cant be empty');
-            return false
-        }
-        if (!isInteger(spawnRate)) {
-            showInfo('Spawn rate must be an integer');
-            return false
-        }
-        if (fileInput.value === '') {
-            showInfo('Please select a locust file');
-            return false;
-        }
-        if (time != '') {
-            if (!isInteger(time)) {
-                showInfo('Time must be an integer');
-                return false;
+    });
+    
+    $('#add-btn').on('click', function(){
+        $('#dismiss-btn').click();
+        $('#spinner').removeClass('hidden');
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
+            console.log(data);
+            if (data.success){
+                const task_id = data.task_id;
+                var eventSource = new EventSource('/task/' + task_id);
+                eventSource.onmessage = function (e) {
+                    message = JSON.parse(e.data)
+                    console.log(message);
+                    if (!message.success){
+                        console.log("Something went wrong");
+                        $('#spinner').addClass('hidden');
+                        showInfo('Something went wrong');
+                        eventSource.close();
+                    }else if(message.status_code === 2){
+                        console.log("installing project");
+                    }else if(message.status_code === 1){
+                        console.log("installing failed");
+                        eventSource.close();
+                        $('#spinner').addClass('hidden');
+                        showInfo('Installation failed');
+                    }else{
+                        console.log("Task is finished");
+                        eventSource.close();
+                        window.location.href = '/project/' + task_id;
+                    }
+                };
+            }else{
+                $('#spinner').addClass('hidden');
+                showInfo(data.message);
             }
-        }
-        if (fileInput.files[0].name.split('.').pop() !== 'py') {
-            showInfo('Locust file can only be a python file');
-            fileInput.value = '';
-            return false;
-        }
-        if(reqInput.value !== ''){
-            if (reqInput.files[0].name.split('.').pop() !== 'txt') {
-                showInfo('Requirements file can only be a text file');
-                reqInput.value = '';
-                return false;
-            }
-        }
-
-
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, users: parseInt(users), spawn_rate: parseInt(spawnRate), host: host, time: parseInt(time), code: code, requirements: requirements }) }).then(data => data.json()).then(data => {
-            if (data.success) {
-                const id = data.id;
-                const started_at = data.started_at;
-                const test = CreateTest(id, users, spawnRate, host, time, 1, code, null, null, started_at);
-                document.getElementById('tests').prepend(test);
-                dismissBtn.click();
-            }
-        }).catch();
+        }).catch( e => {
+            $('#spinner').addClass('hidden');
+            showInfo('Something went wrong');
+        });
         return false;
     });
 
-    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 6 }) }).then(data => data.json()).then(data => {
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 3 }) }).then(data => data.json()).then(data => {
         if (data.success) {
-            const tests = data.tests;
-            if (tests != null) {
-                for (var i = 0; i < tests.length; i++)(function (i) {
-                    var users = null;
-                    var spawn_rate = null;
-                    var host = null;
-                    var time = null;
-                    const info = JSON.parse(tests[i].info);
-                    if (info != null) {
-                        users = info.users;
-                        spawn_rate = info.spawn_rate;
-                        host = info.host;
-                        date = info.date;
-                        time = info.time;
-                    }
-                    const test = CreateTest(tests[i].id, users, spawn_rate, host, time, tests[i].status, tests[i].code, tests[i].data, tests[i].valid, tests[i].started_at);
-                    document.getElementById('tests').appendChild(test);
-                })(i);
-            }
+            const projects = data.projects;
+            $('#content').append(createProjectsList(projects));
         }
     }).catch();
 
+    const deleteBtn = $('#delete-project');
+    deleteBtn.prop("disabled", true);
+    //handle delete button
+    deleteBtn.on("click", function () {
+        setConfirmationModal('Are you sure you want to delete these projects?', function () {
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 10, names: selectedProjects }) }).then(data => data.json()).then(data => {
+                location.reload();
+            }).catch();
+            $('#dismiss-confirmation-modal-btn').click();
+        });
+        return false;
+    });
 });

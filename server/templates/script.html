@@ -1,0 +1,70 @@
+{% include "header.html" %}
+<div class="hidden" id="project-name">{{ project_name }}</div>
+<div class="hidden" id="script-name">{{ script_name }}</div>
+<h3>{{ script_name }}</h3>
+<!-- Button trigger modal -->
+<div class="btn-container">
+    <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#Modal">
+       Start
+    </button>
+
+ </div>
+ <div class="tests" id="tests">
+
+</div>
+ <!-- Modal -->
+ <div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+       <div class="modal-content">
+          <div class="modal-header">
+             <h5 class="modal-title" id="ModalLabel">Start</h5>
+             <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+                <!-- Users input -->
+                <div class="form-outline mb-4">
+                   <input type="text" id="users-input" class="form-control" />
+                   <label class="form-label" for="users-input">Users</label>
+                </div>
+                <!-- Spawn rate input -->
+                <div class="form-outline mb-4">
+                   <input type="text" id="spawn-rate-input" class="form-control" />
+                   <label class="form-label" for="spawn-rate-input">Spawn rate</label>
+                </div>
+                <!-- Workers input -->
+                <div class="form-outline mb-4">
+                    <input type="text" id="workers-input" class="form-control" />
+                    <label class="form-label" for="workers-input">Workers</label>
+                    </div>
+                <div class="form-text" style="padding-bottom:10px;">
+                   This will overwrite all hosts in your file
+                </div>
+                <!-- Host input -->
+                <div class="form-outline mb-4">
+                   <input type="text" id="host-input" class="form-control" />
+                   <label class="form-label" for="host-input">Host</label>
+                </div>
+                <div class="form-text" style="padding-bottom:10px;">
+                   If time is not set, the test will not stop automatically
+                </div>
+                <!-- Time input -->
+                <div class="form-outline mb-4">
+                   <input type="text" id="time-input" class="form-control" />
+                   <label class="form-label" for="time-input">Time in seconds</label>
+                </div>
+                
+                <!-- Submit button -->
+                <button type="button" class="btn btn-primary btn-block" id="start-btn">Start</button>
+             </form>
+             <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-btn"></button>
+          </div>
+       </div>
+    </div>
+ </div>
+
+</div>
+<!-- close content-->
+<!-- Custom scripts -->
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/script.js') }}"></script>
+{% include "footer.html" %}
