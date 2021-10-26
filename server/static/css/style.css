@@ -85,3 +85,8 @@ body {
 #url:hover , .code{
   cursor: pointer;
 }
+
+h3 {
+  margin-bottom: 20px;
+  text-align: center;
+}

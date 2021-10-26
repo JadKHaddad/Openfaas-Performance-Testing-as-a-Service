@@ -371,6 +371,24 @@ def handle(req):
         shutil.rmtree(test_dir) # remove test_dir
         return jsonify(success=True,exit_code=0,message="deleted"), headers
 
+    if command == 10: # delete projects
+        names = data.get("names") or None
+        if names is None:
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        deleted = []
+        for name in names:
+            print(name)
+            # delete project dir
+            project_path = f'{projects_dir}/{name}'
+            if Path(project_path).exists():
+                shutil.rmtree(project_path)
+            # delete project env
+            project_env_path = f'env/{name}'
+            if Path(project_env_path).exists():
+                shutil.rmtree(project_env_path)
+            deleted.append(name)
+        return jsonify(success=True,exit_code=0,deleted=deleted), headers
+
     if command == 911: # kill all running tasks
         kill_running_tasks()
         return jsonify(success=True,exit_code=0,message="tasks killed"), headers

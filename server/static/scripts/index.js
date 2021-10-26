@@ -1,3 +1,5 @@
+var selectedProjects = [];
+
 function createProjectsList(projects) {
     var list = document.createElement('div');
     list.classList.add('list-group');
@@ -26,10 +28,10 @@ function createProjectsList(projects) {
             if (this.checked) {
                 $('#delete-project').prop("disabled", false);
                 // add test to selected projects
-                selectedProjects.push(projects[i].id);
+                selectedProjects.push(projects[i]);
             } else {
                 // remove test from selected projects
-                const index = selectedProjects.indexOf(projects[i].id);
+                const index = selectedProjects.indexOf(projects[i]);
                 if (index > -1) {
                     selectedProjects = selectedProjects.splice(index + 1, 1);
                 }
@@ -49,11 +51,7 @@ function createProjectsList(projects) {
 
 document.addEventListener("DOMContentLoaded", function () {
     const input = document.getElementById("project-input");
-
-
     var myArray = [];
-    var selectedProjects = [];
-
     input.onchange = function(evt) {
         const files = evt.target.files;
         myArray = []
@@ -129,10 +127,10 @@ document.addEventListener("DOMContentLoaded", function () {
     //handle delete button
     deleteBtn.on("click", function () {
         setConfirmationModal('Are you sure you want to delete these projects?', function () {
-            // fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, ids: selectedprojects }) }).then(data => data.json()).then(data => {
-            //     $('#dismiss-confirmation-modal-btn').click();
-            //     location.reload();
-            // }).catch();
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 10, names: selectedProjects }) }).then(data => data.json()).then(data => {
+                location.reload();
+            }).catch();
+            $('#dismiss-confirmation-modal-btn').click();
         });
         return false;
     });
