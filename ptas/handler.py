@@ -1,6 +1,6 @@
 import json
-from flask import jsonify, send_from_directory
-from os.path import join, dirname, realpath
+from flask import jsonify, send_from_directory, request
+from os.path import join
 import time as t
 from pathlib import Path
 import os
@@ -147,31 +147,22 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
-        data = json.loads(req)
-        command = data.get("command") or None
-        if command is None:
-            return  jsonify(success=False,exit_code=1,message="bad request"), headers
-
-        if command == 1: # add a new project
-            files = data.get('files') or None
-            if files is None :
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
+        if request.files is not None: # upload a project
             # create an id for the project
-            project_name = files[0]['name'].split('/')[:-1][0]
+            print(request.files)
+            project_name = request.files['file0'].filename.split('/')[:-1][0]
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
             if Path(project_path).exists():
                 return jsonify(success=False,exit_code=2,message="project exists"), headers
+
             # save project files 
-            for uploaded_file in files:
-                uploaded_file_name = uploaded_file['name']
+            for f in request.files.values():
+                uploaded_file_name = f.filename
                 uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-                content = str(uploaded_file['content'])
-                if uploaded_file_name.endswith('.py'):
-                    content = '# automatically added lines to manage imports\nimport os, sys\ncurrentdir = os.path.dirname(os.path.realpath(__file__))\nparentdir = os.path.dirname(currentdir)\nsys.path.append(parentdir)\n# original content\n' + content
-                with open(f'{projects_dir}/{uploaded_file_name}', 'w', encoding='UTF-8') as file:
-                    file.write(content)
+                pathlib.Path(f'projects/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+                f.save(f'projects/{uploaded_file_name}')
+
             # check locust scripts in locust folder
             if not Path(f'{project_path}/locust').exists():
                 return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
@@ -199,6 +190,11 @@ def handle(req):
                 tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
 
             return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
+
+        data = json.loads(req)
+        command = data.get("command") or None
+        if command is None:
+            return  jsonify(success=False,exit_code=1,message="bad request"), headers
 
         if command == 2: # check task -> sync
             task_id = data.get('task_id') or None

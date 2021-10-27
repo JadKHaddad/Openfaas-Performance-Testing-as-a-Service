@@ -50,43 +50,21 @@ function createProjectsList(projects) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const input = document.getElementById("project-input");
-    var myArray = [];
-    input.onchange = function(evt) {
-        const files = evt.target.files;
-        myArray = []
-        if(!window.FileReader) return; // Browser is not compatible
-        for (var i = 0; i < evt.target.files.length ; i ++)(function (i) {
-            var reader = new FileReader();
-            reader.onload = function(evt) {
-                if(evt.target.readyState != 2) return;
-                if(evt.target.error) {
-                    alert('Error while reading file');
-                    return;
-                }
-                var file = {
-                    'size' : files[i].size,
-                    'type' : files[i].type,
-                    'name' : files[i].webkitRelativePath,
-                    'content' : evt.target.result
-                } 
-                //add the file obj to your array
-                myArray.push(file)
-            };
-            reader.readAsText(files[i]);
-        })(i);
-        $('#add-btn').prop("disabled", false);
-    };
-
-    $('#add-btn-Modal').on('click', function(){
-        $('#add-btn').prop("disabled", true);
-
-    });
-    
     $('#add-btn').on('click', function(){
+        const input = document.getElementById("project-input");
+        const files = input.files;
+        if (files.length < 1){
+            showInfo('Please select a directory to upload');
+            return false;
+        }
+        var data = new FormData()
+        for(var i = 0; i < files.length ; i++){
+            data.append('file' + i, files[i])
+        }
         $('#dismiss-btn').click();
         $('#spinner').removeClass('hidden');
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1, files: myArray}) }).then(data => data.json()).then(data => {
+
+        fetch(FUNCTIONCALL, {method: 'POST', body: data}).then(data => data.json()).then(data => {
             console.log(data);
             if (data.success){
                 const task_id = data.task_id;

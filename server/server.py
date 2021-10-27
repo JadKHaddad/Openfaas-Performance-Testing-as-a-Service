@@ -137,7 +137,7 @@ def proxy():
 
 @app.route('/local', methods=['POST'])
 def local():
-    return handler.handle(request.data.decode("utf-8"))
+    return handler.handle(request.data)
 
 if __name__ == '__main__':
     extern = False
