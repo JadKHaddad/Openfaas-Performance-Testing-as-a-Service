@@ -3,6 +3,7 @@
 import platform
 import subprocess
 from flask import Flask, render_template, request, Response
+from numpy import string_
 from waitress import serve
 import requests
 import json
@@ -10,6 +11,10 @@ import gevent
 import argparse
 from urllib.parse import urljoin, unquote
 import os, sys
+import random
+import string
+import pathlib
+import shutil
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
@@ -49,7 +54,7 @@ def task(task_id):
             data = {'command':2,'task_id': task_id}
             def task_stream():
                 while True:
-                    response = handler.handle(json.dumps(data))
+                    response = handler.handle(json.dumps(data), True)
                     yield f'data: {response}\n\n'
                     gevent.sleep(1)
             return Response(task_stream(), mimetype="text/event-stream")
@@ -87,7 +92,7 @@ def stream(project_name,script_name,id):
             data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
             def stats_stream():
                 while True:
-                    response = handler.handle(json.dumps(data))
+                    response = handler.handle(json.dumps(data), True)
                     yield f'data: {response}\n\n'
                     gevent.sleep(1)
             return Response(stats_stream(), mimetype="text/event-stream")
@@ -128,7 +133,31 @@ def proxy():
             url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    res = requests.post(url, data=request.data)
+    if 'file0' in request.files:
+        ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
+        path = f'temp/{ran}'
+        files = {}
+        openfiles = []
+        # save project files 
+        for key in request.files:
+            f = request.files[key]
+            uploaded_file_name = f.filename
+            uploaded_file_content_type = f.content_type
+            uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
+            pathlib.Path(f'{path}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+            f.save(f'{path}/{uploaded_file_name}')
+            o = open(f'{path}/{uploaded_file_name}', "rb")
+            openfiles.append(o)
+            files[key] = (uploaded_file_name, o, uploaded_file_content_type)
+        res = requests.post(url, data=request.data, files=files)
+        # close the files
+        for o in openfiles:
+            o.close()
+        # delete the files
+        shutil.rmtree(path)
+    else:
+        res = requests.post(url, data=request.data)   
+
     return Response(
         response=res.content,
         status=res.status_code,

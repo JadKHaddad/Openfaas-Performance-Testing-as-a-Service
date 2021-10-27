@@ -143,10 +143,10 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
             return 2 # not enough data
     return 0 # success
 
-def handle(req):
+def handle(req, no_request=False):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
-        if req == b'': # upload a new project
+        if not no_request and 'file0' in request.files: # upload a new project
             # create an id for the project
             project_name = request.files['file0'].filename.split('/')[:-1][0]
             project_path = f'{projects_dir}/{project_name}'
