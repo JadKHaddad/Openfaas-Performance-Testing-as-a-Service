@@ -42,7 +42,6 @@ def kill_running_tasks():
         tasks.clear()
     else:
         for task_id in tasks:
-            print(task_id)
             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
         tasks.clear()
 
@@ -147,9 +146,8 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 def handle(req):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
-        if request.files is not None: # upload a project
+        if req == b'': # upload a new project
             # create an id for the project
-            print(request.files)
             project_name = request.files['file0'].filename.split('/')[:-1][0]
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
@@ -388,7 +386,6 @@ def handle(req):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
             for name in names:
-                print(name)
                 # delete project dir
                 project_path = f'{projects_dir}/{name}'
                 if Path(project_path).exists():
