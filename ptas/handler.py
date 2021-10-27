@@ -34,11 +34,12 @@ def kill_running_tasks():
         for task_id in tasks:
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
             tasks[task_id].kill()
-            del tasks[task_id]
+        tasks.clear()
     else:
         for task_id in tasks:
+            print(task_id)
             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
-            del tasks[task_id]
+        tasks.clear()
 
 def clean_up():
     kill_running_tasks()
