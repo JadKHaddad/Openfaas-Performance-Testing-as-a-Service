@@ -22,32 +22,6 @@ tasks = {}
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
-
-if not Path('distribute_work.py').exists():
-    with open('distribute_work.py', 'w', encoding='UTF-8') as file:
-        file.write("\
-import os\n\
-import sys\n\
-if __name__ == '__main__':\n\
-    project_name = sys.argv[1]\n\
-    script_name = sys.argv[2]\n\
-    id = sys.argv[3]\n\
-    users = sys.argv[4]\n\
-    spawn_rate = sys.argv[5]\n\
-    workers = sys.argv[6]\n\
-    host = sys.argv[7]\n\
-    time = sys.argv[8]\n\
-    results_path = f'locust/{script_name}/{id}/results'\n\
-    log_path = f'locust/{script_name}/{id}/log.log'\n\
-    time_command = f'-t {str(time)}s' if time is not None else ''\n\
-    host_command = f'--host {host}' if host is not None else ''\n\
-    command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --expect-workers={workers}'\n\
-    for i in range(0, int(workers)):\n\
-        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'\n\
-        worker_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker &'\n\
-        os.system(worker_command)\n\
-    os.system(command)\n\
-")
             
 # static functions
 def get_script_dir(project_name, script_name):
@@ -290,7 +264,12 @@ def handle(req):
             workers_count = workers if workers is not None else 0
 
             if workers_count > 0:
-                command = f'python3 distribute_work.py {project_name} {script_name} {id} {users} {spawn_rate} {workers_count} {host} {time}'
+                worker_command = ''
+                for i in range(0, int(workers_count)):
+                    worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
+                    worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker &'
+                master_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --expect-workers={workers_count}'    
+                command = worker_command + master_command
             else:
                 command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
             
