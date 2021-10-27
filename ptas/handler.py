@@ -15,7 +15,6 @@ import platform
 import traceback
 import pathlib
 
-
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
 
@@ -56,10 +55,8 @@ def get_test_info(project_name, script_name, id):
     test_dir = get_test_dir(project_name, script_name, id)
     csv_file_path = f'{test_dir}/results_stats.csv'
     info_file_path = f'{test_dir}/info.txt'
-    task_id = f'{project_name}_{script_name}_{id}'
-        
+    task_id = f'{project_name}_{script_name}_{id}' 
     valid = True
-
     j = None
     if Path(csv_file_path).exists():
         if not os.stat(csv_file_path).st_size == 0:

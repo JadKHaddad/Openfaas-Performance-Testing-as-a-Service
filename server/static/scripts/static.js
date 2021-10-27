@@ -2,7 +2,12 @@ FUNCTIONCALL = '/proxy'
 
 
 
-function showInfo(message) {
+function showInfo(message, color) {
+    if (color == null){
+        $('#info-message').addClass('red');
+    }else{
+        $('#info-message').addClass(color);
+    }
     // set message
     $('#info-message').text(message);
     // show message
@@ -16,7 +21,7 @@ function setUpCode(code) {
     $('#code-modal-button').click();
 }
 
-function setConfirmationModal(message, func) {
+function setConfirmationModal(message, func, buttonText) {
     // set message
     $('#confirm-message').text(message);
     // unbind
@@ -25,6 +30,9 @@ function setConfirmationModal(message, func) {
     $('#confirm-delete').on('click', function () {
         func();
     });
+    if (buttonText != null){
+        $('#confirm-delete').html(buttonText);
+    }
     // show
     $('#confirmation-modal-button').click();
 }

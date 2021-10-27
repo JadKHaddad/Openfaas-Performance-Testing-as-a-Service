@@ -1,0 +1,10 @@
+{% include "header.html" %}
+<div class="control-btn-container"> 
+<button type="button" class="btn btn-danger btn-block control-btn" id="kill-btn">Kill running tasks</button>
+<button type="button" class="btn btn-danger btn-block control-btn" id="cleanup-btn">Clean up</button>
+</div>
+</div>
+<!-- close content-->
+<!-- Custom scripts -->
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/control.js') }}"></script>
+{% include "footer.html" %}
