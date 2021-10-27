@@ -14,6 +14,7 @@ import signal
 import platform
 import traceback
 import pathlib
+import socket
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
@@ -23,6 +24,10 @@ if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
             
 # static functions
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
 def get_script_dir(project_name, script_name):
     return f'{projects_dir}/{project_name}/locust/{script_name}'
 
@@ -262,11 +267,15 @@ def handle(req):
             workers_count = workers if workers is not None else 0
 
             if workers_count > 0:
+                port = 5000
+                while is_port_in_use(port):
+                    port = port + 1
+
                 worker_command = ''
                 for i in range(0, int(workers_count)):
                     worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
-                    worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker &'
-                master_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --expect-workers={workers_count}'    
+                    worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
+                master_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
                 command = worker_command + master_command
             else:
                 command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
