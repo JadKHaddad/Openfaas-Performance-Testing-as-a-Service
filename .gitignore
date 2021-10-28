@@ -5,6 +5,7 @@
 /server/tests
 /server/projects
 /server/temp
+/server/env
 /server/__pycache__
 private_ptas.yml
 basic-auth-password

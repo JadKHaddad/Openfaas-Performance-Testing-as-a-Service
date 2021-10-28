@@ -177,9 +177,9 @@ def handle(req, no_request=False):
             # create a virtual env and install req
             # check if req exists
             if platform.system() == 'Windows': # windows
-                #if Path(f'{project_path}/requirements.txt').exists():
-                    #tasks[project_name] = subprocess.Popen(f'virtualenv {project_path}/env && .\projects\{project_name}\env\Scripts\pip.exe install -r .\projects\{project_name}\\requirements.txt', shell=True, stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , 
-                pass
+                if Path(f'{project_path}/requirements.txt').exists():
+                    req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
+                    tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
                 # cerate a venv
             else:
                 req_cmd = '' 
@@ -260,32 +260,45 @@ def handle(req, no_request=False):
             host_command = f'--host {host}' if host is not None else ''
             workers_count = workers if workers is not None else 0
 
-            if workers_count > 0:
-                port = 5000
-                while is_port_in_use(port):
-                    port = port + 1
+            task_id = f'{project_name}_{script_name}_{id}'
 
-                worker_command = ''
-                for i in range(0, int(workers_count)):
-                    worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
-                    worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
-                master_command = f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
-                command = worker_command + master_command
-            else:
-                command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+            if platform.system() == 'Windows': # windows
+                if workers_count > 0:
+                    port = 5000
+                    while is_port_in_use(port):
+                        port = port + 1
+                    worker_command = ''
+                    for i in range(0, int(workers_count)):
+                        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
+                        worker_command = worker_command + f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} & '
+                    master_command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
+                    command = worker_command + master_command
+                else:
+                    command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+                print(command)
+                tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+   
+            else: # linux
+                if workers_count > 0:
+                    port = 5000
+                    while is_port_in_use(port):
+                        port = port + 1
+                    worker_command = ''
+                    for i in range(0, int(workers_count)):
+                        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
+                        worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
+                    master_command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
+                    command = worker_command + master_command
+                else:
+                    command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+
+                tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
             
             started_at = t.time()
             # save test info
             info_file = f'{test_dir}/info.txt'
             with open(info_file, "w", encoding="UTF-8") as file:
                 file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
-
-            task_id = f'{project_name}_{script_name}_{id}'
-            if platform.system() == 'Windows': # windows
-                #self.process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-                pass        
-            else: # linux
-                tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
 
             return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 

@@ -232,25 +232,27 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     }
     // update results
     function update(jData) {
-        footer.children().remove();
-        results.children().remove();
-        for (var i = 0; i < jData.length; i++) {
-            var type = jData[i]["Type"];
-            const name = jData[i]["Name"];
-            const requests = jData[i]["Request Count"];
-            const fails = jData[i]["Failure Count"];
-            const med = jData[i]["Median Response Time"];
-            const avg = jData[i]["Average Response Time"].toString().slice(0, 8);
-            const min = jData[i]["Min Response Time"].toString().slice(0, 8);
-            const max = jData[i]["Max Response Time"].toString().slice(0, 8);
-            const avgSize = jData[i]["Average Content Size"].toString().slice(0, 8);
-            const rps = jData[i]["Requests/s"].toString().slice(0, 8);
-            const fps = jData[i]["Failures/s"].toString().slice(0, 8);
-            if (i == jData.length - 1) {
-                type = '';
-                footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
-            } else {
-                results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+        if(jData != null){
+            footer.children().remove();
+            results.children().remove();
+            for (var i = 0; i < jData.length; i++) {
+                var type = jData[i]["Type"];
+                const name = jData[i]["Name"];
+                const requests = jData[i]["Request Count"];
+                const fails = jData[i]["Failure Count"];
+                const med = jData[i]["Median Response Time"];
+                const avg = jData[i]["Average Response Time"].toString().slice(0, 8);
+                const min = jData[i]["Min Response Time"].toString().slice(0, 8);
+                const max = jData[i]["Max Response Time"].toString().slice(0, 8);
+                const avgSize = jData[i]["Average Content Size"].toString().slice(0, 8);
+                const rps = jData[i]["Requests/s"].toString().slice(0, 8);
+                const fps = jData[i]["Failures/s"].toString().slice(0, 8);
+                if (i == jData.length - 1) {
+                    type = '';
+                    footer.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+                } else {
+                    results.append(createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps, fps));
+                }
             }
         }
     }
