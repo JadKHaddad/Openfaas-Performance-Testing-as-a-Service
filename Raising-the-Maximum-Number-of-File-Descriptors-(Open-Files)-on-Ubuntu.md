@@ -33,3 +33,6 @@ Check the new limits for your current session:
 ulimit -n
 ```
 
+Still having problems? read the full [article](https://underyx.me/articles/raising-the-maximum-number-of-file-descriptors)
+
+
