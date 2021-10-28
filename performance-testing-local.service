@@ -1,9 +1,10 @@
 [Unit]
 Description=Performance Testing Service
-After=multi-user.target
+After=syslog.target
 [Service]
 WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/server/
 Type=simple
+LimitNOFILE=64000
 Restart=always
 ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -l
 [Install]

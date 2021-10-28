@@ -14,6 +14,9 @@ packages:
  - python3-pip
 
 runcmd:
+- printf "*    soft nofile 64000\n*    hard nofile 64000\nroot soft nofile 64000\nroot hard nofile 64000" | sudo tee -a /etc/security/limits.conf
+- printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session
+- printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session-noninteractive
 - curl -sLSf https://github.com/containerd/containerd/releases/download/v1.5.4/containerd-1.5.4-linux-amd64.tar.gz > /tmp/containerd.tar.gz && tar -xvf /tmp/containerd.tar.gz -C /usr/local/bin/ --strip-components=1
 - curl -SLfs https://raw.githubusercontent.com/containerd/containerd/v1.5.4/containerd.service | tee /etc/systemd/system/containerd.service
 - systemctl daemon-reload && systemctl start containerd
