@@ -3,7 +3,6 @@
 import platform
 import subprocess
 from flask import Flask, render_template, request, Response
-from numpy import string_
 from waitress import serve
 import requests
 import json
@@ -15,6 +14,7 @@ import random
 import string
 import pathlib
 import shutil
+
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)

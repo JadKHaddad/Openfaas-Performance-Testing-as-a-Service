@@ -275,7 +275,6 @@ def handle(req, no_request=False):
                     command = worker_command + master_command
                 else:
                     command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
-                print(command)
                 tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
    
             else: # linux
@@ -390,7 +389,7 @@ def handle(req, no_request=False):
             if not Path(test_dir).exists():
                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers
             shutil.rmtree(test_dir) # remove test_dir
-            delete_zip_file(project_name, script_name,id )
+            delete_zip_file(project_name, script_name,id)
             return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
@@ -416,7 +415,7 @@ def handle(req, no_request=False):
             id = data.get("id") or None
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
-            #create plots
+            # create plots
             create_plots(project_name, script_name, id)
             # zip files
             if zip_files(project_name,script_name,id):
