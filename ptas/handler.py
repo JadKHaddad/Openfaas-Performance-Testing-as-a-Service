@@ -275,7 +275,7 @@ def handle(req, no_request=False):
                     command = worker_command + master_command
                 else:
                     command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
-                tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
    
             else: # linux
                 if workers_count > 0:
@@ -291,7 +291,7 @@ def handle(req, no_request=False):
                 else:
                     command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
 
-                tasks[task_id] = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
+                tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
             
             started_at = t.time()
             # save test info
