@@ -21,11 +21,10 @@ WORKDIR /home/app/
 
 COPY index.py           .
 COPY requirements.txt   .
+COPY limits.conf        .
 
 USER root
-RUN printf "*    soft nofile 64000\n*    hard nofile 64000\nroot soft nofile 64000\nroot hard nofile 64000" | tee -a /etc/security/limits.conf
-RUN printf "session required pam_limits.so" | tee -a /etc/pam.d/common-session
-RUN printf "session required pam_limits.so" | tee -a /etc/pam.d/common-session-noninteractive
+RUN cp limits.conf /etc/security/limits.conf
 
 USER root
 RUN pip install -r requirements.txt
