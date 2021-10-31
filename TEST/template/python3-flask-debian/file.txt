@@ -12,8 +12,8 @@
 
 lsof -n 2>/dev/null | awk '{print $1,$2}' | sort | uniq -c | sort -nr | head -25 | while read nr name pid ; do printf "%10d / %-10d %-15s (PID %5s)\n" $nr $(cat /proc/$pid/limits | grep 'open files' | awk '{print $5}') $name $pid; done
 
-sudo prlimit --pid 35073 --nofile=64000:64000
+sudo prlimit --pid 35073 --nofile=64000:64000 
 
 journalctl _PID=17627
 
- sudo docker exec -it <reg id>  /bin/sh -c 'ulimit -Hn && ulimit -Sn'
+sudo docker exec -it <reg id>  /bin/sh -c 'ulimit -Hn && ulimit -Sn'

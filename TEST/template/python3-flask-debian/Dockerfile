@@ -9,15 +9,7 @@ ARG ADDITIONAL_PACKAGE
 
 RUN apt-get -qy update && apt-get -qy install gcc make ${ADDITIONAL_PACKAGE}
 
-# Add non root user
-RUN addgroup --system app && adduser app --system --ingroup app
-RUN chown app /home/app
-
-USER app
-
-ENV PATH=$PATH:/home/app/.local/bin
-
-WORKDIR /home/app/
+WORKDIR /home/
 
 COPY index.py           .
 COPY requirements.txt   .
@@ -25,16 +17,12 @@ COPY limits.conf        .
 
 USER root
 RUN cp limits.conf /etc/security/limits.conf
-
-USER root
 RUN pip install -r requirements.txt
 
 # Build the function directory and install any user-specified components
-USER app
-
 RUN mkdir -p function
 RUN touch ./function/__init__.py
-WORKDIR /home/app/function/
+WORKDIR /home/function/
 COPY function/requirements.txt	.
 RUN pip install --user -r requirements.txt
 
@@ -42,8 +30,6 @@ RUN pip install --user -r requirements.txt
 USER root
 
 COPY function/   .
-RUN chown -R app:app ../
-
 ARG TEST_COMMAND=tox
 ARG TEST_ENABLED=true
 RUN if [ "$TEST_ENABLED" == "false" ]; then \
@@ -52,10 +38,10 @@ RUN if [ "$TEST_ENABLED" == "false" ]; then \
     eval "$TEST_COMMAND"; \
     fi
 
-WORKDIR /home/app/
+WORKDIR /home/
 
 #configure WSGI server and healthcheck
-USER app
+USER root
 
 ENV fprocess="python index.py"
 
