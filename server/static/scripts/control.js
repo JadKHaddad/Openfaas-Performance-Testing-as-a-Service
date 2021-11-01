@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     $('#kill-btn').on('click', function () {
-        setConfirmationModal('Kill all running tasks?', function () {
+        setConfirmationModal('Kill all running tasks? Istallation tasks can not be stopped', function () {
             fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 911 }) }).then(data => data.json()).then(data => {
                 if (data.success) {
                     $('#dismiss-confirmation-modal-btn').click();

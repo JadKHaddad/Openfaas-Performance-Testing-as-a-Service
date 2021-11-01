@@ -20,8 +20,7 @@ from time import sleep
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
-threads = []
-STOP = False
+installation_tasks = {}
 LOCK = Lock()
 
 projects_dir = 'projects'
@@ -40,7 +39,6 @@ def get_test_dir(project_name, script_name, id):
     return f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
 
 def kill_running_tasks():
-    LOCK.acquire()
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -50,11 +48,9 @@ def kill_running_tasks():
         for task_id in tasks:
             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
         tasks.clear()
-    LOCK.release()
 
 def clean_up():
     kill_running_tasks()
-    LOCK.acquire()
     if Path(projects_dir).exists():
         for f in os.scandir(projects_dir):
             if f.is_dir():
@@ -63,7 +59,6 @@ def clean_up():
                 os.remove(f.path)
     if Path('env/').exists():
         shutil.rmtree('env/')
-    LOCK.release()
 
 def get_test_info(project_name, script_name, id):
     test_dir = get_test_dir(project_name, script_name, id)
@@ -155,16 +150,13 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 def clean_up_project_on_failed_installation(project_name):
     print(project_name +': clean up thread started')
 
-    while project_name in tasks:
+    while project_name in installation_tasks:
         print(project_name + ': sleeping')
-        if STOP:
-            print(project_name +': terminating')
-            return
         sleep(3)
         LOCK.acquire()
-        if tasks[project_name].poll() is not None: # process finished
+        if installation_tasks[project_name].poll() is not None: # process finished
             print(project_name + ': task finished')
-            if tasks[project_name].returncode != 0:
+            if installation_tasks[project_name].returncode != 0:
                 print(project_name + ': cleaning up')
                 # delete project
                 project_path = f'{projects_dir}/{project_name}'
@@ -174,7 +166,7 @@ def clean_up_project_on_failed_installation(project_name):
                 project_env_path = f'env/{project_name}'
                 if Path(project_env_path).exists():
                     shutil.rmtree(project_env_path)
-            del tasks[project_name]
+            del installation_tasks[project_name]
         LOCK.release()
     print(project_name +': terminating')
     
@@ -218,14 +210,13 @@ def handle(req, no_request=False):
             # check if req exists
             if platform.system() == 'Windows': # windows
                 req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
+                installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
             else:   
                 req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
-                tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
+                installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
 
             thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
             thread.start()
-            threads.append(thread)
             return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
         data = json.loads(req)
@@ -237,10 +228,15 @@ def handle(req, no_request=False):
             task_id = data.get('task_id') or None
             if task_id is None:
                 return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+
+            def return_(json):
+                LOCK.release()
+                return(json)
+
             LOCK.acquire()
-            if task_id in tasks:
-                if tasks[task_id].poll() is not None: # process finished
-                    if tasks[task_id].returncode != 0:
+            if task_id in installation_tasks:
+                if installation_tasks[task_id].poll() is not None: # process finished
+                    if installation_tasks[task_id].returncode != 0:
                         # delete project
                         project_path = f'{projects_dir}/{task_id}'
                         if Path(project_path).exists():
@@ -249,17 +245,12 @@ def handle(req, no_request=False):
                         project_env_path = f'env/{task_id}'
                         if Path(project_env_path).exists():
                             shutil.rmtree(project_env_path)
-                        LOCK.release()
-                        return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'})
-                    LOCK.release()
-                    return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
-                LOCK.release()
-                return json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'})
+                        return return_(json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}))
+                    return return_(json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'}))
+                return return_(json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'}))
             if not Path(f'{projects_dir}/{task_id}').exists():
-                LOCK.release()
-                return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}) 
-            LOCK.release()
-            return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'})
+                return return_(json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}))
+            return return_(json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'}))
 
         if command == 3: # get installed projects -> sync
             projects = []
@@ -498,26 +489,21 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 911: # kill all running tasks -> sync
-            STOP = True
-            for thread in threads:
-                thread.join()
             kill_running_tasks()
-            STOP = False
             return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
         if command == 912: # clean up -> sync
-            STOP = True
-            for thread in threads:
-                thread.join()
             clean_up()
-            STOP = False
             return jsonify(success=True,exit_code=0,message="clean up"), headers
 
         if command == 913: # show saved tasks -> sync
             saved_tasks = []
+            saved_installation_tasks = []
             for key in tasks.keys():
                 saved_tasks.append(key)
-            return jsonify(success=True,exit_code=0,tasks=saved_tasks,message="saved tasks"), headers
+            for key in installation_tasks.keys():
+                saved_installation_tasks.append(key)
+            return jsonify(success=True,exit_code=0,tasks=saved_tasks, installation_tasks=saved_installation_tasks,message="saved tasks"), headers
 
     except Exception as e:
         print(traceback.format_exc())
