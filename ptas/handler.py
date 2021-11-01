@@ -179,7 +179,9 @@ def handle(req, no_request=False):
             project_name = request.files['file0'].filename.split('/')[:-1][0].replace(' ','_')
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
+            LOCK.acquire()
             if Path(project_path).exists():
+                LOCK.release()
                 return jsonify(success=False,exit_code=2,message="project exists"), headers
 
             # save project files 
@@ -192,6 +194,7 @@ def handle(req, no_request=False):
             # check locust scripts in locust folder
             if not Path(f'{project_path}/locust').exists():
                 shutil.rmtree(project_path)
+                LOCK.release()
                 return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
 
             # check if locust tests exist
@@ -202,10 +205,12 @@ def handle(req, no_request=False):
                     break
             if not locust_tests_exist:
                 shutil.rmtree(project_path)
+                LOCK.release()
                 return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
 
             if not Path(f'{project_path}/requirements.txt').exists():
                 shutil.rmtree(project_path)
+                LOCK.release()
                 return jsonify(success=False,exit_code=5,message="no requirements found"), headers
             # create a virtual env and install req
             # check if req exists
@@ -218,6 +223,7 @@ def handle(req, no_request=False):
 
             thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
             thread.start()
+            LOCK.release()
             return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
         data = json.loads(req)
@@ -256,16 +262,18 @@ def handle(req, no_request=False):
         if command == 3: # get installed projects -> sync
             projects = []
             LOCK.acquire()
+            LOCK2.acquire()
             for f in os.scandir(projects_dir):
                 if f.is_dir():
                     project_name = os.path.basename(f.path)
-                    if project_name in tasks:
-                        if tasks[project_name].poll() is not None:
-                            del tasks[project_name]
+                    if project_name in installation_tasks:
+                        if installation_tasks[project_name].poll() is not None:
+                            del installation_tasks[project_name]
                             projects.append(project_name)
                     else:
                         projects.append(project_name)
             LOCK.release()
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
         
         if command == 4: # get locust scripts of a project -> sync
@@ -275,13 +283,12 @@ def handle(req, no_request=False):
             project_path = f'{projects_dir}/{project_name}'
             locust_scripts = []
             # check if project exists
-            while LOCK.locked():
-                continue
+            LOCK2.acquire()
             if Path(project_path).exists():
                 for file in os.listdir(f'{project_path}/locust'):
                     if file.endswith('.py'):
                         locust_scripts.append(file.split('.')[0])
-
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
         if command == 5:  # start a test -> sync
@@ -313,7 +320,7 @@ def handle(req, no_request=False):
             workers_count = workers if workers is not None else 0
 
             task_id = f'{project_name}_{script_name}_{id}'
-
+            LOCK2.acquire()
             if platform.system() == 'Windows': # windows
                 if workers_count > 0:
                     port = 5000
@@ -344,7 +351,7 @@ def handle(req, no_request=False):
                     command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
 
                 tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
-            
+            LOCK2.release()
             started_at = t.time()
             # save test info
             info_file = f'{test_dir}/info.txt'
@@ -363,13 +370,12 @@ def handle(req, no_request=False):
                     return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
 
-
             # check if test is runnig
             task_id = f'{project_name}_{script_name}_{id}'
+            LOCK2.acquire()
             if task_id in tasks:
                 test_dir = get_test_dir(project_name, script_name, id)
                 csv_file_path = f'{test_dir}/results_stats.csv'
-                LOCK2.acquire()
                 if tasks[task_id].poll() is not None: # process finished
                     if not Path(csv_file_path).exists(): # test is not valid
                         del tasks[task_id]
@@ -378,8 +384,8 @@ def handle(req, no_request=False):
                             return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
                         return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
                     del tasks[task_id]
-                LOCK2.release()
                 if not Path(csv_file_path).exists():
+                    LOCK2.release()
                     if local is not None:
                         return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
                     return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
@@ -387,9 +393,11 @@ def handle(req, no_request=False):
                 if not os.stat(csv_file_path).st_size == 0:
                     pd_data = pd.read_csv(csv_file_path) 
                     j = pd_data.to_json(orient='records')
+                LOCK2.release()
                 if local is not None:
                     return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
                 return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
+            LOCK2.release()
             if local is not None:
                 return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
             return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
@@ -402,14 +410,13 @@ def handle(req, no_request=False):
             tests_folders = []
             scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
 
-            while LOCK2.locked():
-                continue
-
+            LOCK2.acquire()
             if Path(scrpit_folder_path).exists():
                 for f in os.scandir(scrpit_folder_path):
                     if f.is_dir():
                         id = os.path.basename(f.path)
                         tests_folders.append(get_test_info(project_name, script_name, id))
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 8: # stop test -> sync
@@ -484,16 +491,16 @@ def handle(req, no_request=False):
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
 
-            while LOCK2.locked():
-                continue
-
+            LOCK2.acquire()
             # create plots
             create_plots(project_name, script_name, id)
             # zip files
             if zip_files(project_name,script_name,id):
                 script_dir = get_script_dir(project_name,script_name)
+                LOCK2.release()
                 return send_from_directory(script_dir, f'{id}.zip'), headers
             else:
+                LOCK2.release()
                 return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
 
         if command == 12: # get plots -> sync
@@ -505,17 +512,20 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             test_dir = get_test_dir(project_name, script_name, id)
 
-            while LOCK2.locked():
-                continue
+            LOCK2.acquire()
 
             if type == 1: # create
                 status_code = create_plots(project_name, script_name, id) # 0: success, 1 test does not exist, 2 not enough data
+                LOCK2.release()
                 return jsonify(success=True,exit_code=0,status_code=status_code), headers 
             if type == 2: # linear
+                LOCK2.release()
                 return send_from_directory(test_dir, f'lin.png'), headers
             if type == 3: # regression 
+                LOCK2.release()
                 return send_from_directory(test_dir, f'reg.png'), headers
             else:
+                LOCK2.release()
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 911: # kill all running tasks -> sync
@@ -533,6 +543,10 @@ def handle(req, no_request=False):
         if command == 913: # show saved tasks -> sync
             saved_tasks = []
             saved_installation_tasks = []
+
+            while LOCK.locked() and LOCK2.locked():
+                continue
+
             for key in tasks.keys():
                 saved_tasks.append(key)
             for key in installation_tasks.keys():
