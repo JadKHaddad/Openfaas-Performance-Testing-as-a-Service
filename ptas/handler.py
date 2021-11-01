@@ -183,7 +183,7 @@ def handle(req, no_request=False):
     try:
         if not no_request and 'file0' in request.files: # upload a new project
             # create an id for the project
-            project_name = request.files['file0'].filename.split('/')[:-1][0].replace(' ','_')
+            project_name = request.files['file0'].filename.split('/')[:-1][0]
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
             LOCK.acquire()
@@ -195,8 +195,8 @@ def handle(req, no_request=False):
             for f in request.files.values():
                 uploaded_file_name = f.filename
                 uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}'.replace(' ','_')).mkdir(parents=True, exist_ok=True) 
-                f.save(f'{projects_dir}/{uploaded_file_name}'.replace(' ','_'))
+                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+                f.save(f'{projects_dir}/{uploaded_file_name}')
 
             # check locust scripts in locust folder
             if not Path(f'{project_path}/locust').exists():
