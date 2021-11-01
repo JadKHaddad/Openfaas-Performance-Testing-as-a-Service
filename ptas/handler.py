@@ -21,7 +21,8 @@ from time import sleep
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
 installation_tasks = {}
-LOCK = Lock()
+LOCK = Lock() # for installation
+LOCK2 = Lock() # for tests
 
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
@@ -254,6 +255,7 @@ def handle(req, no_request=False):
 
         if command == 3: # get installed projects -> sync
             projects = []
+            LOCK.acquire()
             for f in os.scandir(projects_dir):
                 if f.is_dir():
                     project_name = os.path.basename(f.path)
@@ -263,6 +265,7 @@ def handle(req, no_request=False):
                             projects.append(project_name)
                     else:
                         projects.append(project_name)
+            LOCK.release()
             return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
         
         if command == 4: # get locust scripts of a project -> sync
@@ -272,10 +275,13 @@ def handle(req, no_request=False):
             project_path = f'{projects_dir}/{project_name}'
             locust_scripts = []
             # check if project exists
+            while LOCK.locked():
+                continue
             if Path(project_path).exists():
                 for file in os.listdir(f'{project_path}/locust'):
                     if file.endswith('.py'):
                         locust_scripts.append(file.split('.')[0])
+
             return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
         if command == 5:  # start a test -> sync
@@ -356,18 +362,23 @@ def handle(req, no_request=False):
                 if local is not None:
                     return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
+
+
             # check if test is runnig
             task_id = f'{project_name}_{script_name}_{id}'
             if task_id in tasks:
                 test_dir = get_test_dir(project_name, script_name, id)
                 csv_file_path = f'{test_dir}/results_stats.csv'
+                LOCK2.acquire()
                 if tasks[task_id].poll() is not None: # process finished
                     if not Path(csv_file_path).exists(): # test is not valid
                         del tasks[task_id]
+                        LOCK2.release()
                         if local is not None:
                             return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
                         return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
                     del tasks[task_id]
+                LOCK2.release()
                 if not Path(csv_file_path).exists():
                     if local is not None:
                         return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
@@ -390,6 +401,10 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             tests_folders = []
             scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
+
+            while LOCK2.locked():
+                continue
+
             if Path(scrpit_folder_path).exists():
                 for f in os.scandir(scrpit_folder_path):
                     if f.is_dir():
@@ -405,6 +420,7 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             task_id = f'{project_name}_{script_name}_{id}'
             #stop the task
+            LOCK2.acquire()
             if task_id not in tasks:
                 return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
             if platform.system() == 'Windows': # windows
@@ -413,6 +429,7 @@ def handle(req, no_request=False):
             else:
                 os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
             del tasks[task_id]
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,message="test is stopped"), headers
 
         if command == 9: # delete test -> sync
@@ -422,7 +439,8 @@ def handle(req, no_request=False):
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             task_id = f'{project_name}_{script_name}_{id}'
-            #stop the task    
+            # stop the task  
+            LOCK2.acquire()  
             if task_id in tasks:
                 if platform.system() == 'Windows': # windows
                     tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -433,9 +451,11 @@ def handle(req, no_request=False):
 
             test_dir = get_test_dir(project_name, script_name, id)
             if not Path(test_dir).exists():
+                LOCK2.release()
                 return jsonify(success=False,exit_code=6,message="test does not exist"), headers
             shutil.rmtree(test_dir) # remove test_dir
             delete_zip_file(project_name, script_name,id)
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
@@ -443,6 +463,7 @@ def handle(req, no_request=False):
             if names is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
+            LOCK2.acquire()  
             for name in names:
                 # delete project dir
                 project_path = f'{projects_dir}/{name}'
@@ -453,6 +474,7 @@ def handle(req, no_request=False):
                 if Path(project_env_path).exists():
                     shutil.rmtree(project_env_path)
                 deleted.append(name)
+            LOCK2.release()  
             return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
         if command == 11: # download a test -> sync
@@ -461,6 +483,10 @@ def handle(req, no_request=False):
             id = data.get("id") or None
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
+
+            while LOCK2.locked():
+                continue
+
             # create plots
             create_plots(project_name, script_name, id)
             # zip files
@@ -478,6 +504,10 @@ def handle(req, no_request=False):
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             test_dir = get_test_dir(project_name, script_name, id)
+
+            while LOCK2.locked():
+                continue
+
             if type == 1: # create
                 status_code = create_plots(project_name, script_name, id) # 0: success, 1 test does not exist, 2 not enough data
                 return jsonify(success=True,exit_code=0,status_code=status_code), headers 
@@ -489,11 +519,15 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 911: # kill all running tasks -> sync
+            LOCK2.acquire()
             kill_running_tasks()
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
         if command == 912: # clean up -> sync
+            LOCK2.acquire()
             clean_up()
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,message="clean up"), headers
 
         if command == 913: # show saved tasks -> sync
