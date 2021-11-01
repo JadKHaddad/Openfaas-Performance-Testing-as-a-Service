@@ -238,4 +238,4 @@ if __name__ == '__main__':
             print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
         print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
-    serve(app, host=host, port=port,threads=8)
+    serve(app, host=host, port=port,threads=24)
