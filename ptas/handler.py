@@ -45,10 +45,17 @@ def kill_running_tasks():
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
             tasks[task_id].kill()
         tasks.clear()
+        for task_id in installation_tasks:
+            installation_tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+            installation_tasks[task_id].kill()
+        # thread will clear the installation tasks
     else:
         for task_id in tasks:
             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
         tasks.clear()
+        for task_id in installation_tasks:
+            os.killpg(os.getpgid(installation_tasks[task_id].pid), signal.SIGTERM)
+        # thread will clear the installation tasks
 
 def clean_up():
     kill_running_tasks()
@@ -153,7 +160,7 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
-        sleep(3)
+        sleep(1)
         LOCK.acquire()
         if installation_tasks[project_name].poll() is not None: # process finished
             print(project_name + ': task finished')
@@ -247,14 +254,6 @@ def handle(req, no_request=False):
             if task_id in installation_tasks:
                 if installation_tasks[task_id].poll() is not None: # process finished
                     if installation_tasks[task_id].returncode != 0:
-                        # delete project
-                        project_path = f'{projects_dir}/{task_id}'
-                        if Path(project_path).exists():
-                            shutil.rmtree(project_path)
-                        # delete project env
-                        project_env_path = f'env/{task_id}'
-                        if Path(project_env_path).exists():
-                            shutil.rmtree(project_env_path)
                         return return_(json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}))
                     return return_(json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'}))
                 return return_(json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'}))
@@ -533,8 +532,10 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 911: # kill all running tasks -> sync
+            LOCK.acquire()
             LOCK2.acquire()
             kill_running_tasks()
+            LOCK.release()
             LOCK2.release()
             return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
