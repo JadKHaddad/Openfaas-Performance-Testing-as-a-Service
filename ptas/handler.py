@@ -148,7 +148,7 @@ def handle(req, no_request=False):
     try:
         if not no_request and 'file0' in request.files: # upload a new project
             # create an id for the project
-            project_name = request.files['file0'].filename.split('/')[:-1][0]
+            project_name = request.files['file0'].filename.split('/')[:-1][0].replace(' ','_')
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
             if Path(project_path).exists():
@@ -158,11 +158,12 @@ def handle(req, no_request=False):
             for f in request.files.values():
                 uploaded_file_name = f.filename
                 uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                pathlib.Path(f'projects/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-                f.save(f'projects/{uploaded_file_name}')
+                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}'.replace(' ','_')).mkdir(parents=True, exist_ok=True) 
+                f.save(f'{projects_dir}/{uploaded_file_name}'.replace(' ','_'))
 
             # check locust scripts in locust folder
             if not Path(f'{project_path}/locust').exists():
+                shutil.rmtree(project_path)
                 return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
 
             # check if locust tests exist
@@ -172,19 +173,19 @@ def handle(req, no_request=False):
                     locust_tests_exist = True
                     break
             if not locust_tests_exist:
+                shutil.rmtree(project_path)
                 return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
 
+            if not Path(f'{project_path}/requirements.txt').exists():
+                shutil.rmtree(project_path)
+                return jsonify(success=False,exit_code=5,message="no requirements found"), headers
             # create a virtual env and install req
             # check if req exists
             if platform.system() == 'Windows': # windows
-                if Path(f'{project_path}/requirements.txt').exists():
-                    req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                    tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
-                # cerate a venv
-            else:
-                req_cmd = '' 
-                if Path(f'{project_path}/requirements.txt').exists():    
-                    req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
+                req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
+                tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
+            else:   
+                req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
                 tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
 
             return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
@@ -201,6 +202,14 @@ def handle(req, no_request=False):
             if task_id in tasks:
                 if tasks[task_id].poll() is not None: # process finished
                     if tasks[task_id].returncode != 0:
+                        # delete project
+                        project_path = f'{projects_dir}/{task_id}'
+                        if Path(project_path).exists():
+                            shutil.rmtree(project_path)
+                        # delete project env
+                        project_env_path = f'env/{task_id}'
+                        if Path(project_env_path).exists():
+                            shutil.rmtree(project_env_path)  
                         return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}) 
                     return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
                 return json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'})
