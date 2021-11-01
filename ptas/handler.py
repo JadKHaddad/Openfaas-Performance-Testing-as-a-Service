@@ -150,11 +150,10 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 
 def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     print(project_name +': clean up thread started')
-
+    LOCK.acquire()
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
         sleep(3)
-        LOCK.acquire()
         if installation_tasks[project_name].poll() is not None: # process finished
             print(project_name + ': task finished')
             if installation_tasks[project_name].returncode != 0:
@@ -168,7 +167,7 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
                 if Path(project_env_path).exists():
                     shutil.rmtree(project_env_path)
             del installation_tasks[project_name]
-        LOCK.release()
+    LOCK.release()
     print(project_name +': terminating')
     
 def handle(req, no_request=False):
@@ -220,10 +219,10 @@ def handle(req, no_request=False):
             else:   
                 req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
                 installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
-
+            LOCK.release()
             thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
             thread.start()
-            LOCK.release()
+            
             return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
         data = json.loads(req)
@@ -235,6 +234,9 @@ def handle(req, no_request=False):
             task_id = data.get('task_id') or None
             if task_id is None:
                 return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+
+            if LOCK.locked():
+                return json.dumps({'success':True,'exit_code':0,'status_code':3,'message':'thread is locking'})
 
             def return_(json):
                 LOCK.release()

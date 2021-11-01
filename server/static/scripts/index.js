@@ -77,6 +77,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         $('#spinner').addClass('hidden');
                         showInfo('Something went wrong');
                         eventSource.close();
+                    }else if(message.status_code === 3){
+                            console.log("thread is locking");
                     }else if(message.status_code === 2){
                         console.log("installing project");
                     }else if(message.status_code === 1){

@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     showInfo('There was an error deleting projects');
                 }
             }).catch();
-        });
+        }, 'Delete');
         return false;
     });
 });
