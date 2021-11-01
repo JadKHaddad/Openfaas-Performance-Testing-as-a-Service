@@ -150,10 +150,11 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 
 def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     print(project_name +': clean up thread started')
-    LOCK.acquire()
+    
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
         sleep(3)
+        LOCK.acquire()
         if installation_tasks[project_name].poll() is not None: # process finished
             print(project_name + ': task finished')
             if installation_tasks[project_name].returncode != 0:
@@ -167,7 +168,7 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
                 if Path(project_env_path).exists():
                     shutil.rmtree(project_env_path)
             del installation_tasks[project_name]
-    LOCK.release()
+        LOCK.release()
     print(project_name +': terminating')
     
 def handle(req, no_request=False):
