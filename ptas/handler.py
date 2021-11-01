@@ -148,7 +148,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
             return 2 # not enough data
     return 0 # success
 
-def clean_up_project_on_failed_installation(project_name):
+def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     print(project_name +': clean up thread started')
 
     while project_name in installation_tasks:
@@ -351,13 +351,14 @@ def handle(req, no_request=False):
                     command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
 
                 tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
-            LOCK2.release()
+            
             started_at = t.time()
             # save test info
             info_file = f'{test_dir}/info.txt'
             with open(info_file, "w", encoding="UTF-8") as file:
                 file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
-
+            
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
         if command == 6: # get test stats -> sync
