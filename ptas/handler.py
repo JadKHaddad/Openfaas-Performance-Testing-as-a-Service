@@ -535,22 +535,24 @@ def handle(req, no_request=False):
             return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
         if command == 912: # clean up -> sync
+            LOCK.acquire()
             LOCK2.acquire()
             clean_up()
+            LOCK.release()
             LOCK2.release()
             return jsonify(success=True,exit_code=0,message="clean up"), headers
 
         if command == 913: # show saved tasks -> sync
             saved_tasks = []
             saved_installation_tasks = []
-
-            while LOCK.locked() and LOCK2.locked():
-                continue
-
+            LOCK.acquire()
+            LOCK2.acquire()
             for key in tasks.keys():
                 saved_tasks.append(key)
             for key in installation_tasks.keys():
                 saved_installation_tasks.append(key)
+            LOCK.release()
+            LOCK2.release()
             return jsonify(success=True,exit_code=0,tasks=saved_tasks, installation_tasks=saved_installation_tasks,message="saved tasks"), headers
 
     except Exception as e:
