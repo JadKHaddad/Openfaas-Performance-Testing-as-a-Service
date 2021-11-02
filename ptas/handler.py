@@ -128,16 +128,18 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
         df = pd.read_csv(stats_history_file) 
         if len(df) > 4:
             if not Path(lin_path).exists():
-                plt.plot(df.iloc[:,17], df.iloc[:,19],color='b',label="Median Response Time") # med
-                plt.plot(df.iloc[:,17], df.iloc[:,20],color='r',label="Average Response Time") # avg
-                plt.plot(df.iloc[:,17], df.iloc[:,21],color='orange',label="Min Response Time") #min
-                plt.plot(df.iloc[:,17], df.iloc[:,22],color='g',label="Max Response Time") #max
-                plt.ylabel("Time (milliseconds)")
-                plt.xlabel("Requests Count")
+                x = range(1, len(df.iloc[:,0]) + 1)
+                plt.plot(x, df.iloc[:,19],color='b',label="Median Response Time") # med
+                plt.plot(x, df.iloc[:,20],color='r',label="Average Response Time") # avg
+                plt.plot(x, df.iloc[:,21],color='orange',label="Min Response Time") #min
+                plt.plot(x, df.iloc[:,22],color='g',label="Max Response Time") #max
+                plt.ylabel("Response Time (milliseconds)")
+                plt.xlabel("Ellapsed Time (seconds)")
                 plt.legend(loc="upper right")
                 plt.savefig(lin_path,dpi=300)
                 plt.close()
             if not Path(reg_path).exists():
+                x = range(1, len(df.iloc[:,0]) + 1)
                 X = df.iloc[:,17].values.reshape(-1, 1)
                 Y = df.iloc[:,20].values.reshape(-1, 1)
                 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
@@ -146,8 +148,8 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 Y_pred = linear_regressor.predict(X_test)  # make predictions
                 plt.scatter(X, Y, label="Acutuall average Response Time")
                 plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
-                plt.ylabel("Time (milliseconds)")
-                plt.xlabel("Requests Count")
+                plt.ylabel("Response Time (milliseconds)")
+                plt.xlabel("Ellapsed Time (seconds)")
                 plt.legend(loc="upper right")
                 plt.savefig(reg_path,dpi=300)
                 plt.close()
