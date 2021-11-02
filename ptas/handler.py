@@ -7,6 +7,7 @@ import os
 import shutil
 import pandas as pd
 import subprocess
+import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
@@ -139,8 +140,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 plt.savefig(lin_path,dpi=300)
                 plt.close()
             if not Path(reg_path).exists():
-                x = range(1, len(df.iloc[:,0]) + 1)
-                X = df.iloc[:,17].values.reshape(-1, 1)
+                X = np.arange(1, len(df.iloc[:,0]) + 1).reshape((-1, 1)) 
                 Y = df.iloc[:,20].values.reshape(-1, 1)
                 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
                 linear_regressor = LinearRegression()  # create object for the class
@@ -148,7 +148,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 Y_pred = linear_regressor.predict(X_test)  # make predictions
                 plt.scatter(X, Y, label="Acutuall average Response Time")
                 plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
-                plt.ylabel("Response Time (milliseconds)")
+                plt.ylabel("Average response Time (milliseconds)")
                 plt.xlabel("Ellapsed Time (seconds)")
                 plt.legend(loc="upper right")
                 plt.savefig(reg_path,dpi=300)

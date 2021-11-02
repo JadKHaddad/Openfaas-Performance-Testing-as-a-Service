@@ -3,3 +3,4 @@ virtualenv
 pandas
 matplotlib
 sklearn
+numpy
