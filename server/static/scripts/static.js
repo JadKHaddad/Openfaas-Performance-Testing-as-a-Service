@@ -1,28 +1,37 @@
 FUNCTIONCALL = '/proxy'
 
-function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt) {
+function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt, showPath) {
     var test = document.createElement('div');
     test.setAttribute('id', id);
     if (host == null) host = '';
     if (time == null) time = '';
+    path = '';
+    if (showPath){
+        path =`
+        <div class="path">
+            <a href="/project/${project_name}">${project_name}</a>&nbsp;&nbsp;<i class="fas fa-angle-right"></i>&nbsp;&nbsp;<a href="/project/${project_name}/${script_name}">${script_name}</a>
+        </div>
+        `;
+    }
     const template = `
     <div class="test-container">
         <div class="buttons btn-container">
-        <button type="button" class="btn btn-primary stop-test" disabled>
-            Stop
-        </button>
-        <button type="button" class="btn btn-primary download-test" disabled>
-            Download
-        </button>
-        <button type="button" class="btn btn-primary show-test-results" disabled>
-        Show results
-        </button>
-        <button type="button" class="btn btn-danger delete-test">Delete</button>
+            <button type="button" class="btn btn-primary stop-test" disabled>
+                Stop
+            </button>
+            <button type="button" class="btn btn-primary download-test" disabled>
+                Download
+            </button>
+            <button type="button" class="btn btn-primary show-test-results" disabled>
+            Show results
+            </button>
+            <button type="button" class="btn btn-danger delete-test">Delete</button>
         </div>
         <div class="img-container">
         <img class="lin hidden" src="">
         <img class="reg hidden" src="">
         </div>
+        ${path}
         <div class="card">
             <div class="card-header">
                 <div class="row">

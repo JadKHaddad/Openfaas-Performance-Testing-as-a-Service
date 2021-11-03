@@ -97,3 +97,20 @@ h3 {
   margin-top: 20px;
   width: 200px;
 }
+
+.path{
+  margin-left: 20px;
+  font-weight: bold;
+}
+
+.path i{
+  color: rgb(182, 182, 182) !important;
+}
+
+.path a, .list-group a{
+  color: rgb(182, 182, 182) !important;
+}
+
+.path a:hover, .list-group a:hover{
+  color: white !important;
+}

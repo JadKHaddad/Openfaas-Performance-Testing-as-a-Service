@@ -30,7 +30,7 @@ if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
             
 # static functions
-def is_port_in_use(port):
+def is_port_in_use(port): # checks if a port is in use. used to distribute work
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
@@ -58,7 +58,7 @@ def kill_running_tasks():
             os.killpg(os.getpgid(installation_tasks[task_id].pid), signal.SIGTERM)
         # thread will clear the installation tasks
 
-def clean_up():
+def clean_up(): # deletes everything
     kill_running_tasks()
     if Path(projects_dir).exists():
         for f in os.scandir(projects_dir):
@@ -95,7 +95,7 @@ def get_test_info(project_name, script_name, id):
         data = {"id":id, "status":0, "data":j, "info":info, "valid":valid} # status 0 -> test is not running
     return data 
 
-def clean_up_cache(project_name, script_name, id):
+def clean_up_cache(project_name, script_name, id): # cleans up cache of a locust test before download
     test_dir = get_test_dir(project_name, script_name, id)
     cache = f'{test_dir}/__pycache__'
     if Path(cache).exists():
@@ -237,6 +237,7 @@ def handle(req, no_request=False):
 
         data = json.loads(req)
         command = data.get("command") or None
+
         if command is None:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
 
