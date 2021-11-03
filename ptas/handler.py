@@ -533,6 +533,27 @@ def handle(req, no_request=False):
                 LOCK2.release()
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
+        if command == 13: # get all running tests -> sync
+            running_tests = []
+            LOCK2.acquire()
+            for p in os.scandir(projects_dir):
+                if p.is_dir():
+                    project_name = os.path.basename(p.path)
+                    for s in os.scandir(f'{projects_dir}/{project_name}/locust/'):
+                        if s.is_dir():
+                            script_name = os.path.basename(s.path)
+                            scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
+                            if Path(scrpit_folder_path).exists():
+                                for f in os.scandir(scrpit_folder_path):
+                                    if f.is_dir():
+                                        id = os.path.basename(f.path)
+                                        task_id = f'{project_name}_{script_name}_{id}'
+                                        if task_id in tasks:
+                                            if tasks[task_id].poll() == None: # still running
+                                                running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
+            LOCK2.release()
+            return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
+
         if command == 911: # kill all running tasks -> sync
             LOCK.acquire()
             LOCK2.acquire()
