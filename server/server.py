@@ -122,6 +122,11 @@ def control():
     theme = get_theme()
     return render_template('control.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
 
+@app.route('/egg')
+def egg():
+    theme = get_theme()
+    return render_template('egg.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+
 @app.route('/proxy', methods=['POST'])
 def proxy():
     url = request.cookies.get('openfaasurl')
