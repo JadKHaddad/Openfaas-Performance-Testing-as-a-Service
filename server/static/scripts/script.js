@@ -39,15 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, project_name: project_name, script_name: script_name, users: parseInt(users), spawn_rate: parseInt(spawnRate), workers: parseInt(workers), host: host, time: parseInt(time) }) }).then(data => data.json()).then(data => {
-            if (data.success) {
-                const id = data.id;
-                const started_at = data.started_at;
-                const test = CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, 1, null, null, started_at, false);
-                document.getElementById('tests').prepend(test);
-                dismissBtn.click();
-            }
-        }).catch();
+        startTest(project_name, script_name, users, spawnRate, workers, host, time, dismissBtn, false);
+        
         return false;
     });
 

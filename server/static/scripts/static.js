@@ -5,6 +5,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     test.setAttribute('id', id);
     if (host == null) host = '';
     if (time == null) time = '';
+    if (workers == 0) workers = '';
     path = '';
     if (showPath){
         path =`
@@ -18,6 +19,9 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         <div class="buttons btn-container">
             <button type="button" class="btn btn-primary stop-test" disabled>
                 Stop
+            </button>
+            <button type="button" class="btn btn-primary restart-test" disabled>
+                Restart
             </button>
             <button type="button" class="btn btn-primary download-test" disabled>
                 Download
@@ -77,8 +81,10 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     `;
 
     test.innerHTML = template;
+    const card = $(test).find('.card');
     const idCol = $(test).find('.test-id');
     const stopBtn = $(test).find('.stop-test');
+    const restartBtn = $(test).find('.restart-test');
     const downloadBtn = $(test).find('.download-test');
     const resultsBtn = $(test).find('.show-test-results');
     const deleteBtn = $(test).find('.delete-test');
@@ -87,7 +93,8 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     const notValid = $(test).find('.not-valid');
     const elapsed = $(test).find('.elapsed');
     const elapsedText = $(test).find('.elapsed-text');
-    const results = $(test).find('.card-body > .results');
+    const body = $(test).find('.card-body');
+    const results = body.find('.results');
     const footer = $(test).find('.card-footer');
     const lin = $(test).find('.lin');
     const reg = $(test).find('.reg');
@@ -98,11 +105,13 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     if (status == 0) { // not running
         stopBtn.prop("disabled", true);
         downloadBtn.prop("disabled", false);
+        restartBtn.prop("disabled", false);
         resultsBtn.prop("disabled", false);
         if (valid === false) {
             notValid.removeClass('hidden');
             idCol.addClass('red');
             downloadBtn.prop("disabled", true);
+            restartBtn.prop("disabled", true);
             resultsBtn.prop("disabled", true);
         } else {
             check.removeClass('hidden');
@@ -114,6 +123,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         idCol.addClass('green');
         stopBtn.prop("disabled", false);
         downloadBtn.prop("disabled", true);
+        restartBtn.prop("disabled", true);
         elapsed.removeClass('hidden');
         spinner.removeClass('hidden');
         // get updates
@@ -126,6 +136,10 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         };
     }
 
+    card.on('dblclick', function(){
+        body.slideToggle();
+    });
+
     stopBtn.on('click', function () {
         fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 8, project_name: project_name, script_name: script_name, id: id }) }).then(data => data.json()).then(data => {
             if (data.success) {
@@ -135,12 +149,17 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", false);
+                restartBtn.prop("disabled", false);
                 resultsBtn.prop("disabled", false);
                 eventSource.close();
             } else {
                 showInfo('There was an error stopping the test');
             }
         });
+    });
+
+    restartBtn.on('click', function(){
+        startTest(project_name, script_name, users, spawnRate, workers, host, time, $('#dismiss-btn'), window.location.pathname == '/control');
     });
 
     downloadBtn.on('click', function () {
@@ -214,6 +233,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", false);
+                restartBtn.prop("disabled", false);
                 resultsBtn.prop("disabled", false);
                 eventSource.close();
                 return;
@@ -236,6 +256,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 spinner.addClass('hidden');
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", true);
+                restartBtn.prop("disabled", true);
                 eventSource.close();
                 return;
             }
@@ -288,6 +309,20 @@ function createRow(type, name, requests, fails, med, avg, min, max, avgSize, rps
     `;
     row.innerHTML = template;
     return row;
+}
+
+function startTest(project_name, script_name, users, spawnRate, workers, host, time, dismissBtn, showPath){
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 5, project_name: project_name, script_name: script_name, users: parseInt(users), spawn_rate: parseInt(spawnRate), workers: parseInt(workers), host: host, time: parseInt(time) }) }).then(data => data.json()).then(data => {
+        if (data.success) {
+            const id = data.id;
+            const started_at = data.started_at;
+            const test = CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, 1, null, null, started_at, showPath);
+            document.getElementById('tests').prepend(test);
+            if (dismissBtn != null){
+                dismissBtn.click();
+            }
+        }
+    }).catch();
 }
 
 function showInfo(message, color) {
