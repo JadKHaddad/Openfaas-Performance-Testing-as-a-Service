@@ -432,6 +432,12 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
+    if (getCookie('noredges') != null){
+        if(getCookie('noredges') === 'true') {
+            $('#i-do-not-like-rounded-edges-checkbox').prop('checked', true);
+        };
+    }
+
     $('#url-input').val(openfaasUrl);
     $('#url').text(openfaasUrl);
     $('#nav-url').on('click', function(){
@@ -444,10 +450,13 @@ document.addEventListener("DOMContentLoaded", function () {
         openfaasUrl = openfaasUrl.replace("http://", "").replace("https://", "");
         openfaasUrl = "http://" + openfaasUrl;
         direct = false;
+        noredges = false;
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         if($('#no-openfaas-checkbox').prop('checked') == true) openfaasUrl = 'None';
+        if($('#i-do-not-like-rounded-edges-checkbox').prop('checked') == true) noredges = true;
         setCookie('direct', direct.toString(), 365);
         setCookie('openfaasurl', openfaasUrl, 365);
+        setCookie('noredges', noredges.toString(), 365);
         theme = 'light'
         if($('#dark-theme-checkbox').prop('checked') == true) theme = 'dark'; 
         setCookie('theme', theme, 365);

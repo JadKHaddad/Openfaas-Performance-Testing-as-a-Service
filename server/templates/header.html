@@ -21,6 +21,9 @@
 
    <!-- Custom -->
    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+   {% if noredges == 'true' -%}
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/noredges.css') }}">
+   {% endif %}
    <!-- jquery-->
    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
    <!-- static -->

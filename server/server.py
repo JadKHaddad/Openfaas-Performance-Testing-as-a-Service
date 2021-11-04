@@ -41,10 +41,15 @@ def get_theme():
         theme = 'light'
     return theme
 
+def get_noredges():
+    noredges = request.cookies.get('noredges')
+    if noredges is None:
+        noredges = 'false'
+    return noredges
+
 @app.route('/')
 def index():
-    theme = get_theme()
-    return render_template('index.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
 
 @app.route('/task/<task_id>')
 def task(task_id):
@@ -76,13 +81,11 @@ def task(task_id):
 
 @app.route('/project/<name>')
 def project(name):
-    theme = get_theme()
-    return render_template('project.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=name)
+    return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name)
 
 @app.route('/project/<project_name>/<script_name>')
 def script(project_name, script_name):
-    theme = get_theme()
-    return render_template('script.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme, project_name=project_name, script_name=script_name)
+    return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name)
 
 @app.route('/stream/<project_name>/<script_name>/<id>')
 def stream(project_name,script_name,id):
@@ -114,18 +117,15 @@ def stream(project_name,script_name,id):
 
 @app.route('/license')
 def license():
-    theme = get_theme()
-    return render_template('license.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+    return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
 
 @app.route('/control')
 def control():
-    theme = get_theme()
-    return render_template('control.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+    return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
 
 @app.route('/egg')
 def egg():
-    theme = get_theme()
-    return render_template('egg.html', openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=theme)
+    return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
 
 @app.route('/proxy', methods=['POST'])
 def proxy():

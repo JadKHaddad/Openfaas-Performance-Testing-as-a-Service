@@ -1,0 +1,3 @@
+*:not(.spinner){
+    border-radius:0rem !important;
+}
