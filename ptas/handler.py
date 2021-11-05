@@ -163,21 +163,20 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
         sleep(1)
-        LOCK.acquire()
-        if installation_tasks[project_name].poll() is not None: # process finished
-            print(project_name + ': task finished')
-            if installation_tasks[project_name].returncode != 0:
-                print(project_name + ': cleaning up')
-                # delete project
-                project_path = f'{projects_dir}/{project_name}'
-                if Path(project_path).exists():
-                    shutil.rmtree(project_path)
-                # delete project env
-                project_env_path = f'env/{project_name}'
-                if Path(project_env_path).exists():
-                    shutil.rmtree(project_env_path)
-            del installation_tasks[project_name]
-        LOCK.release()
+        with LOCK:
+            if installation_tasks[project_name].poll() is not None: # process finished
+                print(project_name + ': task finished')
+                if installation_tasks[project_name].returncode != 0:
+                    print(project_name + ': cleaning up')
+                    # delete project
+                    project_path = f'{projects_dir}/{project_name}'
+                    if Path(project_path).exists():
+                        shutil.rmtree(project_path)
+                    # delete project env
+                    project_env_path = f'env/{project_name}'
+                    if Path(project_env_path).exists():
+                        shutil.rmtree(project_env_path)
+                del installation_tasks[project_name]
     print(project_name +': terminating')
     
 def handle(req, no_request=False):
@@ -188,52 +187,47 @@ def handle(req, no_request=False):
             project_name = request.files['file0'].filename.split('/')[:-1][0]
             project_path = f'{projects_dir}/{project_name}'
             # check if project folder exists
-            LOCK.acquire()
-            if Path(project_path).exists():
-                LOCK.release()
-                return jsonify(success=False,exit_code=2,message="project exists"), headers
+            with LOCK:
+                if Path(project_path).exists():
+                    return jsonify(success=False,exit_code=2,message="project exists"), headers
 
-            # save project files 
-            for f in request.files.values():
-                uploaded_file_name = f.filename
-                uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-                f.save(f'{projects_dir}/{uploaded_file_name}')
+                # save project files 
+                for f in request.files.values():
+                    uploaded_file_name = f.filename
+                    uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
+                    pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
+                    f.save(f'{projects_dir}/{uploaded_file_name}')
 
-            # check locust scripts in locust folder
-            if not Path(f'{project_path}/locust').exists():
-                shutil.rmtree(project_path)
-                LOCK.release()
-                return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
+                # check locust scripts in locust folder
+                if not Path(f'{project_path}/locust').exists():
+                    shutil.rmtree(project_path)
+                    return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
 
-            # check if locust tests exist
-            locust_tests_exist = False
-            for file in os.listdir(f'{project_path}/locust'):
-                if file.endswith('.py'):
-                    locust_tests_exist = True
-                    break
-            if not locust_tests_exist:
-                shutil.rmtree(project_path)
-                LOCK.release()
-                return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
+                # check if locust tests exist
+                locust_tests_exist = False
+                for file in os.listdir(f'{project_path}/locust'):
+                    if file.endswith('.py'):
+                        locust_tests_exist = True
+                        break
+                if not locust_tests_exist:
+                    shutil.rmtree(project_path)
+                    return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
 
-            if not Path(f'{project_path}/requirements.txt').exists():
-                shutil.rmtree(project_path)
-                LOCK.release()
-                return jsonify(success=False,exit_code=5,message="no requirements found"), headers
-            # create a virtual env and install req
-            # check if req exists
-            if platform.system() == 'Windows': # windows
-                req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
-            else:   
-                req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
-                installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
-            LOCK.release()
-            thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
-            thread.start()
-            
-            return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
+                if not Path(f'{project_path}/requirements.txt').exists():
+                    shutil.rmtree(project_path)
+                    return jsonify(success=False,exit_code=5,message="no requirements found"), headers
+                # create a virtual env and install req
+                # check if req exists
+                if platform.system() == 'Windows': # windows
+                    req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
+                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
+                else:   
+                    req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
+                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
+                thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
+                thread.start()
+                
+                return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
 
         data = json.loads(req)
         command = data.get("command") or None
@@ -249,37 +243,31 @@ def handle(req, no_request=False):
             if LOCK.locked():
                 return json.dumps({'success':True,'exit_code':0,'status_code':3,'message':'thread is locking'})
 
-            def return_(json):
-                LOCK.release()
-                return(json)
-
-            LOCK.acquire()
-            if task_id in installation_tasks:
-                if installation_tasks[task_id].poll() is not None: # process finished
-                    if installation_tasks[task_id].returncode != 0:
-                        return return_(json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}))
-                    return return_(json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'}))
-                return return_(json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'}))
-            if not Path(f'{projects_dir}/{task_id}').exists():
-                return return_(json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'}))
-            return return_(json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'}))
+            with LOCK:
+                if task_id in installation_tasks:
+                    if installation_tasks[task_id].poll() is not None: # process finished
+                        if installation_tasks[task_id].returncode != 0:
+                            return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'})
+                        return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
+                    return json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'})
+                if not Path(f'{projects_dir}/{task_id}').exists():
+                    return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'})
+                return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'})
 
         if command == 3: # get installed projects -> sync
             projects = []
-            LOCK.acquire()
-            LOCK2.acquire()
-            for f in os.scandir(projects_dir):
-                if f.is_dir():
-                    project_name = os.path.basename(f.path)
-                    if project_name in installation_tasks:
-                        if installation_tasks[project_name].poll() is not None:
-                            del installation_tasks[project_name]
-                            projects.append(project_name)
-                    else:
-                        projects.append(project_name)
-            LOCK.release()
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
+            with LOCK:
+                with LOCK2:
+                    for f in os.scandir(projects_dir):
+                        if f.is_dir():
+                            project_name = os.path.basename(f.path)
+                            if project_name in installation_tasks:
+                                if installation_tasks[project_name].poll() is not None:
+                                    del installation_tasks[project_name]
+                                    projects.append(project_name)
+                            else:
+                                projects.append(project_name)
+                    return jsonify(success=True,exit_code=0,projects=projects,message="projects"), headers
         
         if command == 4: # get locust scripts of a project -> sync
             project_name = data.get('project_name') or None
@@ -288,13 +276,12 @@ def handle(req, no_request=False):
             project_path = f'{projects_dir}/{project_name}'
             locust_scripts = []
             # check if project exists
-            LOCK2.acquire()
-            if Path(project_path).exists():
-                for file in os.listdir(f'{project_path}/locust'):
-                    if file.endswith('.py'):
-                        locust_scripts.append(file.split('.')[0])
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
+            with LOCK2:
+                if Path(project_path).exists():
+                    for file in os.listdir(f'{project_path}/locust'):
+                        if file.endswith('.py'):
+                            locust_scripts.append(file.split('.')[0])
+                return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
         if command == 5: # start a test -> sync
             project_name = data.get("project_name") or None
@@ -325,46 +312,45 @@ def handle(req, no_request=False):
             workers_count = workers if workers is not None else 0
 
             task_id = f'{project_name}_{script_name}_{id}'
-            LOCK2.acquire()
-            if platform.system() == 'Windows': # windows
-                if workers_count > 0:
-                    port = 5000
-                    while is_port_in_use(port):
-                        port = port + 1
-                    worker_command = ''
-                    for i in range(0, int(workers_count)):
-                        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
-                        worker_command = worker_command + f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} & '
-                    master_command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
-                    command = worker_command + master_command
-                else:
-                    command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
-                tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
-   
-            else: # linux
-                if workers_count > 0:
-                    port = 5000
-                    while is_port_in_use(port):
-                        port = port + 1
-                    worker_command = ''
-                    for i in range(0, int(workers_count)):
-                        worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
-                        worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
-                    master_command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
-                    command = worker_command + master_command
-                else:
-                    command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+            with LOCK2:
+                if platform.system() == 'Windows': # windows
+                    if workers_count > 0:
+                        port = 5000
+                        while is_port_in_use(port):
+                            port = port + 1
+                        worker_command = ''
+                        for i in range(0, int(workers_count)):
+                            worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
+                            worker_command = worker_command + f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} & '
+                        master_command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
+                        command = worker_command + master_command
+                    else:
+                        command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+                    tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+    
+                else: # linux
+                    if workers_count > 0:
+                        port = 5000
+                        while is_port_in_use(port):
+                            port = port + 1
+                        worker_command = ''
+                        for i in range(0, int(workers_count)):
+                            worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
+                            worker_command = worker_command + f'cd projects/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
+                        master_command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
+                        command = worker_command + master_command
+                    else:
+                        command = f'cd {projects_dir}/{project_name} && ../../env/{project_name}/bin/locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
 
-                tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
-            
-            started_at = t.time()
-            # save test info
-            info_file = f'{test_dir}/info.txt'
-            with open(info_file, "w", encoding="UTF-8") as file:
-                file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
-            
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
+                    tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
+                
+                started_at = t.time()
+                # save test info
+                info_file = f'{test_dir}/info.txt'
+                with open(info_file, "w", encoding="UTF-8") as file:
+                    file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
+
+                return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
         if command == 6: # get test stats -> sync
             project_name = data.get("project_name") or None
@@ -378,35 +364,31 @@ def handle(req, no_request=False):
 
             # check if test is runnig
             task_id = f'{project_name}_{script_name}_{id}'
-            LOCK2.acquire()
-            if task_id in tasks:
-                test_dir = get_test_dir(project_name, script_name, id)
-                csv_file_path = f'{test_dir}/results_stats.csv'
-                if tasks[task_id].poll() is not None: # process finished
-                    if not Path(csv_file_path).exists(): # test is not valid
+            with LOCK2:
+                if task_id in tasks:
+                    test_dir = get_test_dir(project_name, script_name, id)
+                    csv_file_path = f'{test_dir}/results_stats.csv'
+                    if tasks[task_id].poll() is not None: # process finished
+                        if not Path(csv_file_path).exists(): # test is not valid
+                            del tasks[task_id]
+                            if local is not None:
+                                return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
+                            return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
                         del tasks[task_id]
-                        LOCK2.release()
+                    if not Path(csv_file_path).exists():
                         if local is not None:
-                            return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
-                        return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
-                    del tasks[task_id]
-                if not Path(csv_file_path).exists():
-                    LOCK2.release()
+                            return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
+                        return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
+                    j = None
+                    if not os.stat(csv_file_path).st_size == 0:
+                        pd_data = pd.read_csv(csv_file_path) 
+                        j = pd_data.to_json(orient='records')
                     if local is not None:
-                        return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
-                    return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
-                j = None
-                if not os.stat(csv_file_path).st_size == 0:
-                    pd_data = pd.read_csv(csv_file_path) 
-                    j = pd_data.to_json(orient='records')
-                LOCK2.release()
+                        return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
+                    return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
                 if local is not None:
-                    return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
-                return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-            LOCK2.release()
-            if local is not None:
-                return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
-            return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
+                    return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
+                return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
 
         if command == 7: # get tests -> sync
             project_name = data.get("project_name") or None
@@ -416,14 +398,14 @@ def handle(req, no_request=False):
             tests_folders = []
             scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
 
-            LOCK2.acquire()
-            if Path(scrpit_folder_path).exists():
-                for f in os.scandir(scrpit_folder_path):
-                    if f.is_dir():
-                        id = os.path.basename(f.path)
-                        tests_folders.append(get_test_info(project_name, script_name, id))
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
+            with LOCK2:
+                if Path(scrpit_folder_path).exists():
+                    for f in os.scandir(scrpit_folder_path):
+                        if f.is_dir():
+                            id = os.path.basename(f.path)
+                            tests_folders.append(get_test_info(project_name, script_name, id))
+
+                return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 8: # stop test -> sync
             project_name = data.get("project_name") or None
@@ -433,17 +415,16 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             task_id = f'{project_name}_{script_name}_{id}'
             #stop the task
-            LOCK2.acquire()
-            if task_id not in tasks:
-                return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
-            if platform.system() == 'Windows': # windows
-                tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
-                tasks[task_id].kill()
-            else:
-                os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
-            del tasks[task_id]
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,message="test is stopped"), headers
+            with LOCK2:
+                if task_id not in tasks:
+                    return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
+                if platform.system() == 'Windows': # windows
+                    tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                    tasks[task_id].kill()
+                else:
+                    os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+                del tasks[task_id]
+                return jsonify(success=True,exit_code=0,message="test is stopped"), headers
 
         if command == 9: # delete test -> sync
             project_name = data.get("project_name") or None
@@ -453,42 +434,39 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             task_id = f'{project_name}_{script_name}_{id}'
             # stop the task  
-            LOCK2.acquire()  
-            if task_id in tasks:
-                if platform.system() == 'Windows': # windows
-                    tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
-                    tasks[task_id].kill()
-                else:
-                    os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
-                del tasks[task_id]
+            with LOCK2:
+                if task_id in tasks:
+                    if platform.system() == 'Windows': # windows
+                        tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                        tasks[task_id].kill()
+                    else:
+                        os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+                    del tasks[task_id]
 
-            test_dir = get_test_dir(project_name, script_name, id)
-            if not Path(test_dir).exists():
-                LOCK2.release()
-                return jsonify(success=False,exit_code=6,message="test does not exist"), headers
-            shutil.rmtree(test_dir) # remove test_dir
-            delete_zip_file(project_name, script_name,id)
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,message="deleted"), headers
+                test_dir = get_test_dir(project_name, script_name, id)
+                if not Path(test_dir).exists():
+                    return jsonify(success=False,exit_code=6,message="test does not exist"), headers
+                shutil.rmtree(test_dir) # remove test_dir
+                delete_zip_file(project_name, script_name,id)
+                return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
             names = data.get("names") or None
             if names is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             deleted = []
-            LOCK2.acquire()  
-            for name in names:
-                # delete project dir
-                project_path = f'{projects_dir}/{name}'
-                if Path(project_path).exists():
-                    shutil.rmtree(project_path)
-                # delete project env
-                project_env_path = f'env/{name}'
-                if Path(project_env_path).exists():
-                    shutil.rmtree(project_env_path)
-                deleted.append(name)
-            LOCK2.release()  
-            return jsonify(success=True,exit_code=0,deleted=deleted), headers
+            with LOCK2:
+                for name in names:
+                    # delete project dir
+                    project_path = f'{projects_dir}/{name}'
+                    if Path(project_path).exists():
+                        shutil.rmtree(project_path)
+                    # delete project env
+                    project_env_path = f'env/{name}'
+                    if Path(project_env_path).exists():
+                        shutil.rmtree(project_env_path)
+                    deleted.append(name)
+                return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
         if command == 11: # download a test -> sync
             project_name = data.get("project_name") or None
@@ -497,17 +475,15 @@ def handle(req, no_request=False):
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
 
-            LOCK2.acquire()
-            # create plots
-            create_plots(project_name, script_name, id)
-            # zip files
-            if zip_files(project_name,script_name,id):
-                script_dir = get_script_dir(project_name,script_name)
-                LOCK2.release()
-                return send_from_directory(script_dir, f'{id}.zip'), headers
-            else:
-                LOCK2.release()
-                return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
+            with LOCK2:
+                # create plots
+                create_plots(project_name, script_name, id)
+                # zip files
+                if zip_files(project_name,script_name,id):
+                    script_dir = get_script_dir(project_name,script_name)
+                    return send_from_directory(script_dir, f'{id}.zip'), headers
+                else:
+                    return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
 
         if command == 12: # get plots -> sync
             project_name = data.get("project_name") or None
@@ -518,80 +494,67 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
             test_dir = get_test_dir(project_name, script_name, id)
 
-            LOCK2.acquire()
-
-            if type == 1: # create
-                status_code = create_plots(project_name, script_name, id) # 0: success, 1 test does not exist, 2 not enough data
-                LOCK2.release()
-                return jsonify(success=True,exit_code=0,status_code=status_code), headers 
-            if type == 2: # linear
-                LOCK2.release()
-                return send_from_directory(test_dir, f'lin.png'), headers
-            if type == 3: # regression 
-                LOCK2.release()
-                return send_from_directory(test_dir, f'reg.png'), headers
-            else:
-                LOCK2.release()
-                return jsonify(success=False,exit_code=1,message="bad request"), headers 
+            with LOCK2:
+                if type == 1: # create
+                    status_code = create_plots(project_name, script_name, id) # 0: success, 1 test does not exist, 2 not enough data
+                    return jsonify(success=True,exit_code=0,status_code=status_code), headers 
+                if type == 2: # linear
+                    return send_from_directory(test_dir, f'lin.png'), headers
+                if type == 3: # regression 
+                    return send_from_directory(test_dir, f'reg.png'), headers
+                else:
+                    return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 13: # get all running tests -> sync
             running_tests = []
-            LOCK2.acquire()
-            for p in os.scandir(projects_dir):
-                if p.is_dir():
-                    project_name = os.path.basename(p.path)
-                    for s in os.scandir(f'{projects_dir}/{project_name}/locust/'):
-                        if s.is_dir():
-                            script_name = os.path.basename(s.path)
-                            scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
-                            if Path(scrpit_folder_path).exists():
-                                for f in os.scandir(scrpit_folder_path):
-                                    if f.is_dir():
-                                        id = os.path.basename(f.path)
-                                        task_id = f'{project_name}_{script_name}_{id}'
-                                        if task_id in tasks:
-                                            if tasks[task_id].poll() == None: # still running
-                                                running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
+            with LOCK2:
+                for p in os.scandir(projects_dir):
+                    if p.is_dir():
+                        project_name = os.path.basename(p.path)
+                        for s in os.scandir(f'{projects_dir}/{project_name}/locust/'):
+                            if s.is_dir():
+                                script_name = os.path.basename(s.path)
+                                scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
+                                if Path(scrpit_folder_path).exists():
+                                    for f in os.scandir(scrpit_folder_path):
+                                        if f.is_dir():
+                                            id = os.path.basename(f.path)
+                                            task_id = f'{project_name}_{script_name}_{id}'
+                                            if task_id in tasks:
+                                                if tasks[task_id].poll() == None: # still running
+                                                    running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
+                return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
 
         if command == 14: # get count of running tests
             local = data.get('local') or None
-            LOCK2.acquire()
-            count = len(tasks)
-            LOCK2.release()
+            with LOCK2:
+                count = len(tasks)
             if local is not None:
                 return json.dumps({'success':True,'exit_code':0,'count':count,'message':'count of running tests'})
             return jsonify(success=True,exit_code=0,count=count,message="count of running tests"), headers
 
         if command == 911: # kill all running tasks -> sync
-            LOCK.acquire()
-            LOCK2.acquire()
-            kill_running_tasks()
-            LOCK.release()
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,message="tasks killed"), headers
+            with LOCK:
+                with LOCK2:
+                    kill_running_tasks()
+                    return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
         if command == 912: # clean up -> sync
-            LOCK.acquire()
-            LOCK2.acquire()
-            clean_up()
-            LOCK.release()
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,message="clean up"), headers
+            with LOCK:
+                with LOCK2:
+                    clean_up()
+                    return jsonify(success=True,exit_code=0,message="clean up"), headers
 
         if command == 913: # show saved tasks -> sync
             saved_tasks = []
             saved_installation_tasks = []
-            LOCK.acquire()
-            LOCK2.acquire()
-            for key in tasks.keys():
-                saved_tasks.append(key)
-            for key in installation_tasks.keys():
-                saved_installation_tasks.append(key)
-            LOCK.release()
-            LOCK2.release()
-            return jsonify(success=True,exit_code=0,tasks=saved_tasks, installation_tasks=saved_installation_tasks,message="saved tasks"), headers
+            with LOCK:
+                with LOCK2:
+                    for key in tasks.keys():
+                        saved_tasks.append(key)
+                    for key in installation_tasks.keys():
+                        saved_installation_tasks.append(key)
+                    return jsonify(success=True,exit_code=0,tasks=saved_tasks, installation_tasks=saved_installation_tasks,message="saved tasks"), headers
 
     except Exception as e:
         print(traceback.format_exc())
