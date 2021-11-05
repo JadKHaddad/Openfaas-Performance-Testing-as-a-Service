@@ -443,6 +443,21 @@ function getCookie(name) {
     return null;
 }
 
+// rotate element
+$.fn.animateRotate = function(angle, duration, easing, complete) {
+    var args = $.speed(duration, easing, complete);
+    var step = args.step;
+    return this.each(function(i, e) {
+      args.complete = $.proxy(args.complete, e);
+      args.step = function(now) {
+        $.style(e, 'transform', 'rotate(' + now + 'deg)');
+        if (step) return step.apply(e, arguments);
+      };
+  
+      $({deg: 0}).animate({deg: angle}, args);
+    });
+  };
+
 document.addEventListener("DOMContentLoaded", function () {
     const functionName = document.getElementById('function-name').innerText;
     var openfaasUrl = document.getElementById('openfaas-url').innerText;
@@ -474,7 +489,16 @@ document.addEventListener("DOMContentLoaded", function () {
     $('#url-input').val(openfaasUrl);
     $('#url').text(openfaasUrl);
     $('#nav-url').on('click', function(){
+        $('#gear').animateRotate(180);
         $('#url-modal-button').click();
+        $('*').bind('click.myEvents', function(event){
+            if(event.currentTarget == $('#Url-Modal')[0]){
+                $('#gear').animateRotate(-180);
+                $('*').off('.myEvents');
+            }
+            event.stopPropagation();
+            
+        });
         return false;
     });
 
