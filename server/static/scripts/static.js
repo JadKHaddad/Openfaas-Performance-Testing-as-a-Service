@@ -1,4 +1,6 @@
 FUNCTIONCALL = '/proxy'
+WEBSOCKET = false;
+var socket;
 
 function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt, showPath) {
     var test = document.createElement('div');
@@ -101,6 +103,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
     var intv;
     var eventSource;
     var intvSet = false;
+    var socketIntv;
 
     if (status == 0) { // not running
         stopBtn.prop("disabled", true);
@@ -127,13 +130,24 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         elapsed.removeClass('hidden');
         spinner.removeClass('hidden');
         // get updates
+        if (WEBSOCKET){
+            socketIntv = setInterval(function () {
+                socket.emit('stats', { project_name: project_name, script_name: script_name, id:id });
+            }, 1000);
+            socket.on(id, function (msg) {
+                if (!IsJsonString(msg.data)) return;
+                message = JSON.parse(msg.data)
+                interpretMessage(message);
+            });
+        }else{
+            eventSource = new EventSource('/stream/' + project_name + "/" + script_name + "/" + id);
+            eventSource.onmessage = function (e) {
+                if (!IsJsonString(e.data)) return;
+                message = JSON.parse(e.data)
+                interpretMessage(message);
+            };
+        }
 
-        eventSource = new EventSource('/stream/' + project_name + "/" + script_name + "/" + id);
-        eventSource.onmessage = function (e) {
-            if (!IsJsonString(e.data)) return;
-            message = JSON.parse(e.data)
-            interpretMessage(message);
-        };
     }
 
     card.on('dblclick', function(){
@@ -151,7 +165,12 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 downloadBtn.prop("disabled", false);
                 restartBtn.prop("disabled", false);
                 resultsBtn.prop("disabled", false);
-                eventSource.close();
+                if(WEBSOCKET){
+                    clearInterval(socketIntv);
+                }else{
+                    eventSource.close();
+                }
+                
             } else {
                 showInfo('There was an error stopping the test');
             }
@@ -209,7 +228,12 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 if (data.success) {
                     $('#dismiss-confirmation-modal-btn').click();
                     $(test).remove();
-                    if (eventSource != null) eventSource.close();
+                    if(WEBSOCKET){
+                        if (socketIntv != null) clearInterval(socketIntv);
+                    }else{
+                        if (eventSource != null) eventSource.close();
+                    }
+                    
                 } else {
                     showInfo('There was an error deleting the test');
                 }
@@ -235,7 +259,11 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 downloadBtn.prop("disabled", false);
                 restartBtn.prop("disabled", false);
                 resultsBtn.prop("disabled", false);
-                eventSource.close();
+                if(WEBSOCKET){
+                    clearInterval(socketIntv);
+                }else{
+                    eventSource.close();
+                }
                 return;
             }
             if (!intvSet) {
@@ -257,7 +285,11 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 stopBtn.prop("disabled", true);
                 downloadBtn.prop("disabled", true);
                 restartBtn.prop("disabled", true);
-                eventSource.close();
+                if(WEBSOCKET){
+                    clearInterval(socketIntv);
+                }else{
+                    eventSource.close();
+                }
                 return;
             }
         }
@@ -416,6 +448,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var openfaasUrl = document.getElementById('openfaas-url').innerText;
     var direct = false;
     if (document.getElementById('direct').innerText === 'true') direct = true;
+    if (document.getElementById('websocket').innerText === 'true') WEBSOCKET  = true;
 
     if (getCookie('openfaasurl') != null){
         openfaasUrl = getCookie('openfaasurl');
@@ -508,5 +541,19 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#url-input').prop('disabled', true);
     }else{
         $('#url-input').prop('disabled', false);
+    }
+    if(WEBSOCKET){
+        socket = io();
+        socket.on('connect', function (msg) {
+            if (msg != null){
+                data = JSON.parse(msg.data);
+                if (data != null) {
+                    if (data.success){
+                        $('#running-tests-label').text(data.count);
+                    }
+                }
+            }
+        });
+
     }
 });

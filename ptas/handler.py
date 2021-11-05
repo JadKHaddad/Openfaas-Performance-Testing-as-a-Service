@@ -296,7 +296,7 @@ def handle(req, no_request=False):
             LOCK2.release()
             return jsonify(success=True,exit_code=0,locust_scripts=locust_scripts,message="locust_scripts"), headers
 
-        if command == 5:  # start a test -> sync
+        if command == 5: # start a test -> sync
             project_name = data.get("project_name") or None
             script_name = data.get("script_name") or None
             users = data.get("users") or None
@@ -554,6 +554,15 @@ def handle(req, no_request=False):
                                                 running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
             LOCK2.release()
             return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
+
+        if command == 14: # get count of running tests
+            local = data.get('local') or None
+            LOCK2.acquire()
+            count = len(tasks)
+            LOCK2.release()
+            if local is not None:
+                return json.dumps({'success':True,'exit_code':0,'count':count,'message':'count of running tests'})
+            return jsonify(success=True,exit_code=0,count=count,message="count of running tests"), headers
 
         if command == 911: # kill all running tasks -> sync
             LOCK.acquire()

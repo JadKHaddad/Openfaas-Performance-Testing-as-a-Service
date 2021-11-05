@@ -3,6 +3,7 @@
 import platform
 import subprocess
 from flask import Flask, render_template, request, Response
+from flask_socketio import SocketIO, emit
 from waitress import serve
 import requests
 import json
@@ -21,6 +22,7 @@ sys.path.append(parentdir)
 from ptas import handler
 
 LOCAL = False
+WEBSOCKET = None
 
 PROXYOPENFAASULR = None
 PROXYFUNCTION = None
@@ -34,6 +36,8 @@ ASYNCFUNCTIONURL = None
 DIRECT = None
 
 app = Flask(__name__)
+socketio = SocketIO(app,cors_allowed_origins='*')
+thread = None
 
 def get_theme():
     theme = request.cookies.get('theme')
@@ -47,9 +51,16 @@ def get_noredges():
         noredges = 'false'
     return noredges
 
+def background_thread():
+    while True:
+        socketio.sleep(5)
+        data = {'command':14, 'local':True}
+        response = handler.handle(json.dumps(data), True)
+        socketio.emit('connect', {'data': response})
+
 @app.route('/')
 def index():
-    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
+    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/task/<task_id>')
 def task(task_id):
@@ -81,11 +92,11 @@ def task(task_id):
 
 @app.route('/project/<name>')
 def project(name):
-    return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name)
+    return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
 
 @app.route('/project/<project_name>/<script_name>')
 def script(project_name, script_name):
-    return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name)
+    return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
 
 @app.route('/stream/<project_name>/<script_name>/<id>')
 def stream(project_name,script_name,id):
@@ -117,15 +128,15 @@ def stream(project_name,script_name,id):
 
 @app.route('/license')
 def license():
-    return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
+    return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/control')
 def control():
-    return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
+    return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/egg')
 def egg():
-    return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme())
+    return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
@@ -173,6 +184,33 @@ def proxy():
 def local():
     return handler.handle(request.data)
 
+@socketio.on('stats')
+def stats(message):
+    project_name = message.get('project_name')
+    script_name = message.get('script_name')
+    id = message.get('id')
+    if project_name is None or script_name is None or id is None:
+        emit(id, {'data': None})
+    data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
+    response = handler.handle(json.dumps(data), True)
+    emit(id, {'data': response})
+
+@socketio.on('connect')
+def connect():
+    session_id = request.sid
+    print('Client connected', session_id)
+    global thread
+    if thread is None:
+        thread = socketio.start_background_task(background_thread)
+    data = {'command':14, 'local':True}
+    response = handler.handle(json.dumps(data), True)
+    socketio.emit('connect', {'data': response})
+
+@socketio.on('disconnect')
+def disconnect():
+    session_id = request.sid
+    print('Client disconnected', session_id)
+
 if __name__ == '__main__':
     extern = False
     parser = argparse.ArgumentParser(add_help=False)
@@ -184,6 +222,7 @@ if __name__ == '__main__':
     requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
     requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
     requiredNamed.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
+    requiredNamed.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: server will not run with waitress')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
     requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
 
@@ -195,7 +234,9 @@ if __name__ == '__main__':
     extern = args.extern
     function = args.function or 'ptas'
     direct = args.direct or 'true'
+    WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
+
 
     if direct != 'true' and direct != 'false':
         print('-d , --direct can only be true or false')
@@ -243,4 +284,8 @@ if __name__ == '__main__':
             print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
         print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
-    serve(app, host=host, port=port,threads=24)
+    if WEBSOCKET == 'true':
+        print(f'running with websockets')
+        socketio.run(app, host=host, port=port)
+    else:
+        serve(app, host=host, port=port, threads=24)

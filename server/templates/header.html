@@ -24,7 +24,13 @@
    {% if noredges == 'true' -%}
    <link rel="stylesheet" href="{{ url_for('static', filename='css/noredges.css') }}">
    {% endif %}
-   <!-- jquery-->
+   {% if websocket == 'true' -%}
+   <!-- socket io -->    
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"
+   integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ=="
+   crossorigin="anonymous"></script>
+   {% endif %}
+   <!-- jquery -->
    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
    <!-- static -->
    <script type="text/javascript" src="{{ url_for('static', filename='scripts/static.js') }}"></script>
@@ -70,8 +76,14 @@
       </nav>
       <!-- Navbar -->
    </header>
+   {% if websocket == 'true' -%}
+   <div id="server-stats">
+      Running tests: <label id="running-tests-label"></label>
+   </div>
+   {% endif %}
    <!-- content -->
    <div class="content" id="content">
       <div class="hidden" id="openfaas-url">{{ openfaas_url }}</div>
       <div class="hidden" id="function-name">{{ function_name }}</div>
       <div class="hidden" id="direct">{{ direct }}</div>
+      <div class="hidden" id="websocket">{{ websocket }}</div>

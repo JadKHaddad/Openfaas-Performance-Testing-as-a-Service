@@ -114,3 +114,10 @@ h3 {
   -webkit-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
+
+#server-stats{
+  position:absolute;
+  z-index: 1031;
+  right:20px;
+  top  :15px;
+}
