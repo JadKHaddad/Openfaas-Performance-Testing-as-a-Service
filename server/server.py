@@ -51,30 +51,9 @@ def get_noredges():
         noredges = 'false'
     return noredges
 
-def background_thread():
-    while True:
-        socketio.sleep(5)
-        data = {'command':14, 'local':True}
-        response = handler.handle(json.dumps(data), True)
-        socketio.emit('connect', {'data': response})
-
-@app.route('/')
-def index():
-    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
-@app.route('/task/<task_id>')
-def task(task_id):
-    url = request.cookies.get('openfaasurl')
+def extract_url(url):
     if url is not None:
-        if url == 'None':
-            data = {'command':2,'task_id': task_id}
-            def task_stream():
-                while True:
-                    response = handler.handle(json.dumps(data), True)
-                    yield f'data: {response}\n\n'
-                    gevent.sleep(1)
-            return Response(task_stream(), mimetype="text/event-stream")
-        else:    
+        if url != 'None':
             url = unquote(url)
             url = urljoin(url, 'function/')
             url = urljoin(url, FUNCTION)
@@ -82,13 +61,48 @@ def task(task_id):
                 url = PROXYFUNCTIONURL
     else:
         url = PROXYFUNCTIONURL
-    data = {'command':2,'task_id': task_id}
-    def task_stream():
-        while True:
-            response = requests.post(url, data=json.dumps(data))
-            yield f'data: {response.text}\n\n'
-            gevent.sleep(1)
-    return Response(task_stream(), mimetype="text/event-stream")
+    return url
+
+def running_tasks_count(url):
+    if url == 'None':
+        data = {'command':14, 'local':True}
+        response = handler.handle(json.dumps(data), True)
+        socketio.emit('connect', {'data': response})
+        return 
+    else:    
+        data = {'command':14}
+        response = requests.post(url, data=json.dumps(data))
+        socketio.emit('connect', {'data': response.text})
+        return 
+
+def background_thread(url):
+    while True:
+        socketio.sleep(3)
+        running_tasks_count(url)
+        
+@app.route('/')
+def index():
+    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+
+@app.route('/task/<task_id>')
+def task(task_id):
+    url = extract_url(request.cookies.get('openfaasurl'))
+    if url == 'None':
+        data = {'command':2,'task_id': task_id}
+        def task_stream():
+            while True:
+                response = handler.handle(json.dumps(data), True)
+                yield f'data: {response}\n\n'
+                gevent.sleep(1)
+        return Response(task_stream(), mimetype="text/event-stream")
+    else:
+        data = {'command':2,'task_id': task_id}
+        def task_stream():
+            while True:
+                response = requests.post(url, data=json.dumps(data))
+                yield f'data: {response.text}\n\n'
+                gevent.sleep(1)
+        return Response(task_stream(), mimetype="text/event-stream")
 
 @app.route('/project/<name>')
 def project(name):
@@ -100,31 +114,23 @@ def script(project_name, script_name):
 
 @app.route('/stream/<project_name>/<script_name>/<id>')
 def stream(project_name,script_name,id):
-    url = request.cookies.get('openfaasurl')
-    if url is not None:
-        if url == 'None':
-            data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
-            def stats_stream():
-                while True:
-                    response = handler.handle(json.dumps(data), True)
-                    yield f'data: {response}\n\n'
-                    gevent.sleep(1)
-            return Response(stats_stream(), mimetype="text/event-stream")
-        else:    
-            url = unquote(url)
-            url = urljoin(url, 'function/')
-            url = urljoin(url, FUNCTION)
-            if url == FUNCTIONURL:
-                url = PROXYFUNCTIONURL
+    url = extract_url(request.cookies.get('openfaasurl'))
+    if url == 'None':
+        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
+        def stats_stream():
+            while True:
+                response = handler.handle(json.dumps(data), True)
+                yield f'data: {response}\n\n'
+                gevent.sleep(1)
+        return Response(stats_stream(), mimetype="text/event-stream")
     else:
-        url = PROXYFUNCTIONURL
-    data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
-    def stats_stream():
-        while True:
-            response = requests.post(url, data=json.dumps(data))
-            yield f'data: {response.text}\n\n'
-            gevent.sleep(1)
-    return Response(stats_stream(), mimetype="text/event-stream")
+        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
+        def stats_stream():
+            while True:
+                response = requests.post(url, data=json.dumps(data))
+                yield f'data: {response.text}\n\n'
+                gevent.sleep(1)
+        return Response(stats_stream(), mimetype="text/event-stream")
 
 @app.route('/license')
 def license():
@@ -191,20 +197,45 @@ def stats(message):
     id = message.get('id')
     if project_name is None or script_name is None or id is None:
         emit(id, {'data': None})
-    data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
-    response = handler.handle(json.dumps(data), True)
-    emit(id, {'data': response})
+        return 
+    url = extract_url(request.cookies.get('openfaasurl'))
+    if url == 'None':
+        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
+        response = handler.handle(json.dumps(data), True)
+        emit(id, {'data': response})
+        return
+    else:
+        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
+        response = requests.post(url, data=json.dumps(data))
+        emit(id, {'data': response.text})
+        return
+    
+@socketio.on('task_stats')
+def task_stats(message):
+    project_name = message.get('project_name')
+    if project_name is None:
+        emit(project_name, {'data': None})
+        return 
+    url = extract_url(request.cookies.get('openfaasurl'))
+    data = {'command':2,'task_id': project_name}
+    if url == 'None':
+        response = handler.handle(json.dumps(data), True)
+        emit(project_name, {'data': response})
+        return
+    else:
+        response = requests.post(url, data=json.dumps(data))
+        emit(project_name, {'data': response.text})
+        return
 
 @socketio.on('connect')
 def connect():
+    url = extract_url(request.cookies.get('openfaasurl'))
     session_id = request.sid
     print('Client connected', session_id)
     global thread
     if thread is None:
-        thread = socketio.start_background_task(background_thread)
-    data = {'command':14, 'local':True}
-    response = handler.handle(json.dumps(data), True)
-    socketio.emit('connect', {'data': response})
+        thread = socketio.start_background_task(background_thread, url)
+    running_tasks_count(url)
 
 @socketio.on('disconnect')
 def disconnect():
@@ -236,7 +267,6 @@ if __name__ == '__main__':
     direct = args.direct or 'true'
     WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
-
 
     if direct != 'true' and direct != 'false':
         print('-d , --direct can only be true or false')

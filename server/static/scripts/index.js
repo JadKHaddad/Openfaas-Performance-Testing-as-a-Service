@@ -68,30 +68,62 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log(data);
             if (data.success){
                 const task_id = data.task_id;
-                var eventSource = new EventSource('/task/' + task_id);
-                eventSource.onmessage = function (e) {
-                    message = JSON.parse(e.data)
-                    console.log(message);
+                var eventSource;
+                var socketIntv;
+                function onMessage(message){
                     if (!message.success){
                         console.log("Something went wrong");
                         $('#spinner').addClass('hidden');
                         showInfo('Something went wrong');
-                        eventSource.close();
+                        if(WEBSOCKET){
+                            clearInterval(socketIntv);
+                        }else{
+                            eventSource.close();
+                        }
                     }else if(message.status_code === 3){
                             console.log("thread is locking");
                     }else if(message.status_code === 2){
                         console.log("installing project");
                     }else if(message.status_code === 1){
                         console.log("installing failed");
-                        eventSource.close();
+                        if(WEBSOCKET){
+                            clearInterval(socketIntv);
+                        }else{
+                            eventSource.close();
+                        }
                         $('#spinner').addClass('hidden');
                         showInfo('Installation failed');
                     }else{
                         console.log("Task is finished");
-                        eventSource.close();
+                        if(WEBSOCKET){
+                            clearInterval(socketIntv);
+                        }else{
+                            eventSource.close();
+                        }
                         window.location.href = '/project/' + task_id;
                     }
                 };
+
+                if (WEBSOCKET){
+                    socketIntv = setInterval(function () {
+                        socket.emit('task_stats', { project_name: task_id});
+                    }, 1000);
+                    socket.on(task_id, function (msg) {
+                        if (!IsJsonString(msg.data)) return;
+                        var message = JSON.parse(msg.data);
+                        onMessage(message);
+                    });
+                }else{
+                    eventSource = new EventSource('/task/' + task_id);
+                    eventSource.onmessage = function (e) {
+                        var message = JSON.parse(e.data);
+                        console.log(message);
+                        onMessage(message);
+                    };
+                }
+
+
+
             }else{
                 $('#spinner').addClass('hidden');
                 showInfo(data.message);
