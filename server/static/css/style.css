@@ -116,7 +116,7 @@ h3 {
 }
 
 #server-stats{
-  position:absolute;
+  position:fixed;
   z-index: 1031;
   right:20px;
   top  :15px;
