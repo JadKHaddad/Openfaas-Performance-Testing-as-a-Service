@@ -572,7 +572,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if(WEBSOCKET){
         socket = io();
-        socket.on('connect', function (msg) {
+        socketIntv = setInterval(function () {
+            socket.emit('server_stats');
+        }, 1000);
+        socket.on('server_stats', function (msg) {
             if (msg != null){
                 if (!IsJsonString(msg.data)) return;
                 data = JSON.parse(msg.data);
@@ -583,6 +586,5 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         });
-
     }
 });

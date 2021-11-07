@@ -62,23 +62,6 @@ def extract_url(url):
     else:
         url = PROXYFUNCTIONURL
     return url
-
-def running_tasks_count(url):
-    if url == 'None':
-        data = {'command':14, 'local':True}
-        response = handler.handle(json.dumps(data), True)
-        socketio.emit('connect', {'data': response})
-        return 
-    else:    
-        data = {'command':14}
-        response = requests.post(url, data=json.dumps(data))
-        socketio.emit('connect', {'data': response.text})
-        return 
-
-def background_thread(url):
-    while True:
-        socketio.sleep(3)
-        running_tasks_count(url)
         
 @app.route('/')
 def index():
@@ -227,15 +210,24 @@ def task_stats(message):
         emit(project_name, {'data': response.text})
         return
 
+@socketio.on('server_stats')
+def server_stats():
+    url = extract_url(request.cookies.get('openfaasurl'))
+    if url == 'None':
+        data = {'command':14, 'local':True}
+        response = handler.handle(json.dumps(data), True)
+        socketio.emit('server_stats', {'data': response})
+        return 
+    else:    
+        data = {'command':14}
+        response = requests.post(url, data=json.dumps(data))
+        socketio.emit('server_stats', {'data': response.text})
+        return 
+
 @socketio.on('connect')
 def connect():
-    url = extract_url(request.cookies.get('openfaasurl'))
     session_id = request.sid
     print('Client connected', session_id)
-    global thread
-    if thread is None:
-        thread = socketio.start_background_task(background_thread, url)
-    running_tasks_count(url)
 
 @socketio.on('disconnect')
 def disconnect():

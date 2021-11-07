@@ -556,6 +556,9 @@ def handle(req, no_request=False):
                         saved_installation_tasks.append(key)
                     return jsonify(success=True,exit_code=0,tasks=saved_tasks, installation_tasks=saved_installation_tasks,message="saved tasks"), headers
 
+        if command == 914: # test connection -> sync
+            return jsonify(success=True), headers
+
     except Exception as e:
         print(traceback.format_exc())
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
