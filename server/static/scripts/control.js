@@ -8,7 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     showInfo('There was an error killing running tasks');
                 }
-            }).catch();
+            }).catch(function(){
+                showInfo('Could not connect to server');
+            });
         }, 'Kill');
         return false;
     });
@@ -22,7 +24,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     showInfo('There was an error deleting projects');
                 }
-            }).catch();
+            }).catch(function(){
+                showInfo('Could not connect to server');
+            });
         }, 'Delete');
         return false;
     });
@@ -57,6 +61,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 })(i);
             }
         }
-    }).catch();
+    }).catch(function(){
+        showInfo('Could not connect to server');
+    });
 });
 

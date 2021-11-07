@@ -72,5 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })(i);
             }
         }
-    }).catch();
+    }).catch(function(){
+        showInfo('Could not connect to server');
+    });
 });

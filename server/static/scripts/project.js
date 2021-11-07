@@ -32,5 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const tests = data.locust_scripts;
             $('#content').append(createTestsList(tests, project_name));
         }
-    }).catch();
+    }).catch(function(){
+        showInfo('Could not connect to server');
+    });
 });

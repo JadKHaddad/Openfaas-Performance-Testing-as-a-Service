@@ -237,7 +237,9 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 } else {
                     showInfo('There was an error deleting the test');
                 }
-            }).catch();
+            }).catch(function(){
+                showInfo('Could not connect to server');
+            });
         });
         return false;
     });
@@ -354,7 +356,9 @@ function startTest(project_name, script_name, users, spawnRate, workers, host, t
                 dismissBtn.click();
             }
         }
-    }).catch();
+    }).catch(function(){
+        showInfo('Could not connect to server');
+    });
 }
 
 function showInfo(message, color) {
@@ -570,6 +574,7 @@ document.addEventListener("DOMContentLoaded", function () {
         socket = io();
         socket.on('connect', function (msg) {
             if (msg != null){
+                if (!IsJsonString(msg.data)) return;
                 data = JSON.parse(msg.data);
                 if (data != null) {
                     if (data.success){

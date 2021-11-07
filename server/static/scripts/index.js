@@ -140,7 +140,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const projects = data.projects;
             $('#content').append(createProjectsList(projects));
         }
-    }).catch();
+    }).catch(function(){
+        showInfo('Could not connect to server');
+    });
 
     const deleteBtn = $('#delete-project');
     deleteBtn.prop("disabled", true);
@@ -149,7 +151,9 @@ document.addEventListener("DOMContentLoaded", function () {
         setConfirmationModal('Are you sure you want to delete these projects?', function () {
             fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 10, names: selectedProjects }) }).then(data => data.json()).then(data => {
                 location.reload();
-            }).catch();
+            }).catch(function(){
+                showInfo('Could not connect to server');
+            });
             $('#dismiss-confirmation-modal-btn').click();
         });
         return false;
