@@ -316,6 +316,6 @@ if __name__ == '__main__':
     print(f'server running on {host}:{port}')
     if WEBSOCKET == 'true':
         print(f'running with websockets')
-        socketio.run(app, host=host, port=port)
+        socketio.run(app, host=host, port=int(port))
     else:
-        serve(app, host=host, port=port, threads=24)
+        serve(app, host=host, port=int(port), threads=24)
