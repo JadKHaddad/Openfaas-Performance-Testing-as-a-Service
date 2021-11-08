@@ -299,7 +299,7 @@ if __name__ == '__main__':
 
     if extern == True:
         if platform.system() == 'Linux':
-            host = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1]
+            host = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1].replace('\n','')
             OPENFAASULR = ('http://'+host+':8080/')
         else:
             if url is None:
