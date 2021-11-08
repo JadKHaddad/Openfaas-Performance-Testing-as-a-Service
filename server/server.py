@@ -36,8 +36,7 @@ ASYNCFUNCTIONURL = None
 DIRECT = None
 
 app = Flask(__name__)
-socketio = SocketIO(app,cors_allowed_origins='*')
-thread = None
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 def get_theme():
     theme = request.cookies.get('theme')
@@ -263,7 +262,7 @@ if __name__ == '__main__':
     requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
     requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
     requiredNamed.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
-    requiredNamed.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: server will not run with waitress')
+    requiredNamed.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: app will run with WSGIServer instead of waitress')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
     requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
     requiredNamed.add_argument('-t','--threads', help='waitress threads default 24',metavar='')
@@ -272,11 +271,12 @@ if __name__ == '__main__':
 
     host = args.host or '0.0.0.0'
     port = args.port or 80
+    port = 80 if not port.isdigit() else port
     url = args.url
     extern = args.extern
     function = args.function or 'ptas'
     direct = args.direct or 'true'
-    threads = args.threads
+    threads = args.threads or 24
     WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
 
@@ -328,7 +328,10 @@ if __name__ == '__main__':
     print(f'server running on {host}:{port}')
     if WEBSOCKET == 'true':
         print(f'running with websockets')
-        socketio.run(app, host=host, port=int(port))
+        from gevent import pywsgi
+        from geventwebsocket.handler import WebSocketHandler
+        server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
+        server.serve_forever()
     else:
         if threads.isdigit():
             threads = int(threads)

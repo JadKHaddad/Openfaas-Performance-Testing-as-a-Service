@@ -6,6 +6,6 @@ WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/server/
 Type=simple
 LimitNOFILE=64000
 Restart=always
-ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -s 0.0.0.0 -p 80 -e -f ptas -d true -t 100
+ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/server.py -s 0.0.0.0 -p 80 -e -f ptas -d true -w
 [Install]
 WantedBy=multi-user.target

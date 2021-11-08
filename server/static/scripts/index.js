@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         $('#dismiss-btn').click();
         $('#spinner').removeClass('hidden');
-        $(this).prop('disabled', true);
+        $('#add-btn-Modal').prop('disabled', true);
 
         fetch(FUNCTIONCALL, {method: 'POST', body: data}).then(data => data.json()).then(data => {
             console.log(data);
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!message.success){
                         console.log("Something went wrong");
                         $('#spinner').addClass('hidden');
-                        $(this).prop('disabled', false);
+                        $('#add-btn-Modal').prop('disabled', false);
                         showInfo('Something went wrong');
                         if(WEBSOCKET){
                             clearInterval(socketIntv);
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             eventSource.close();
                         }
                         $('#spinner').addClass('hidden');
-                        $(this).prop('disabled', false);
+                        $('#add-btn-Modal').prop('disabled', false);
                         showInfo('Installation failed');
                     }else{
                         console.log("Task is finished");
@@ -128,12 +128,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }else{
                 $('#spinner').addClass('hidden');
-                $(this).prop('disabled', false);
+                $('#add-btn-Modal').prop('disabled', false);
                 showInfo(data.message);
             }
         }).catch( e => {
             $('#spinner').addClass('hidden');
-            $(this).prop('disabled', false);
+            $('#add-btn-Modal').prop('disabled', false);
             showInfo('Something went wrong');
         });
         return false;
