@@ -538,7 +538,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         $('#url-spinner').removeClass('hidden');
         $('#url-message').addClass('hidden');
-        if (openfaasUrl !== 'None'){
+        if($('#no-openfaas-checkbox').prop('checked') == false){
             // check if valid
             fetch('/check_connection', { method: 'POST', body: JSON.stringify({ url: openfaasUrl }) }).then(data => data.json()).then(data => {
                 if (data.success) {
@@ -600,6 +600,7 @@ document.addEventListener("DOMContentLoaded", function () {
         socketIntv = setInterval(function () {
             socket.emit('server_stats');
         }, 1000);
+        socket.emit('server_stats');
         socket.on('server_stats', function (msg) {
             if (msg != null){
                 if (!IsJsonString(msg.data)) return;

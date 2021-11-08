@@ -266,6 +266,7 @@ if __name__ == '__main__':
     requiredNamed.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: server will not run with waitress')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
     requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
+    requiredNamed.add_argument('-t','--threads', help='waitress threads default 24',metavar='')
 
     args = parser.parse_args()
 
@@ -275,6 +276,7 @@ if __name__ == '__main__':
     extern = args.extern
     function = args.function or 'ptas'
     direct = args.direct or 'true'
+    threads = args.threads
     WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
 
@@ -328,4 +330,9 @@ if __name__ == '__main__':
         print(f'running with websockets')
         socketio.run(app, host=host, port=int(port))
     else:
-        serve(app, host=host, port=int(port), threads=24)
+        if threads.isdigit():
+            threads = int(threads)
+        else:
+            threads = 24
+        print(f'waitress threads: {threads}')
+        serve(app, host=host, port=int(port), threads=threads)
