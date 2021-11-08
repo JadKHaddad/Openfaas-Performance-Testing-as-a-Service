@@ -277,6 +277,7 @@ if __name__ == '__main__':
     function = args.function or 'ptas'
     direct = args.direct or 'true'
     threads = args.threads or 24
+    threads = 24 if not threads.isdigit() else threads
     WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
 
@@ -333,9 +334,5 @@ if __name__ == '__main__':
         server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
         server.serve_forever()
     else:
-        if threads.isdigit():
-            threads = int(threads)
-        else:
-            threads = 24
         print(f'waitress threads: {threads}')
-        serve(app, host=host, port=int(port), threads=threads)
+        serve(app, host=host, port=int(port), threads=int(threads))
