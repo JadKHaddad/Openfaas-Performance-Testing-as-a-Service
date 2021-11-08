@@ -178,7 +178,7 @@ def check_connection():
     url = json.loads(request.data)['url']
     url = url[:-1] if url[-1] == '/' else url
     try:
-        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'))   
+        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)   
         return Response(
             response=res.content,
             status=res.status_code,
@@ -234,10 +234,14 @@ def server_stats():
         return 
     else:    
         data = {'command':14}
-        response = requests.post(url, data=json.dumps(data))
-        socketio.emit('server_stats', {'data': response.text})
-        return 
-
+        try:
+            response = requests.post(url, data=json.dumps(data), timeout=2)
+            socketio.emit('server_stats', {'data': response.text})
+        except:
+            socketio.emit('server_stats', {'data': {'stop':True}})
+        finally:
+            return
+       
 @socketio.on('connect')
 def connect():
     session_id = request.sid

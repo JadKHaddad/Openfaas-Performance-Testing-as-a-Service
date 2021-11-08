@@ -608,6 +608,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (data.success){
                         $('#running-tests-label').text(data.count);
                     }
+                }else if(data.stop){
+                    clearInterval(socketIntv);
                 }
             }
         });
