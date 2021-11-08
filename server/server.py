@@ -16,6 +16,7 @@ import string
 import pathlib
 import shutil
 
+# handler is needed if openfaas is not being used
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
@@ -38,6 +39,7 @@ DIRECT = None
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
 
+# static functions
 def get_theme():
     theme = request.cookies.get('theme')
     if theme is None:
@@ -61,7 +63,8 @@ def extract_url(url):
     else:
         url = PROXYFUNCTIONURL
     return url
-        
+
+# app routes    
 @app.route('/')
 def index():
     return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
@@ -186,6 +189,7 @@ def check_connection():
     except:
         return jsonify(success=False)
 
+# socket
 @socketio.on('stats')
 def stats(message):
     project_name = message.get('project_name')
@@ -270,14 +274,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     host = args.host or '0.0.0.0'
-    port = args.port or 80
-    port = 80 if not port.isdigit() else port
+    port = args.port or '80'
+    port = '80' if not port.isdigit() else port
     url = args.url
     extern = args.extern
     function = args.function or 'ptas'
     direct = args.direct or 'true'
-    threads = args.threads or 24
-    threads = 24 if not threads.isdigit() else threads
+    threads = args.threads or '24'
+    threads = '24' if not threads.isdigit() else threads
     WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
 
