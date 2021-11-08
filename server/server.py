@@ -2,7 +2,7 @@
 
 import platform
 import subprocess
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit
 from waitress import serve
 import requests
@@ -172,6 +172,20 @@ def proxy():
 @app.route('/local', methods=['POST'])
 def local():
     return handler.handle(request.data)
+
+@app.route('/check_connection', methods=['POST'])
+def check_connection():
+    url = json.loads(request.data)['url']
+    url = url[:-1] if url[-1] == '/' else url
+    try:
+        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'))   
+        return Response(
+            response=res.content,
+            status=res.status_code,
+            headers=dict(res.headers)
+        )
+    except:
+        return jsonify(success=False)
 
 @socketio.on('stats')
 def stats(message):

@@ -84,11 +84,17 @@
                      I don't like rounded edges
                   </label>
                </div>
+               <div>
+               <label class="hidden" id="url-message">Could not connect to openfaas</label>
+            </div>
             </form>
          </div>
          <div class="modal-footer">
+            
+            <div class="spinner-border text-primary hidden spinner" id="url-spinner"></div>
             <button type="button" class="btn btn-danger" id="restore-defaults-btn">Restore defaults</button>
             <button type="button" class="btn btn-primary" id="set-url-btn">Ok</button>
+            
          </div>
          <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal"
             id="dismiss-url-modal-btn"></button>

@@ -122,8 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     };
                 }
 
-
-
             }else{
                 $('#spinner').addClass('hidden');
                 showInfo(data.message);

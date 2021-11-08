@@ -507,30 +507,55 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $('#set-url-btn').on('click',function(){
+        var newOpenfaasUrl = FUNCTIONCALL;
         openfaasUrl = $('#url-input').val();
         openfaasUrl = openfaasUrl.replace("http://", "").replace("https://", "");
         openfaasUrl = "http://" + openfaasUrl;
         direct = false;
         noredges = false;
+        theme = 'light'
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         if($('#no-openfaas-checkbox').prop('checked') == true) openfaasUrl = 'None';
         if($('#i-do-not-like-rounded-edges-checkbox').prop('checked') == true) noredges = true;
-        setCookie('direct', direct.toString(), 365);
-        setCookie('openfaasurl', openfaasUrl, 365);
-        setCookie('noredges', noredges.toString(), 365);
-        theme = 'light'
         if($('#dark-theme-checkbox').prop('checked') == true) theme = 'dark'; 
-        setCookie('theme', theme, 365);
 
         if (openfaasUrl === 'None'){
-            FUNCTIONCALL = '/local';
+            newOpenfaasUrl = '/local';
         }else if (direct){
             if (openfaasUrl.slice(-1) == '/'){
                 openfaasUrl = openfaasUrl.slice(0, -1);
             }
-            FUNCTIONCALL = `${openfaasUrl}/function/${functionName}`;
+            newOpenfaasUrl = `${openfaasUrl}/function/${functionName}`;
         }
-        location.reload(true);
+
+        function onSuccess(){
+            setCookie('direct', direct.toString(), 365);
+            setCookie('openfaasurl', openfaasUrl, 365);
+            setCookie('noredges', noredges.toString(), 365);
+            setCookie('theme', theme, 365);
+            FUNCTIONCALL = newOpenfaasUrl;
+            location.reload(true);
+        }
+        $('#url-spinner').removeClass('hidden');
+        $('#url-message').addClass('hidden');
+        if (openfaasUrl !== 'None'){
+            // check if valid
+            fetch('/check_connection', { method: 'POST', body: JSON.stringify({ url: openfaasUrl }) }).then(data => data.json()).then(data => {
+                if (data.success) {
+                    onSuccess();
+                }else{
+                    $('#url-spinner').addClass('hidden');
+                    $('#url-message').removeClass('hidden');
+                }
+            }).catch(function(){
+                $('#url-spinner').addClass('hidden');
+                $('#url-message').addClass('hidden');
+                $('#dismiss-url-modal-btn').click();
+                showInfo('Could not connect to server');
+            });
+        }else{
+            onSuccess();
+        }
     });
 
     $('#no-openfaas-checkbox').change(function() {
