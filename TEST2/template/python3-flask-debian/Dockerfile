@@ -24,6 +24,9 @@ COPY requirements.txt   .
 
 USER root
 RUN pip install -r requirements.txt
+RUN printf "*    soft nofile 64000\n*    hard nofile 64000\nroot soft nofile 64000\nroot hard nofile 64000" | tee -a /etc/security/limits.conf
+RUN printf "session required pam_limits.so" | tee -a /etc/pam.d/common-session
+RUN printf "session required pam_limits.so" | tee -a /etc/pam.d/common-session-noninteractive
 
 # Build the function directory and install any user-specified components
 USER app
@@ -51,7 +54,7 @@ RUN if [ "$TEST_ENABLED" == "false" ]; then \
 WORKDIR /home/app/
 
 #configure WSGI server and healthcheck
-USER app
+USER root
 
 ENV fprocess="python index.py"
 
