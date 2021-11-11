@@ -38,6 +38,10 @@ Connect to the VM listed with **ssh**:
 ```sh
 ssh ubuntu@$IP
 ```
+or:
+```sh
+multipass shell performance
+```
 Once you are logged in, deploy the **OpenFaaS** function:
 ```sh
 cd /etc/Openfaas-Performance-Testing-as-a-Service/
