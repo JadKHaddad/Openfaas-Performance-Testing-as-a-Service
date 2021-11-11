@@ -3,10 +3,10 @@ provider:
   name: openfaas
   gateway: http://127.0.0.1:8080
 functions:
-  ptas:
+  test:
     lang: python3-flask-debian
     handler: ./test
-    image: localhost:5000/ptas:latest
+    image: localhost:5000/test:latest
     environment:
       write_timeout: "10000s"
       read_timeout: "10000s"
