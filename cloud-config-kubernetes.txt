@@ -41,3 +41,5 @@ runcmd:
 - sudo systemctl daemon-reload
 - sudo systemctl enable performance-testing.service
 - sudo systemctl start performance-testing.service
+- sudo systemctl enable port-forward.service
+- sudo systemctl start port-forward.service
