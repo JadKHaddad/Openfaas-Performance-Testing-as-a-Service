@@ -5,6 +5,7 @@ After=syslog.target
 User=root
 Type=simple
 Restart=always
+RestartSec=30
 ExecStart=/usr/local/bin/kubectl port-forward -n openfaas svc/gateway 8080:8080 --address='0.0.0.0'
 [Install]
 WantedBy=multi-user.target
