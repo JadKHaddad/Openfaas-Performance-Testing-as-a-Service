@@ -42,5 +42,4 @@ runcmd:
 - sudo systemctl start performance-testing.service
 - sudo systemctl enable port-forward.service
 - sudo systemctl start port-forward.service
-- PASSWORD=$(sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
-- echo -n $PASSWORD | sudo faas-cli login -s
+- (sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo) | sudo faas-cli login -s
