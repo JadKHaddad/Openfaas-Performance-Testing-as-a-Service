@@ -17,7 +17,7 @@ runcmd:
 - printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session
 - printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session-noninteractive
 
-- sudo git clone https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service
+- sudo git clone https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon.json /etc/docker/daemon.json
 - curl -sLS https://get.arkade.dev | sudo sh
