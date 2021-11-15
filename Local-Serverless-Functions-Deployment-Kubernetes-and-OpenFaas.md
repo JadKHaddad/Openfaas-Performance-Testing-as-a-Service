@@ -26,13 +26,10 @@ reboot
 * Get **arkade**:
 
 ```sh
-# Note: you can also run without `sudo` and move the binary yourself
 curl -sLS https://get.arkade.dev | sudo sh
-
-arkade --help
-ark --help  # a handy alias
-
-# Windows users with Git Bash
+```
+For windows
+```sh
 curl -sLS https://get.arkade.dev | sh
 ```
 Windows users: arkade requires bash to be available, therefore Windows users can [install Git bash](https://git-scm.com/downloads)

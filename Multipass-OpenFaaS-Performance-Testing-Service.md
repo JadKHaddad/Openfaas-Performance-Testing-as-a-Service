@@ -1,4 +1,4 @@
-# Multipass + OpenFaaS + Performance Testing
+# Multipass + OpenFaaS + Performance Testing [Faasd + Containerd]
 
 ## Installation
 
@@ -80,5 +80,6 @@ or restart the service in the VM: ```recommended```
 ```sh
 sudo systemctl restart performance-testing.service
 ```
+Locust tend to open a huge amount of files while running tests. To allow OpenFaaS to open more than 1024 files [setup OpenFaaS with Kubernetes](Multipass-OpenFaaS-Performance-Testing-Service-kube.md)<br />
 
 
