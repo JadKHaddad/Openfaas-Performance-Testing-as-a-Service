@@ -40,6 +40,9 @@ def get_script_dir(project_name, script_name):
 def get_test_dir(project_name, script_name, id):
     return f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
 
+def create_task_id(project_name, script_name, id):
+    return f'TASK_{project_name}_{script_name}_{id}' 
+
 def kill_running_tasks():
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
@@ -73,7 +76,7 @@ def get_test_info(project_name, script_name, id):
     test_dir = get_test_dir(project_name, script_name, id)
     csv_file_path = f'{test_dir}/results_stats.csv'
     info_file_path = f'{test_dir}/info.txt'
-    task_id = f'{project_name}_{script_name}_{id}' 
+    task_id = create_task_id(project_name, script_name, id)
     valid = True
     j = None
     if Path(csv_file_path).exists():
@@ -311,7 +314,7 @@ def handle(req, no_request=False):
             host_command = f'--host {host}' if host is not None else ''
             workers_count = workers if workers is not None else 0
 
-            task_id = f'{project_name}_{script_name}_{id}'
+            task_id = create_task_id(project_name, script_name, id)
             with LOCK2:
                 if platform.system() == 'Windows': # windows
                     if workers_count > 0:
@@ -363,7 +366,7 @@ def handle(req, no_request=False):
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
 
             # check if test is runnig
-            task_id = f'{project_name}_{script_name}_{id}'
+            task_id = create_task_id(project_name, script_name, id)
             with LOCK2:
                 if task_id in tasks:
                     test_dir = get_test_dir(project_name, script_name, id)
@@ -413,7 +416,7 @@ def handle(req, no_request=False):
             id = data.get("id") or None
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
-            task_id = f'{project_name}_{script_name}_{id}'
+            task_id = create_task_id(project_name, script_name, id)
             #stop the task
             with LOCK2:
                 if task_id not in tasks:
@@ -432,7 +435,7 @@ def handle(req, no_request=False):
             id = data.get("id") or None
             if project_name is None or script_name is None or id is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
-            task_id = f'{project_name}_{script_name}_{id}'
+            task_id = create_task_id(project_name, script_name, id)
             # stop the task  
             with LOCK2:
                 if task_id in tasks:
@@ -457,6 +460,18 @@ def handle(req, no_request=False):
             deleted = []
             with LOCK2:
                 for name in names:
+                    # stop running tests
+                    deleted = []
+                    for task_id in tasks:
+                        if task_id.startswith(f'TASK_{name}_'):
+                            deleted.append(task_id)
+                            if platform.system() == 'Windows': # windows
+                                tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                                tasks[task_id].kill()
+                            else: # Linux
+                                os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+                    for deleted_task in deleted:
+                        del tasks[deleted_task]
                     # delete project dir
                     project_path = f'{projects_dir}/{name}'
                     if Path(project_path).exists():
@@ -519,7 +534,7 @@ def handle(req, no_request=False):
                                     for f in os.scandir(scrpit_folder_path):
                                         if f.is_dir():
                                             id = os.path.basename(f.path)
-                                            task_id = f'{project_name}_{script_name}_{id}'
+                                            task_id = create_task_id(project_name, script_name, id)
                                             if task_id in tasks:
                                                 if tasks[task_id].poll() == None: # still running
                                                     running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
