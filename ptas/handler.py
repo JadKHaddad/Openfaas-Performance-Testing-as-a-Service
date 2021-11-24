@@ -25,9 +25,15 @@ installation_tasks = {}
 LOCK = Lock() # for installation
 LOCK2 = Lock() # for tests
 
+# create projects dir
 projects_dir = 'projects'
 if not Path(projects_dir).exists():
     os.mkdir(projects_dir)
+
+# create errors dir
+errors_dir = 'errors'
+if not Path(errors_dir).exists():
+    os.mkdir(errors_dir)
             
 # static functions
 def is_port_in_use(port): # checks if a port is in use. used to distribute work
@@ -162,7 +168,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
 
 def clean_up_project_on_failed_installation(project_name): # runs in a thread!
     print(project_name +': clean up thread started')
-    
+    error_file = f'{errors_dir}/{project_name}.txt'
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
         sleep(1)
@@ -170,6 +176,11 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
             if installation_tasks[project_name].poll() is not None: # process finished
                 print(project_name + ': task finished')
                 if installation_tasks[project_name].returncode != 0:
+                    out, err = installation_tasks[project_name].communicate()
+                    print('Error caught in Thread: ' +  str(err))
+                    # save installation error
+                    with open(error_file, 'w', encoding='UTF-8') as file:
+                        file.write(err.decode('UTF-8'))
                     print(project_name + ': cleaning up')
                     # delete project
                     project_path = f'{projects_dir}/{project_name}'
@@ -179,9 +190,13 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
                     project_env_path = f'env/{project_name}'
                     if Path(project_env_path).exists():
                         shutil.rmtree(project_env_path)
+                elif Path(error_file).exists():
+                    # delete the file
+                    os.remove(error_file)
                 del installation_tasks[project_name]
+
     print(project_name +': terminating')
-    
+
 def handle(req, no_request=False):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
@@ -223,10 +238,10 @@ def handle(req, no_request=False):
                 # check if req exists
                 if platform.system() == 'Windows': # windows
                     req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,  creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) #stdout=subprocess.DEVNULL , stderr=subprocess.DEVNULL,
+                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # ,
                 else:   
                     req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
-                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.DEVNULL, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
+                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.PIPE, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
                 thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
                 thread.start()
                 
@@ -242,20 +257,19 @@ def handle(req, no_request=False):
             task_id = data.get('task_id') or None
             if task_id is None:
                 return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
-
-            if LOCK.locked():
-                return json.dumps({'success':True,'exit_code':0,'status_code':3,'message':'thread is locking'})
-
             with LOCK:
-                if task_id in installation_tasks:
-                    if installation_tasks[task_id].poll() is not None: # process finished
-                        if installation_tasks[task_id].returncode != 0:
-                            return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'})
-                        return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task finished'})
+                if task_id in installation_tasks: # task running, thread will delete it when finished
                     return json.dumps({'success':True,'exit_code':0,'status_code':2,'message':'task not finished'})
                 if not Path(f'{projects_dir}/{task_id}').exists():
-                    return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed'})
-                return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task not found'})
+                    err = None
+                    error_file = f'{errors_dir}/{task_id}.txt'
+                    if Path(error_file).exists():
+                        with open(error_file, 'r', encoding='UTF-8') as file:
+                            err = file.read()
+                        # delete the file
+                        os.remove(error_file)
+                    return json.dumps({'success':True,'exit_code':0,'status_code':1,'message':'installation failed','error': str(err)})
+                return json.dumps({'success':True,'exit_code':0,'status_code':0,'message':'task is finished'})
 
         if command == 3: # get installed projects -> sync
             projects = []

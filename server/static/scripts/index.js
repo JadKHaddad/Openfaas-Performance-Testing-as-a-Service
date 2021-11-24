@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var eventSource;
                 var socketIntv;
                 function onMessage(message){
+                    console.log(message)
                     if (!message.success){
                         console.log("Something went wrong");
                         $('#spinner').addClass('hidden');
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                         $('#spinner').addClass('hidden');
                         $('#add-btn-Modal').prop('disabled', false);
-                        showInfo('Installation failed');
+                        showInfo('Installation failed','red', message.error.replaceAll('\n', '<br />'));
                     }else{
                         console.log("Task is finished");
                         if(WEBSOCKET){

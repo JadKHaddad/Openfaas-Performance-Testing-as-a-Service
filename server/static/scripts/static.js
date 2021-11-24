@@ -361,11 +361,17 @@ function startTest(project_name, script_name, users, spawnRate, workers, host, t
     });
 }
 
-function showInfo(message, color) {
+function showInfo(message, color, error) {
     if (color == null){
         $('#info-message').addClass('red');
     }else{
         $('#info-message').addClass(color);
+    }
+    if (error != null && error != 'None'){
+        $('#info-error').removeClass('hidden');
+        $('#info-error').html(error);
+    }else{
+        $('#info-error').addClass('hidden');
     }
     // set message
     $('#info-message').text(message);
