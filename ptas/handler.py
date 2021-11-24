@@ -176,11 +176,12 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
             if installation_tasks[project_name].poll() is not None: # process finished
                 print(project_name + ': task finished')
                 if installation_tasks[project_name].returncode != 0:
-                    out, err = installation_tasks[project_name].communicate()
-                    print('Error caught in Thread: ' +  str(err))
-                    # save installation error
-                    with open(error_file, 'w', encoding='UTF-8') as file:
-                        file.write(err.decode('UTF-8'))
+                    if platform.system() != 'Windows':
+                        out, err = installation_tasks[project_name].communicate()
+                        print('Error caught in Thread: ' +  str(err))
+                        # save installation error
+                        with open(error_file, 'w', encoding='UTF-8') as file:
+                            file.write(err.decode('UTF-8'))
                     print(project_name + ': cleaning up')
                     # delete project
                     project_path = f'{projects_dir}/{project_name}'
@@ -238,7 +239,7 @@ def handle(req, no_request=False):
                 # check if req exists
                 if platform.system() == 'Windows': # windows
                     req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # ,
+                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 else:   
                     req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
                     installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.PIPE, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
