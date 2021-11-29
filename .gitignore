@@ -12,7 +12,6 @@
 /server/env
 private_ptas.yml
 basic-auth-password
-seq.vsdx
 ~$$seq.~vsdx
 *.junk
 *.sh
