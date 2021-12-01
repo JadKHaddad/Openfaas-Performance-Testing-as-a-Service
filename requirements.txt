@@ -1,7 +1,7 @@
-flask=2.0.2
-flask_socketio=5.1.1
-gevent-websocket=0.10.1
-waitress=2.0.0
-requests=2.22.0
-gevent=21.8.0
-virtualenv=20.10.0
+flask
+flask_socketio
+gevent-websocket
+waitress
+requests
+gevent
+virtualenv
