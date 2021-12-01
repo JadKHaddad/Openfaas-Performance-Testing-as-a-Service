@@ -41,13 +41,13 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         <div class="card">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-3 test-id"> ${id}</div>
-                    <div class="col-1"><i class="fas fa-user-alt"></i>  ${users}</div>
-                    <div class="col-1"><i class="fas fa-users"></i>  ${spawnRate}</div>
-                    <div class="col-1"><i class="fas fa-hard-hat"></i> ${workers}</div>
-                    <div class="col-3"><i class="fas fa-globe"></i>  ${host}</div>
-                    <div class="col-1"><i class="fas fa-clock"></i>  ${time}</div>
-                    <div class="col-1 elapsed hidden"><i class="fas fa-stopwatch"></i>  <label class="elapsed-text"></label></div>
+                    <div class="col-3 test-id" data-mdb-toggle="tooltip" title="Test id"> ${id}</div>
+                    <div class="col-1" data-mdb-toggle="tooltip" title="Users"><i class="fas fa-user-alt"></i>  ${users}</div>
+                    <div class="col-1" data-mdb-toggle="tooltip" title="Spawn rate"><i class="fas fa-users"></i>  ${spawnRate}</div>
+                    <div class="col-1" data-mdb-toggle="tooltip" title="Workers"><i class="fas fa-hard-hat"></i> ${workers}</div>
+                    <div class="col-3" data-mdb-toggle="tooltip" title="Host"><i class="fas fa-globe"></i>  ${host}</div>
+                    <div class="col-1" data-mdb-toggle="tooltip" title="Time is seconds"><i class="fas fa-clock"></i>  ${time}</div>
+                    <div class="col-1 elapsed hidden" data-mdb-toggle="tooltip" title="Elapsed time is seconds"><i class="fas fa-stopwatch" ></i>  <label class="elapsed-text"></label></div>
                     <div class="col-1">
                         <div class="spinner-border text-primary spinner hidden"></div>
                         <i class="fas fa-check check hidden"></i>

@@ -155,7 +155,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 linear_regressor = LinearRegression()  # create object for the class
                 linear_regressor.fit(X_train, Y_train)  # perform linear regression
                 Y_pred = linear_regressor.predict(X_test)  # make predictions
-                plt.scatter(X, Y, label="Acutuall average Response Time")
+                plt.scatter(X, Y, label="Acutual average Response Time")
                 plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
                 plt.ylabel("Average response Time (milliseconds)")
                 plt.xlabel("Ellapsed Time (seconds)")
