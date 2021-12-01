@@ -15,29 +15,29 @@ document.addEventListener("DOMContentLoaded", function () {
         const time = $('#time-input').val();
         // handle false inputs
         if (users === '') {
-            showInfo('Users cant be empty');
+            showInfo('Users cant be empty','red');
             return false
         }
         if (!isInteger(users)) {
-            showInfo('Users must be an integer');
+            showInfo('Users must be an integer','red');
             return false
         }
         if (spawnRate === '') {
-            showInfo('Spawn rate cant be empty');
+            showInfo('Spawn rate cant be empty','red');
             return false
         }
         if (!isInteger(spawnRate)) {
-            showInfo('Spawn rate must be an integer');
+            showInfo('Spawn rate must be an integer','red');
             return false
         }
         if (workers !== '' && !isInteger(workers)) {
-            showInfo('workers must be an integer');
+            showInfo('workers must be an integer','red');
             return false
         }
 
         if (time != '') {
             if (!isInteger(time)) {
-                showInfo('Time must be an integer');
+                showInfo('Time must be an integer','red');
                 return false;
             }
         }
@@ -79,6 +79,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }).catch(function(){
-        showInfo('Could not connect to server');
+        showInfo('Could not connect to server','red');
     });
 });

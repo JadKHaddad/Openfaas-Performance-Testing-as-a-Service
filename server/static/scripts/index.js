@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById("project-input");
         const files = input.files;
         if (files.length < 1){
-            showInfo('Please select a directory to upload');
+            showInfo('Please select a directory to upload','red');
             return false;
         }
         var data = new FormData()
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         console.log("Something went wrong");
                         $('#spinner').addClass('hidden');
                         $('#add-btn-Modal').prop('disabled', false);
-                        showInfo('Something went wrong');
+                        showInfo('Something went wrong','red');
                         if(WEBSOCKET){
                             clearInterval(socketIntv);
                         }else{
@@ -130,12 +130,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }else{
                 $('#spinner').addClass('hidden');
                 $('#add-btn-Modal').prop('disabled', false);
-                showInfo(data.message);
+                showInfo(data.message,'red');
             }
         }).catch( e => {
             $('#spinner').addClass('hidden');
             $('#add-btn-Modal').prop('disabled', false);
-            showInfo('Something went wrong');
+            showInfo('Something went wrong','red');
         });
         return false;
     });
@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
             $('#content').append(createProjectsList(projects));
         }
     }).catch(function(){
-        showInfo('Could not connect to server');
+        showInfo('Could not connect to server','red');
     });
 
     const deleteBtn = $('#delete-project');
@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 10, names: selectedProjects }) }).then(data => data.json()).then(data => {
                 location.reload();
             }).catch(function(){
-                showInfo('Could not connect to server');
+                showInfo('Could not connect to server','red');
             });
             $('#dismiss-confirmation-modal-btn').click();
         });

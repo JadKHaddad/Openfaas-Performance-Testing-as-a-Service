@@ -172,7 +172,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                 }
                 
             } else {
-                showInfo('There was an error stopping the test');
+                showInfo('There was an error stopping the test', 'red');
             }
         });
     });
@@ -207,7 +207,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                                 });
                             });
                         } else if (data.status_code == 2) {
-                            showInfo("Not enough data to analyse");
+                            showInfo("Not enough data to analyse", "red");
                             resultsBtn.prop("disabled", true);
                         }
                     }
@@ -235,10 +235,10 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                     }
                     
                 } else {
-                    showInfo('There was an error deleting the test');
+                    showInfo('There was an error deleting the test', 'red');
                 }
             }).catch(function(){
-                showInfo('Could not connect to server');
+                showInfo('Could not connect to server', 'red');
             });
         });
         return false;
@@ -278,7 +278,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
             update(jData);
         } else {
             if (message.exit_code == 4) {
-                showInfo(id + ' There was an error running your locust file');
+                showInfo(id + ' There was an error running your locust file', 'red');
                 clearInterval(intv);
                 idCol.removeClass('green').addClass('red');
                 notValid.removeClass('hidden');
@@ -357,16 +357,17 @@ function startTest(project_name, script_name, users, spawnRate, workers, host, t
             }
         }
     }).catch(function(){
-        showInfo('Could not connect to server');
+        showInfo('Could not connect to server','red');
     });
 }
 
 function showInfo(message, color, error) {
-    if (color == null){
-        $('#info-message').addClass('red');
-    }else{
-        $('#info-message').addClass(color);
-    }
+
+
+    $('#info-message').removeClass('red');
+    $('#info-message').removeClass('green');
+    $('#info-message').addClass(color);
+
     if (error != null && error != 'None'){
         $('#info-error').removeClass('hidden');
         $('#info-error').html(error);
@@ -557,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 $('#url-spinner').addClass('hidden');
                 $('#url-message').addClass('hidden');
                 $('#dismiss-url-modal-btn').click();
-                showInfo('Could not connect to server');
+                showInfo('Could not connect to server', 'red');
             });
         }else{
             onSuccess();

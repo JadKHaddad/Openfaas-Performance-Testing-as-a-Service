@@ -33,6 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
             $('#content').append(createTestsList(tests, project_name));
         }
     }).catch(function(){
-        showInfo('Could not connect to server');
+        showInfo('Could not connect to server','red');
     });
 });
