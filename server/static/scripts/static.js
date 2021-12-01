@@ -577,6 +577,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $('#restore-defaults-btn').on('click', function(){
         setCookie('direct', direct.toString(), -1);
         setCookie('openfaasurl', openfaasUrl, -1);
+        localStorage.removeItem('last_host');
         location.reload(); 
     });
 

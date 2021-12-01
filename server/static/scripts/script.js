@@ -43,10 +43,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         startTest(project_name, script_name, users, spawnRate, workers, host, time, dismissBtn, false);
-        
+        if (host != ""){
+            localStorage.setItem('last_host', host);
+        }
         return false;
     });
 
+    $('#host-input').val(localStorage.getItem('last_host'));
     // get tests of this script
     fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 7, project_name: project_name, script_name: script_name }) }).then(data => data.json()).then(data => {
         if (data.success) {
