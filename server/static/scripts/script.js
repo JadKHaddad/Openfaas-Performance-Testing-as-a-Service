@@ -8,7 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const users = $('#users-input').val();
         const spawnRate = $('#spawn-rate-input').val();
         const workers = $('#workers-input').val();
-        const host = "http://" + $('#host-input').val().replace("http://", "").replace("https://", "");
+        var host = $('#host-input').val().replace("http://", "").replace("https://", "");
+        if (host != ""){
+            host = "http://" + host;
+        }
         const time = $('#time-input').val();
         // handle false inputs
         if (users === '') {
