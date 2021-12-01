@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     $('#dismiss-confirmation-modal-btn').click();
                     showInfo('Success', 'green');
                 } else {
-                    showInfo('There was an error killing running tasks');
+                    showInfo('There was an error killing running tasks','red');
                 }
             }).catch(function(){
-                showInfo('Could not connect to server');
+                showInfo('Could not connect to server','red');
             });
         }, 'Kill');
         return false;
@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     $('#dismiss-confirmation-modal-btn').click();
                     showInfo('Success', 'green');
                 } else {
-                    showInfo('There was an error deleting projects');
+                    showInfo('There was an error deleting projects','red');
                 }
             }).catch(function(){
-                showInfo('Could not connect to server');
+                showInfo('Could not connect to server','red');
             });
         }, 'Delete');
         return false;
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }).catch(function(){
-        showInfo('Could not connect to server');
+        showInfo('Could not connect to server','red');
     });
 });
 
