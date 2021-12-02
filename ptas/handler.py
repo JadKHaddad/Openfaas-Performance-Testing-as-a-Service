@@ -18,6 +18,7 @@ import pathlib
 import socket
 from threading import Thread, Lock
 from time import sleep
+import atexit
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
@@ -616,3 +617,5 @@ def handle(req, no_request=False):
     except Exception as e:
         print(traceback.format_exc())
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
+
+atexit.register(kill_running_tasks)
