@@ -469,8 +469,6 @@ function startTest(project_name, script_name, users, spawnRate, workers, host, t
 }
 
 function showInfo(message, color, error) {
-
-
     $('#info-message').removeClass('red');
     $('#info-message').removeClass('green');
     $('#info-message').addClass(color);
@@ -484,7 +482,7 @@ function showInfo(message, color, error) {
     // set message
     $('#info-message').text(message);
     // show message
-    $('#info-modal-button').click();
+    if(!$('#Info-Modal').hasClass('show')) $('#info-modal-button').click();
 }
 
 function setUpCode(code) {
