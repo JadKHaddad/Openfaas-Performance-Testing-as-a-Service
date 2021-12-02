@@ -30,7 +30,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 'Delete');
         return false;
     });
-
+    // get all installing projects
+    fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 1 }) }).then(data => data.json()).then(data => {
+        if (data.success) {
+            const projects = data.projects;
+            for (var i = 0; i < projects.length; i++)(function (i) {
+                document.getElementById('projects').appendChild(createProjectCard(projects[i]));
+            })(i);
+        }
+    }).catch(function(){
+        showInfo('Could not connect to server','red');
+    });
     // get all runnig tests
     fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 13 }) }).then(data => data.json()).then(data => {
         if (data.success) {

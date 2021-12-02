@@ -2,6 +2,102 @@ FUNCTIONCALL = '/proxy'
 WEBSOCKET = false;
 var socket;
 
+function createProjectCard(project_name){
+    var project = document.createElement('div');
+    const template = `
+        <div class="card project-card" id="${project_name}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-10 project_name" data-mdb-toggle="tooltip" title="Project name">${project_name}</div>
+                    <div class="col-1">
+                        <div class="spinner-border text-primary spinner" data-mdb-toggle="tooltip" title="Running"></div>
+                    </div>
+                    <div class="col-1" data-mdb-toggle="tooltip" title="Cancel">
+                        <i class="fas fa-times stop-install-project"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    project.innerHTML = template;
+
+    var eventSource;
+    var socketIntv;
+
+    $(project).find('.stop-install-project').on('click', function(){
+        fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 15, project_name: project_name}) }).then(data => data.json()).then(data => {
+            if (data.success) {
+                if(WEBSOCKET){
+                    clearInterval(socketIntv);
+                }else{
+                    eventSource.close();
+                }
+                $(project).remove();
+                showInfo(project_name + ': installation canceled successfully','green');
+            } else {
+                showInfo('There was an error canceling the installation', 'red');
+            }
+        }).catch(function(){
+            showInfo('Could not connect to server', 'red');
+        });
+    });
+
+    function onMessage(message){
+        console.log(message)
+        if (!message.success){
+            console.log("Something went wrong");
+            showInfo('Something went wrong','red');
+            if(WEBSOCKET){
+                clearInterval(socketIntv);
+            }else{
+                eventSource.close();
+            }
+
+        }else if(message.status_code === 3){
+                console.log("thread is locking");
+        }else if(message.status_code === 2){
+            console.log("installing project");
+        }else if(message.status_code === 1){
+            console.log("installing failed");
+            if(WEBSOCKET){
+                clearInterval(socketIntv);
+            }else{
+                eventSource.close();
+            }
+            $(project).remove();
+            showInfo(project_name + ': Installation failed','red', message.error.replaceAll('\n', '<br />'));
+        }else{
+            console.log("Task is finished");
+            if(WEBSOCKET){
+                clearInterval(socketIntv);
+            }else{
+                eventSource.close();
+            }
+            $(project).remove();
+            showInfo(project_name + ' installed successfully','green');
+        }
+    };
+
+    if (WEBSOCKET){
+        socketIntv = setInterval(function () {
+            socket.emit('task_stats', { project_name: project_name});
+        }, 1000);
+        socket.on(project_name, function (msg) {
+            if (!IsJsonString(msg.data)) return;
+            var message = JSON.parse(msg.data);
+            onMessage(message);
+        });
+    }else{
+        eventSource = new EventSource('/task/' + project_name);
+        eventSource.onmessage = function (e) {
+            var message = JSON.parse(e.data);
+            console.log(message);
+            onMessage(message);
+        };
+    }
+    return project;
+}
+
 function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt, showPath) {
     var test = document.createElement('div');
     test.setAttribute('id', id);
@@ -38,10 +134,10 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         <img class="reg hidden" src="">
         </div>
         ${path}
-        <div class="card">
+        <div class="card" data-mdb-toggle="tooltip" title="Double click to minimize">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-3 test-id" data-mdb-toggle="tooltip" title="Test id"> ${id}</div>
+                    <div class="col-3 test-id"><label  data-mdb-toggle="tooltip" title="Test id">${id}</label></div>
                     <div class="col-1" data-mdb-toggle="tooltip" title="Users"><i class="fas fa-user-alt"></i>  ${users}</div>
                     <div class="col-1" data-mdb-toggle="tooltip" title="Spawn rate"><i class="fas fa-users"></i>  ${spawnRate}</div>
                     <div class="col-1" data-mdb-toggle="tooltip" title="Workers"><i class="fas fa-hard-hat"></i> ${workers}</div>
@@ -49,11 +145,10 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
                     <div class="col-1" data-mdb-toggle="tooltip" title="Time is seconds"><i class="fas fa-clock"></i>  ${time}</div>
                     <div class="col-1 elapsed hidden" data-mdb-toggle="tooltip" title="Elapsed time is seconds"><i class="fas fa-stopwatch" ></i>  <label class="elapsed-text"></label></div>
                     <div class="col-1">
-                        <div class="spinner-border text-primary spinner hidden"></div>
+                        <div class="spinner-border text-primary spinner hidden" data-mdb-toggle="tooltip" title="Running"></div>
                         <i class="fas fa-check check hidden"></i>
                         <i class="fas fa-times not-valid hidden"></i>
                     </div>
-
                 </div>
             </div>
             <div class="card-body">

@@ -254,6 +254,13 @@ def handle(req, no_request=False):
         if command is None:
             return  jsonify(success=False,exit_code=1,message="bad request"), headers
 
+        if command == 1: # get installing projects -> sync
+            projects = []
+            with LOCK:
+                for project_name in installation_tasks:
+                    projects.append(project_name)
+                return json.dumps({'success':True,'exit_code':0,'projects':projects,'message':'installing projects'})
+
         if command == 2: # check task -> sync
             task_id = data.get('task_id') or None
             if task_id is None:
@@ -562,6 +569,23 @@ def handle(req, no_request=False):
             if local is not None:
                 return json.dumps({'success':True,'exit_code':0,'count':count,'message':'count of running tests'})
             return jsonify(success=True,exit_code=0,count=count,message="count of running tests"), headers
+
+        if command == 15: # stop installing task
+            task_id = data.get("project_name") or None
+            if task_id is None:
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
+            with LOCK:
+                if platform.system() == 'Windows': # windows
+                    if task_id in installation_tasks:
+                        installation_tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                        installation_tasks[task_id].kill()
+                    # thread will clear the installation task
+                    
+                else:
+                    if task_id in installation_tasks:
+                        os.killpg(os.getpgid(installation_tasks[task_id].pid), signal.SIGTERM)
+                    # thread will clear the installation task
+                return jsonify(success=True,exit_code=0,message="task killed"), headers
 
         if command == 911: # kill all running tasks -> sync
             with LOCK:

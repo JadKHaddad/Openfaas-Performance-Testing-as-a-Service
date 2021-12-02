@@ -9,8 +9,8 @@
 <div class="modal fade" id="Info-Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
    <div class="modal-dialog">
       <div class="modal-content">
-         <div class="modal-body">
-            <h5 id="info-message">info</h5>
+         <div class="modal-body info-message-container">
+            <label id="info-message">info</label>
             <label id="info-error"></label>
          </div>
       </div>
@@ -57,7 +57,7 @@
                   <label class="form-label" for="url-input">OpenFaaS url</label>
                </div>
                <!-- checkbox -->
-               <div class="form-check">
+               <div class="form-check" data-mdb-toggle="tooltip" title="Can the brwoser connect to OpenFaas directly?">
                   <input class="form-check-input" type="checkbox" value="" id="direct-checkbox" />
                   <label class="form-check-label" for="direct-checkbox">
                      Direct connection
@@ -65,7 +65,7 @@
 
                </div>
                <!-- checkbox -->
-               <div class="form-check">
+               <div class="form-check" data-mdb-toggle="tooltip" title="No OpenFaaS-Server is being used">
                   <input class="form-check-input" type="checkbox" value="" id="no-openfaas-checkbox" />
                   <label class="form-check-label" for="no-openfaas-checkbox">
                      No OpenFaaS
@@ -83,6 +83,13 @@
                   <input class="form-check-input" type="checkbox" value="" id="i-do-not-like-rounded-edges-checkbox" />
                   <label class="form-check-label" for="dark-theme-checkbox">
                      I don't like rounded edges
+                  </label>
+               </div>
+               <!-- checkbox -->
+               <div class="form-check" data-mdb-toggle="tooltip" title="Tests will be minimized by default">
+                  <input class="form-check-input" type="checkbox" value="" id="start-tests-minimized" />
+                  <label class="form-check-label" for="dark-theme-checkbox">
+                     Start tests minimized
                   </label>
                </div>
                <div>
