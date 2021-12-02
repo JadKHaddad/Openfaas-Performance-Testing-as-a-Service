@@ -1,5 +1,6 @@
 FUNCTIONCALL = '/proxy'
 WEBSOCKET = false;
+MININIMZED = false;
 var socket;
 
 function createProjectCard(project_name){
@@ -112,6 +113,9 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         </div>
         `;
     }
+    var minimized = MININIMZED;
+    var bodyTooltipText = 'minimize';
+    if(minimized) bodyTooltipText = 'maximize';
     const template = `
     <div class="test-container">
         <div class="buttons btn-container">
@@ -134,7 +138,7 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
         <img class="reg hidden" src="">
         </div>
         ${path}
-        <div class="card" data-mdb-toggle="tooltip" title="Double click to minimize">
+        <div class="card" data-mdb-toggle="tooltip" title="Double click to ${bodyTooltipText}">
             <div class="card-header">
                 <div class="row">
                     <div class="col-3 test-id"><label  data-mdb-toggle="tooltip" title="Test id">${id}</label></div>
@@ -245,7 +249,15 @@ function CreateTest(project_name, script_name, id, users, spawnRate, workers, ho
 
     }
 
+    if(MININIMZED){
+        body.css('display', 'none');
+    }
+
     card.on('dblclick', function(){
+        minimized = !minimized;
+        var bodyTooltipText = 'minimize';
+        if(minimized) bodyTooltipText = 'maximize';
+        card.attr('title',`Double click to ${bodyTooltipText}`);
         body.slideToggle();
     });
 
@@ -568,6 +580,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const functionName = document.getElementById('function-name').innerText;
     var openfaasUrl = document.getElementById('openfaas-url').innerText;
     var direct = false;
+    if (localStorage.getItem('minimized') == 'true'){
+        MININIMZED = true;
+        $('#minimized').prop('checked', true);
+    }
     if (document.getElementById('direct').innerText === 'true') direct = true;
     if (document.getElementById('websocket').innerText === 'true') WEBSOCKET  = true;
 
@@ -615,7 +631,12 @@ document.addEventListener("DOMContentLoaded", function () {
         openfaasUrl = "http://" + openfaasUrl;
         direct = false;
         noredges = false;
-        theme = 'light'
+        theme = 'light';
+        if($('#minimized').prop('checked') == true) {
+            localStorage.setItem('minimized','true');
+        }else{
+            localStorage.setItem('minimized','false');
+        }
         if($('#direct-checkbox').prop('checked') == true) direct = true; 
         if($('#no-openfaas-checkbox').prop('checked') == true) openfaasUrl = 'None';
         if($('#i-do-not-like-rounded-edges-checkbox').prop('checked') == true) noredges = true;
@@ -674,6 +695,7 @@ document.addEventListener("DOMContentLoaded", function () {
         setCookie('direct', direct.toString(), -1);
         setCookie('openfaasurl', openfaasUrl, -1);
         localStorage.removeItem('last_host');
+        localStorage.removeItem('minimized');
         location.reload(); 
     });
 
