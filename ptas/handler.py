@@ -139,29 +139,33 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
         df = pd.read_csv(stats_history_file) 
         if len(df) > 4:
             if not Path(lin_path).exists():
-                x = range(1, len(df.iloc[:,0]) + 1)
+                x = pd.to_datetime(df.iloc[:,0], unit='s').values
                 plt.plot(x, df.iloc[:,19],color='b',label="Median Response Time") # med
                 plt.plot(x, df.iloc[:,20],color='r',label="Average Response Time") # avg
                 plt.plot(x, df.iloc[:,21],color='orange',label="Min Response Time") #min
                 plt.plot(x, df.iloc[:,22],color='g',label="Max Response Time") #max
                 plt.ylabel("Response Time (milliseconds)")
-                plt.xlabel("Ellapsed Time (seconds)")
+                plt.xlabel("Time")
+                plt.xticks(rotation=45)
                 plt.legend(loc="upper right")
-                plt.savefig(lin_path,dpi=300)
+                plt.savefig(lin_path,dpi=500,bbox_inches='tight')
                 plt.close()
             if not Path(reg_path).exists():
-                X = np.arange(1, len(df.iloc[:,0]) + 1).reshape((-1, 1)) 
+                X = pd.to_datetime(df.iloc[:,0], unit='s').values
+                X_plt = np.array(X).reshape((-1, 1))
+                X_for_train = np.array(X.astype('float64')).reshape((-1, 1))
                 Y = df.iloc[:,20].values.reshape(-1, 1)
-                X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+                X_train, X_test, Y_train, Y_test = train_test_split(X_for_train, Y, test_size=0.2, random_state=0)
                 linear_regressor = LinearRegression()  # create object for the class
                 linear_regressor.fit(X_train, Y_train)  # perform linear regression
-                Y_pred = linear_regressor.predict(X_test)  # make predictions
-                plt.scatter(X, Y, label="Acutual average Response Time")
-                plt.plot(X_test, Y_pred, color='red',label="Predicted average Response Time")
+                Y_pred = linear_regressor.predict(X_for_train)  # make predictions
+                plt.plot(X_plt, Y, label="Acutual average Response Time",)
+                plt.plot(X_plt, Y_pred, color='red',label="Predicted average Response Time")
                 plt.ylabel("Average response Time (milliseconds)")
-                plt.xlabel("Ellapsed Time (seconds)")
+                plt.xlabel("Time")
+                plt.xticks(rotation=45)
                 plt.legend(loc="upper right")
-                plt.savefig(reg_path,dpi=300)
+                plt.savefig(reg_path,dpi=500,bbox_inches='tight')
                 plt.close()
         else:
             return 2 # not enough data
