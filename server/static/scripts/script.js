@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
         setConfirmationModal(script_name + ': Are you sure you want to delete all tests?', function () {
             fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 16, project_name: project_name, script_name: script_name}) }).then(data => data.json()).then(data => {
                 if (data.success) {
-                    //location.reload(true);
+                    location.reload(true);
                 } else {
                     showInfo('There was an error deleting tests', 'red');
                 }
