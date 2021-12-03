@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const project_name = document.getElementById('project-name').innerText;
     const script_name = document.getElementById('script-name').innerText;
     const startBtn = $('#start-btn');
+    const deleteBtn = $('#delete-script-tests');
     const dismissBtn = $('#dismiss-btn');
 
     startBtn.on('click', function () {
@@ -46,6 +47,21 @@ document.addEventListener("DOMContentLoaded", function () {
         if (host != ""){
             localStorage.setItem('last_host', host);
         }
+        return false;
+    });
+
+    deleteBtn.on('click', function () {
+        setConfirmationModal(script_name + ': Are you sure you want to delete all tests?', function () {
+            fetch(FUNCTIONCALL, { method: 'POST', body: JSON.stringify({ command: 16, project_name: project_name, script_name: script_name}) }).then(data => data.json()).then(data => {
+                if (data.success) {
+                    //location.reload(true);
+                } else {
+                    showInfo('There was an error deleting tests', 'red');
+                }
+            }).catch(function(){
+                showInfo('Could not connect to server', 'red');
+            });
+        });
         return false;
     });
 
