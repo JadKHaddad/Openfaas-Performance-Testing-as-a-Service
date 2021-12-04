@@ -8,7 +8,7 @@ Get **cloud-config.txt**<br />
 ```sh
 curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-kubernetes.txt
 ```
-Replace the public key in **cloud-config.txt** with your own public key<br /><br />
+Replace the public key in **cloud-config-kubernetes.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
 multipass launch --cloud-init cloud-config-kubernetes.txt --name performance --cpus 6 --mem 6G --disk 20G
