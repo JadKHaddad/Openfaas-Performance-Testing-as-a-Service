@@ -64,6 +64,28 @@ def extract_url(url):
         url = PROXYFUNCTIONURL
     return url
 
+def check_openfaas():
+    out, err = subprocess.Popen('faas-cli list', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    out = out.decode("utf-8")
+    err = err.decode("utf-8")
+    installed = False
+    if err != "":
+        check = "false"
+        message = "openfaas is not installed successfully"
+        return installed, check, message   
+    out = out.split('\n') 
+    for line in out:
+        if line.split('\t')[0].strip() == FUNCTION:
+            installed = True
+            break  
+    if installed:
+        message = "function installed"
+        check = "false"
+    else:
+        message = "function not installed, or openfaas is not running yet"
+        check = "true"
+    return installed, check, message
+
 # app routes    
 @app.route('/')
 def index():
@@ -117,6 +139,15 @@ def stream(project_name,script_name,id):
                 gevent.sleep(1)
         return Response(stats_stream(), mimetype="text/event-stream")
 
+@app.route('/openfaas-stream')
+def openfaas_stream():
+    def stream():
+        while True:
+            installed, check, message = check_openfaas()
+            yield f'data: {json.dumps({"installed": installed})}\n\n'
+            gevent.sleep(1)
+    return Response(stream(), mimetype="text/event-stream")
+
 @app.route('/license')
 def license():
     return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
@@ -127,8 +158,8 @@ def control():
 
 @app.route('/openfaas')
 def openfaas_stats():
-    
-    return render_template('openfaas_stats.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    installed, check, message = check_openfaas()
+    return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
 
 @app.route('/egg')
 def egg():
@@ -259,6 +290,12 @@ def connect():
 def disconnect():
     session_id = request.sid
     print('Client disconnected', session_id)
+
+@socketio.on('openfaas')
+def openfass_socket():
+    # check if function is installed
+    installed, check, message = check_openfaas()
+    socketio.emit('openfaas', {'data': installed})
 
 if __name__ == '__main__':
     extern = False
