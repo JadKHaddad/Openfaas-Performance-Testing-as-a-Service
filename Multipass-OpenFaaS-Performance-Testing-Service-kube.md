@@ -42,11 +42,9 @@ or:
 ```sh
 multipass shell performance
 ```
-Once you are logged in, deploy the **OpenFaaS** function:
+**OpenFaaS** function will be deployed in the background. Check the **OpenFaaS** function status in the **OpenFaaS** tab in your browser. If the function faild to deploy automatically, you can deploy it manually with:
 ```sh
-(sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo) | sudo faas-cli login -s
-cd /etc/Openfaas-Performance-Testing-as-a-Service/
-sudo faas-cli up -f ptas.yml
+sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_kube.sh 
 ```
 ## Usage
 
