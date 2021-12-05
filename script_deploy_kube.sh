@@ -16,7 +16,4 @@ cd /etc/Openfaas-Performance-Testing-as-a-Service/
 sudo faas-cli up -f ptas.yml
 #finished
 printf "finish deploying\n" | tee -a /home/ubuntu/log.txt
-#redeploy
-printf "redeploying\n" | tee -a /home/ubuntu/log.txt
-sudo faas-cli deploy -f ptas.yml
-printf "finish redeploying\n\n" | tee -a /home/ubuntu/log.txt
+touch /etc/Openfaas-Performance-Testing-as-a-Service/done.txt
