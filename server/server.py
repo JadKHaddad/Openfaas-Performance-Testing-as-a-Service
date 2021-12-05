@@ -100,7 +100,7 @@ def check_openfaas_thread():
         socketio.emit('openfaas', {'data': installed})
         if installed:
             break
-        socketio.sleep(1)
+        socketio.sleep(3)
     thread = None
     
 # app routes    
