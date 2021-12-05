@@ -75,7 +75,7 @@ def check_openfaas():
     installed = False
     if err != "":
         check = "false"
-        message = "openfaas is not installed successfully"
+        message = "openfaas is not installed"
         return installed, check, message   
     out = out.split('\n') 
     for line in out:
