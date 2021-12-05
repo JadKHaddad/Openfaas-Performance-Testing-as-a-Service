@@ -91,13 +91,15 @@ def check_openfaas():
     return installed, check, message
 
 def check_openfaas_thread():
+    global thread
     while(True):
         installed, check, message = check_openfaas()
         socketio.emit('openfaas', {'data': installed})
         if installed:
             break
         socketio.sleep(1)
-
+    thread = None
+    
 # app routes    
 @app.route('/')
 def index():
