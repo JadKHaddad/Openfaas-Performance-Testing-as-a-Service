@@ -59,7 +59,7 @@ password: ie9ZhJhq5aqoYXb6uPrKF4DbvIoonfwuxpmu2JnicmDMMJO8tOsnc9jOG730DuW
 ```
 Get your password:
 ```sh
-PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
+PASSWORD=$(sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
 echo $PASSWORD
 ```
 
