@@ -38,5 +38,6 @@ runcmd:
 - sudo systemctl start performance-testing.service
 - sudo systemctl enable port-forward.service
 - sudo systemctl start port-forward.service
+- sudo touch /home/ubuntu/log.txt
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_kube.sh
-- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_kube.sh &
+- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_kube.sh & printf "$!\n" | tee -a /home/ubuntu/log.txt
