@@ -142,7 +142,7 @@ kubectl port-forward -n openfaas svc/gateway 8080:8080
 ```
 * Get your **openfaas** password:
 ```sh
-PASSWORD=$(kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
+PASSWORD=$(sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo)
 ```
 * Authenticate **fass-cli**:
 ```sh
