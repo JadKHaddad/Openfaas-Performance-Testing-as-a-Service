@@ -75,7 +75,7 @@ def check_openfaas():
     installed = False
     if err != "":
         check = "false"
-        message = "openfaas is not installed"
+        message = "OpenFaaS not installed"
         return installed, check, message   
     out = out.split('\n') 
     for line in out:
@@ -83,10 +83,10 @@ def check_openfaas():
             installed = True
             break  
     if installed:
-        message = "function installed"
+        message = "Function installed"
         check = "false"
     else:
-        message = "function not installed, or openfaas is not running yet"
+        message = "Function not installed, or OpenFaaS not running yet"
         check = "true"
     return installed, check, message
 
