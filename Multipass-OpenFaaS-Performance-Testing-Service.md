@@ -6,12 +6,12 @@ Get [multipass.run](https://multipass.run)<br /><br />
 Get **cloud-config.txt**<br />
 
 ```sh
-curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config.txt
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-faasd.txt
 ```
-Replace the public key in **cloud-config.txt** with your own public key<br /><br />
+Replace the public key in **cloud-config-faasd.txt** with your own public key<br /><br />
 Boot the VM:
 ```sh
-multipass launch --cloud-init cloud-config.txt --name performance --cpus 6 --mem 6G --disk 20G
+multipass launch --cloud-init cloud-config-faasd.txt --name performance --cpus 6 --mem 6G --disk 20G
 ```
 Get the VM's IP and connect with **ssh**:
 ```sh

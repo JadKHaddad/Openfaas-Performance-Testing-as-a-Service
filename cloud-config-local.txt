@@ -24,5 +24,3 @@ runcmd:
 - sudo systemctl daemon-reload
 - sudo systemctl enable performance-testing.service
 - sudo systemctl start performance-testing.service
-- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_faasd.sh
-- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_faasd.sh &
