@@ -1,7 +1,14 @@
 {% include "header.html" %}
 
-<h1 id="check">{{ check }}</h1>
+<div class="hidden" id="check">{{ check }}</div>
 <h1 id="message">{{ message }}</h1>
+<div class="hidden" id="initializing">
+    <h4>initializing..</h4>
+    <div class="btn-container">
+        <div class="spinner-border text-primary"></div>
+    </div>
+</div>
+
 </div>
 <!-- close content-->
 <!-- Custom scripts -->

@@ -3,22 +3,27 @@ document.addEventListener("DOMContentLoaded", function () {
     if(document.getElementById('check').innerText == "true") check = true;
     console.log(check);
     if(check){
+        $('#initializing').removeClass('hidden');
         var eventSource;
-        var socketIntv;
         if (WEBSOCKET){
-            socketIntv = setInterval(function () {
-                socket.emit('openfaas');
-            }, 1000);
+            socket.emit('openfaas');
             socket.on('openfaas', function (msg) {
-                if (!IsJsonString(msg.data)) return;
                 var message = JSON.parse(msg.data);
+                if (message == true){
+                    $('#message').text('function installed');
+                    $('#initializing').addClass('hidden');
+                }
                 console.log(message)
             });
         }else{
-            eventSource = new EventSource('/openfaas-stream');
+            eventSource = new EventSource('/openfaas_stream');
             eventSource.onmessage = function (e) {
                 var message = JSON.parse(e.data);
                 var installed = message.installed;
+                if (installed == true){
+                    $('#message').text('function installed');
+                    $('#initializing').addClass('hidden');
+                }
                 console.log(installed);
             };
         }

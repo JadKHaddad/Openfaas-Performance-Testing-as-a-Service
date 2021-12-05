@@ -2,6 +2,7 @@
 
 import platform
 import subprocess
+import threading
 from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit
 from waitress import serve
@@ -15,6 +16,7 @@ import random
 import string
 import pathlib
 import shutil
+from threading import Thread
 
 # handler is needed if openfaas is not being used
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -35,6 +37,8 @@ FUNCTION = None
 FUNCTIONURL = None
 ASYNCFUNCTIONURL = None
 DIRECT = None
+
+thread = None
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
@@ -85,6 +89,14 @@ def check_openfaas():
         message = "function not installed, or openfaas is not running yet"
         check = "true"
     return installed, check, message
+
+def check_openfaas_thread():
+    while(True):
+        installed, check, message = check_openfaas()
+        socketio.emit('openfaas', {'data': installed})
+        if installed:
+            break
+        socketio.sleep(1)
 
 # app routes    
 @app.route('/')
@@ -139,11 +151,13 @@ def stream(project_name,script_name,id):
                 gevent.sleep(1)
         return Response(stats_stream(), mimetype="text/event-stream")
 
-@app.route('/openfaas-stream')
+@app.route('/openfaas_stream')
 def openfaas_stream():
     def stream():
         while True:
             installed, check, message = check_openfaas()
+            if installed:
+                return f'data: {json.dumps({"installed": installed})}\n\n'
             yield f'data: {json.dumps({"installed": installed})}\n\n'
             gevent.sleep(1)
     return Response(stream(), mimetype="text/event-stream")
@@ -293,9 +307,12 @@ def disconnect():
 
 @socketio.on('openfaas')
 def openfass_socket():
-    # check if function is installed
+    global thread
     installed, check, message = check_openfaas()
     socketio.emit('openfaas', {'data': installed})
+    if thread is None:
+        thread = Thread(target=check_openfaas_thread)
+        thread.start()
 
 if __name__ == '__main__':
     extern = False
