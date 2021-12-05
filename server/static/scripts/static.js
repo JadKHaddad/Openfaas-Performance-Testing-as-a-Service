@@ -99,7 +99,7 @@ function createProjectCard(project_name){
     return project;
 }
 
-function CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt, showPath) {
+function createTest(project_name, script_name, id, users, spawnRate, workers, host, time, status, stats, valid, startedAt, showPath) {
     var test = document.createElement('div');
     test.setAttribute('id', id);
     if (host == null) host = '';
@@ -457,7 +457,7 @@ function startTest(project_name, script_name, users, spawnRate, workers, host, t
         if (data.success) {
             const id = data.id;
             const started_at = data.started_at;
-            const test = CreateTest(project_name, script_name, id, users, spawnRate, workers, host, time, 1, null, null, started_at, showPath);
+            const test = createTest(project_name, script_name, id, users, spawnRate, workers, host, time, 1, null, null, started_at, showPath);
             document.getElementById('tests').prepend(test);
             if (dismissBtn != null){
                 dismissBtn.click();

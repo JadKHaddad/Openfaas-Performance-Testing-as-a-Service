@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         workers = info.workers;
                         started_at = info.started_at;
                     }
-                    const test = CreateTest(project_name, script_name, tests[i].id, users, spawn_rate, workers, host, time, tests[i].status, tests[i].data, tests[i].valid, started_at, false);
+                    const test = createTest(project_name, script_name, tests[i].id, users, spawn_rate, workers, host, time, tests[i].status, tests[i].data, tests[i].valid, started_at, false);
 
                     document.getElementById('tests').appendChild(test);
                 })(i);

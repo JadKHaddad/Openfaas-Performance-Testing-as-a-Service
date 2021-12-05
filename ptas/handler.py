@@ -264,7 +264,7 @@ def handle(req, no_request=False):
             with LOCK:
                 for project_name in installation_tasks:
                     projects.append(project_name)
-                return json.dumps({'success':True,'exit_code':0,'projects':projects,'message':'installing projects'})
+                return jsonify(success=True,exit_code=0,projects=projects,message='installing projects'), headers
 
         if command == 2: # check task -> sync
             task_id = data.get('task_id') or None
