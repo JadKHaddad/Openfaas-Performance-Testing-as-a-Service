@@ -2,10 +2,10 @@
 Description=Performance Testing Service
 After=syslog.target
 [Service]
-WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/server/
+WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/
 Type=simple
 Restart=on-failure
 RestartSec=5s
-ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/server/script-deploy-kube-runtime.sh
+ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-kube-runtime.sh
 [Install]
 WantedBy=multi-user.target
