@@ -24,22 +24,28 @@ runcmd:
 - sudo microk8s.enable dashboard
 - sudo microk8s.enable openfaas
 - curl -sSL https://cli.openfaas.com | sudo -E sh
+
 - sudo git clone -b main --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
-- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s-runtime.sh
+
+#- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s-runtime.sh
+
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon-k8s.json /etc/docker/daemon.json
 - sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/requirements.txt
 - sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/ptas/requirements.txt
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/performance-testing.service /etc/systemd/system/performance-testing.service
-- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/port-forward-k8s.service /etc/systemd/system/port-forward-k8s.service
-- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/k8s-deploy-runtime.service /etc/systemd/system/k8s-deploy-runtime.service
+
+#- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/port-forward-k8s.service /etc/systemd/system/port-forward-k8s.service
+#- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/k8s-deploy-runtime.service /etc/systemd/system/k8s-deploy-runtime.service
+
 - sudo systemctl daemon-reload
 - sudo systemctl enable performance-testing.service
 - sudo systemctl start performance-testing.service
-- sudo systemctl enable port-forward-k8s.service
-- sudo systemctl start port-forward-k8s.service
-- sudo systemctl enable k8s-deploy-runtime.service
-- sudo systemctl start k8s-deploy-runtime.service
-- sudo touch /home/ubuntu/log.txt
-- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh
-- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh & printf "$!\n" | sudo tee -a /home/ubuntu/log.txt
+
+#- sudo systemctl enable port-forward-k8s.service
+#- sudo systemctl start port-forward-k8s.service
+#- sudo systemctl enable k8s-deploy-runtime.service
+#- sudo systemctl start k8s-deploy-runtime.service
+#- sudo touch /home/ubuntu/log.txt
+#- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh
+#- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh & printf "$!\n" | sudo tee -a /home/ubuntu/log.txt
