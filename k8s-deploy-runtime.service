@@ -1,0 +1,11 @@
+[Unit]
+Description=Performance Testing Service
+After=syslog.target
+[Service]
+WorkingDirectory=/etc/Openfaas-Performance-Testing-as-a-Service/
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s-runtime.sh
+[Install]
+WantedBy=multi-user.target
