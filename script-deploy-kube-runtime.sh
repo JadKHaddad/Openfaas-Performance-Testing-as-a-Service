@@ -1,6 +1,6 @@
 #!/bin/bash
 
-printf "\nchecking if first script is done\n" | tee -a /home/ubuntu/log.txt
+printf "checking if first script is done\n" | tee -a /home/ubuntu/log.txt
 while true
 do
     #check if first script is done
