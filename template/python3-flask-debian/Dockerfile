@@ -41,7 +41,7 @@ COPY function/   .
 RUN chown -R app:app ../
 
 ARG TEST_COMMAND=tox
-ARG TEST_ENABLED=true
+ARG TEST_ENABLED=false
 RUN if [ "$TEST_ENABLED" == "false" ]; then \
     echo "skipping tests";\
     else \
