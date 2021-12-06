@@ -1,0 +1,50 @@
+# multipass launch --cloud-init cloud-config-microk8s.txt --name performance --cpus 6 --mem 6G --disk 25G
+# cloud-config
+ssh_authorized_keys:
+## Note: Replace with your own public key
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC5AkkL2mu8iXk+YouO9UO++yGC4fWrvOPJvhStBC5Sju8imWJjM30mYxrqW1vtEjHKvSZoFqT08yLTMLiuSQ7JlizXRpUdbgpXbaO4ca0RPHRIRIrjQGGsfMs8dnJBAkFnzWjrL/HtsHTa1MKgwXKu1gaCMRfoBGEU4cNXFSmvaQUs7WDmjcB4gU4lczL0nO1Bg0Cnk3QgWCBTAt9AIc2lDHOhmreisiAHHyGu4cn/z/+HASD4HYlc3FqNmQ7HWkTAX1eVGqlRqGxP25sKxFzmcjAEvO2jLRQgVuom3DjW09H8THmpox4p+7ft3odAfCoqv2BqCITyAtve9gG71rBf61IRkxQX7XAt3uNJh1eVLee/0qynPTLxTPqJGnqif6K8/CokkJuslEdpPhybl7jpm54Yr3Q8iFnAeSvxCZlNRR84wHC2lt3MMBvsv2GrMaF6Djw7YsCKxUyd+Nys9SZIu/3YudSHMP1zApMYcsj0lkq1DyX5b4EbcAIHqW1SOp0= JadKhaddad@ROG
+
+package_update: true
+
+packages:
+ - runc
+ - git
+ - docker.io
+ - python3
+ - python3-pip
+
+runcmd:
+- printf "*    soft nofile 64000\n*    hard nofile 64000\nroot soft nofile 64000\nroot hard nofile 64000" | sudo tee -a /etc/security/limits.conf
+- printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session
+- printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session-noninteractive
+
+- sudo snap install microk8s --classic
+- sudo snap alias microk8s.kubectl kubectl
+- sudo microk8s.enable dns
+- sudo microk8s.enable dashboard
+- sudo microk8s.enable openfaas
+
+- curl -sSL https://cli.openfaas.com | sudo -E sh
+
+- sudo git clone -b main --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
+- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
+
+- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon.json /etc/docker/daemon.json
+
+- sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/requirements.txt
+- sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/ptas/requirements.txt
+
+- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/performance-testing.service /etc/systemd/system/performance-testing.service
+- sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/port-forward-microk8s.service /etc/systemd/system/port-forward-microk8s.service
+
+- sudo systemctl daemon-reload
+- sudo systemctl enable performance-testing.service
+- sudo systemctl start performance-testing.service
+- sudo systemctl enable port-forward-microk8s.service
+- sudo systemctl start port-forward-microk8s.service
+
+
+
+# kubectl -n openfaas get deployments -l "release=openfaas, app=openfaas"
+# echo $(kubectl -n openfaas get secret basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode)
+# sudo kubectl port-forward -n openfaas svc/gateway 8080:8080 --address='0.0.0.0'
