@@ -44,7 +44,7 @@ multipass shell performance
 ```
 **OpenFaaS** function will be deployed in the background. Check the **OpenFaaS** function status in the **OpenFaaS** tab in your browser. If the function faild to deploy automatically, you can deploy it manually with:
 ```sh
-sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_faasd.sh 
+sudo /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-faasd.sh 
 ```
 ## Usage
 

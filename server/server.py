@@ -70,8 +70,6 @@ def extract_url(url):
     return url
 
 def check_openfaas():
-    if Path("done.txt").exists():
-        subprocess.Popen('(sudo kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode; echo) | sudo faas-cli login -s && cd /etc/Openfaas-Performance-Testing-as-a-Service/ && sudo faas-cli deploy -f ptas.yml', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
     out, err = subprocess.Popen('faas-cli list', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     out = out.decode("utf-8")
     err = err.decode("utf-8")

@@ -46,5 +46,5 @@ runcmd:
 - sudo systemctl enable performance-testing.service
 - sudo systemctl start performance-testing.service
 - sudo cat /var/lib/faasd/secrets/basic-auth-password | faas-cli login -s
-- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_faasd.sh
-- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script_deploy_faasd.sh &
+- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-faasd.sh
+- sudo /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-faasd.sh &

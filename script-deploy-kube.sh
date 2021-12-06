@@ -16,4 +16,4 @@ cd /etc/Openfaas-Performance-Testing-as-a-Service/
 sudo faas-cli up -f ptas.yml
 #finished
 printf "finish deploying\n" | tee -a /home/ubuntu/log.txt
-touch /etc/Openfaas-Performance-Testing-as-a-Service/done.txt
+touch /home/ubuntu/done.txt
