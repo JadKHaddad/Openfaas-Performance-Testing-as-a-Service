@@ -10,10 +10,4 @@
 /server/errors
 /server/temp
 /server/env
-private_ptas.yml
-basic-auth-password
-~$$seq.~vsdx
 *.junk
-kind-with-registry.sh
-cloud-config-private.txt
-cloud-config-default.txt
