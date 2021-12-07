@@ -3,7 +3,7 @@
 ## Installation
 
 Get [multipass.run](https://multipass.run)<br /><br />
-Get **cloud-config-kubernetes.txt**<br />
+Get **cloud-config-microk8s.txt**<br />
 
 ```sh
 curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-microk8s.txt
