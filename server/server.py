@@ -2,7 +2,7 @@
 
 import platform
 import subprocess
-import threading
+import datetime
 from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from waitress import serve
@@ -32,6 +32,7 @@ PROXYFUNCTION = None
 PROXYFUNCTIONURL = None
 PROXYASYNCFUNCTIONURL = None
 
+ALLOWPROXY = None
 OPENFAASULR = None
 FUNCTION = None
 FUNCTIONURL = None
@@ -168,7 +169,17 @@ def egg():
 def proxy():
     url = request.cookies.get('openfaasurl')
     print(url)
-    url = extract_url(url)
+    if url is not None:
+        url = unquote(url)
+        url = urljoin(url, 'function/')
+        url = urljoin(url, FUNCTION)
+        if url == FUNCTIONURL:
+            url = PROXYFUNCTIONURL
+    else:
+        if not ALLOWPROXY:
+            return jsonify(success=False)
+        url = PROXYFUNCTIONURL
+
     print(url)
     if 'file0' in request.files:
         ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
@@ -216,12 +227,23 @@ def check_connection():
             status=res.status_code,
             headers=dict(res.headers)
         )
-        response.set_cookie('openfaasurl', url, expires=90000)
+
+        expire_date = datetime.datetime.now()
+        expire_date = expire_date + datetime.timedelta(days=90)
+        response.set_cookie('openfaasurl', url, expires=expire_date)
         return response 
     except:
         response = jsonify(success=False)
-        response.set_cookie('openfaasurl', '', expires=0)
         return response
+
+@app.route('/defaults', methods=['POST'])
+def defaults():
+    response = jsonify(openfaas_url=OPENFAASULR, direct=DIRECT)
+    expire_date = datetime.datetime.now()
+    expire_date = expire_date + datetime.timedelta(days=90)
+    response.set_cookie('openfaasurl', url, expires=expire_date)
+    return response 
+
 
 # socket
 @socketio.on('stats')
@@ -264,7 +286,7 @@ def task_stats(message):
 @socketio.on('server_stats')
 def server_stats(message):
     url = extract_url(message.get('openfaasurl'))
-    print("getting from: " + url)
+    #print("getting from: " + url)
     if url == 'None':
         data = {'command':14, 'local':True}
         response = handler.handle(json.dumps(data), True)
@@ -332,6 +354,11 @@ if __name__ == '__main__':
     if direct != 'true' and direct != 'false':
         print('-d , --direct can only be true or false')
         exit()
+
+    if url is None:
+        ALLOWPROXY = False
+    else:
+        ALLOWPROXY = True
 
     if url is None and extern == False and LOCAL == False:
         print('please provide an openfaasurl using -u or -e or use -l if you dont want to use an openfaas server')
