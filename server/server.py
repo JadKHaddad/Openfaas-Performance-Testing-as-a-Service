@@ -168,7 +168,6 @@ def egg():
 @app.route('/proxy', methods=['POST'])
 def proxy():
     url = request.cookies.get('openfaasurl')
-    print(url)
     if url is not None:
         url = unquote(url)
         url = urljoin(url, 'function/')
@@ -179,8 +178,6 @@ def proxy():
         if not ALLOWPROXY:
             return jsonify(success=False)
         url = PROXYFUNCTIONURL
-
-    print(url)
     if 'file0' in request.files:
         ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
         path = f'temp/{ran}'
@@ -239,12 +236,20 @@ def check_connection():
 @app.route('/defaults', methods=['POST'])
 def defaults():
     response = jsonify(openfaas_url=OPENFAASULR, direct=DIRECT)
+    url = OPENFAASULR
+    if url is None:
+        url = 'None'
+
     expire_date = datetime.datetime.now()
     expire_date = expire_date + datetime.timedelta(days=90)
     response.set_cookie('openfaasurl', url, expires=expire_date)
     return response 
 
-
+@app.route('/openfaas', methods=['POST'])
+def openfaas_info():
+    installed, check, message = check_openfaas()
+    return jsonify(installed=installed, check=check, message=message)
+    
 # socket
 @socketio.on('stats')
 def stats(message):
