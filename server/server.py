@@ -3,7 +3,7 @@
 import platform
 import subprocess
 import threading
-from flask import Flask, render_template, request, Response, jsonify
+from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from waitress import serve
 import requests
@@ -40,7 +40,9 @@ DIRECT = None
 
 thread = None
 
-app = Flask(__name__)
+dist_dir = os.path.abspath('./dist/')
+
+app = Flask(__name__, template_folder=dist_dir, static_url_path='')
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 # static functions
@@ -99,36 +101,68 @@ def check_openfaas_thread():
             break
         socketio.sleep(3)
     thread = None
-    
+
+#definining all this junk because we want to build our frontend and use it out of the box. just build it and paste it in dist folder    
+#for vue    
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory(f'{dist_dir}/js', path)
+
+#for vue
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory(f'{dist_dir}/css', path)
+
+#for errors
+@app.route('/favicon.ico')
+def send_favs():
+    return send_from_directory(f'{dist_dir}/fav', 'favicon.ico')
+
+#for vue
+@app.route('/fav/<path:path>')
+def send_fav(path):
+    return send_from_directory(f'{dist_dir}/fav', path)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('index.html'), 404
+
 # app routes    
 @app.route('/')
 def index():
-    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/project/<name>')
 def project(name):
-    return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
 
 @app.route('/project/<project_name>/<script_name>')
 def script(project_name, script_name):
-    return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
 
 @app.route('/license')
 def license():
-    return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/control')
 def control():
-    return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/openfaas')
 def openfaas_stats():
-    installed, check, message = check_openfaas()
-    return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
+    return render_template('index.html')
+    #installed, check, message = check_openfaas()
+    #return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
 
 @app.route('/egg')
 def egg():
-    return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/proxy', methods=['POST'])
 def proxy():

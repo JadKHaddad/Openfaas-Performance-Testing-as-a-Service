@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><link rel="icon" href="/fav/favicon.ico"><title>Performance Testing Service</title><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"><link rel="stylesheet" href="/css/mdb.min.css"><link rel="stylesheet" href="/css/style.css"><script src="https://code.jquery.com/jquery-3.6.0.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script><script>function isInteger(str) {
+      var pattern = /^\d+$/;
+      return pattern.test(str);
+    }
+    function IsJsonString(str) {
+      try {
+        JSON.parse(str);
+      } catch (e) {
+        return false;
+      }
+      return true;
+    }
+    function setCookie(name, value, daysToLive) {
+      // Encode value in order to escape semicolons, commas, and whitespace
+      var cookie = name + "=" + encodeURIComponent(value);
+
+      if (typeof daysToLive === "number") {
+        /* Sets the max-age attribute so that the cookie expires
+        after the specified number of days */
+        cookie += "; max-age=" + (daysToLive * 24 * 60 * 60) + ";path=/";
+
+        document.cookie = cookie;
+      }
+    }
+
+    function getCookie(name) {
+      // Split cookie string and get all individual name=value pairs in an array
+      var cookieArr = document.cookie.split(";");
+
+      // Loop through the array elements
+      for (var i = 0; i < cookieArr.length; i++) {
+        var cookiePair = cookieArr[i].split("=");
+
+        /* Removing whitespace at the beginning of the cookie name
+        and compare it with the given string */
+        if (name == cookiePair[0].trim()) {
+          // Decode the cookie value and return
+          return decodeURIComponent(cookiePair[1]);
+        }
+      }
+      // Return null if not found
+      return null;
+    }</script><link href="/js/app.b19c943b.js" rel="preload" as="script"><link href="/js/chunk-vendors.05ea1615.js" rel="preload" as="script"></head><body><noscript><strong>We're sorry but frontend doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div class="content" id="content"><div id="app"></div></div><footer class="bg-light text-center text-white footer"><div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);"><a class="text-white" href="https://www.uni-muenster.de/">Westfälische Wilhelms-Universität Münster</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a class="text-white" href="https://www.gselectronic.com/">GS Electronic</a></div></footer><script src="/js/mdb.min.js"></script><script src="/js/chunk-vendors.05ea1615.js"></script><script src="/js/app.b19c943b.js"></script></body></html>
