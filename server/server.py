@@ -96,7 +96,7 @@ def check_openfaas_thread():
     global thread
     while(True):
         installed, check, message = check_openfaas()
-        socketio.emit('openfaas', {'data': installed}, broadcast=False)
+        socketio.emit('openfaas', {'data': installed})
         if installed:
             break
         socketio.sleep(3)
@@ -167,14 +167,9 @@ def egg():
 @app.route('/proxy', methods=['POST'])
 def proxy():
     url = request.cookies.get('openfaasurl')
-    if url is not None:
-        url = unquote(url)
-        url = urljoin(url, 'function/')
-        url = urljoin(url, FUNCTION)
-        if url == FUNCTIONURL:
-            url = PROXYFUNCTIONURL
-    else:
-        url = PROXYFUNCTIONURL
+    print(url)
+    url = extract_url(url)
+    print(url)
     if 'file0' in request.files:
         ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
         path = f'temp/{ran}'
@@ -215,14 +210,18 @@ def check_connection():
     url = json.loads(request.data)['url']
     url = url[:-1] if url[-1] == '/' else url
     try:
-        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)   
-        return Response(
+        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)  
+        response = Response(
             response=res.content,
             status=res.status_code,
             headers=dict(res.headers)
         )
+        response.set_cookie('openfaasurl', url, expires=90000)
+        return response 
     except:
-        return jsonify(success=False)
+        response = jsonify(success=False)
+        response.set_cookie('openfaasurl', '', expires=0)
+        return response
 
 # socket
 @socketio.on('stats')
@@ -265,6 +264,7 @@ def task_stats(message):
 @socketio.on('server_stats')
 def server_stats(message):
     url = extract_url(message.get('openfaasurl'))
+    print("getting from: " + url)
     if url == 'None':
         data = {'command':14, 'local':True}
         response = handler.handle(json.dumps(data), True)
@@ -384,3 +384,4 @@ if __name__ == '__main__':
     else:
         print(f'waitress threads: {threads}')
         serve(app, host=host, port=int(port), threads=int(threads))
+
