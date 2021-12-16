@@ -115,9 +115,9 @@ def send_css(path):
     return send_from_directory(f'{dist_dir}/css', path)
 
 #for errors
-@app.route('/favicon.ico')
+@app.route('/favicon.png')
 def send_favs():
-    return send_from_directory(f'{dist_dir}/fav', 'favicon.ico')
+    return send_from_directory(f'{dist_dir}/fav', 'favicon.png')
 
 #for vue
 @app.route('/fav/<path:path>')
