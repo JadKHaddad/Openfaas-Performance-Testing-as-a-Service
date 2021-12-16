@@ -2,7 +2,6 @@
 
 import platform
 import subprocess
-import threading
 from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit
 from waitress import serve
@@ -32,6 +31,7 @@ PROXYFUNCTION = None
 PROXYFUNCTIONURL = None
 PROXYASYNCFUNCTIONURL = None
 
+ALLOWPROXY = None
 OPENFAASULR = None
 FUNCTION = None
 FUNCTIONURL = None
@@ -191,7 +191,10 @@ def proxy():
         if url == FUNCTIONURL:
             url = PROXYFUNCTIONURL
     else:
+        if not ALLOWPROXY:
+            return jsonify(success=False, message="Check your cookies"), 404
         url = PROXYFUNCTIONURL
+
     if 'file0' in request.files:
         ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
         path = f'temp/{ran}'
@@ -248,35 +251,35 @@ def stats(message):
     script_name = message.get('script_name')
     id = message.get('id')
     if project_name is None or script_name is None or id is None:
-        emit(id, {'data': None})
+        emit(id, {'data': None},broadcast=False)
         return 
     url = extract_url(request.cookies.get('openfaasurl'))
     if url == 'None':
         data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
         response = handler.handle(json.dumps(data), True)
-        emit(id, {'data': response})
+        emit(id, {'data': response},broadcast=False)
         return
     else:
         data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
         response = requests.post(url, data=json.dumps(data))
-        emit(id, {'data': response.text})
+        emit(id, {'data': response.text},broadcast=False)
         return
     
 @socketio.on('task_stats')
 def task_stats(message):
     project_name = message.get('project_name')
     if project_name is None:
-        emit(project_name, {'data': None})
+        emit(project_name, {'data': None},broadcast=False)
         return 
     url = extract_url(request.cookies.get('openfaasurl'))
     data = {'command':2,'task_id': project_name}
     if url == 'None':
         response = handler.handle(json.dumps(data), True)
-        emit(project_name, {'data': response})
+        emit(project_name, {'data': response},broadcast=False)
         return
     else:
         response = requests.post(url, data=json.dumps(data))
-        emit(project_name, {'data': response.text})
+        emit(project_name, {'data': response.text},broadcast=False)
         return
 
 @socketio.on('server_stats')
@@ -285,15 +288,15 @@ def server_stats():
     if url == 'None':
         data = {'command':14, 'local':True}
         response = handler.handle(json.dumps(data), True)
-        socketio.emit('server_stats', {'data': response})
+        socketio.emit('server_stats', {'data': response},broadcast=False)
         return 
     else:    
         data = {'command':14}
         try:
             response = requests.post(url, data=json.dumps(data), timeout=2)
-            socketio.emit('server_stats', {'data': response.text})
+            socketio.emit('server_stats', {'data': response.text},broadcast=False)
         except:
-            socketio.emit('server_stats', {'data': {'stop':True}})
+            socketio.emit('server_stats', {'data': {'stop':True}},broadcast=False)
         finally:
             return
        
@@ -311,7 +314,7 @@ def disconnect():
 def openfass_socket():
     global thread
     installed, check, message = check_openfaas()
-    socketio.emit('openfaas', {'data': installed})
+    socketio.emit('openfaas', {'data': installed},broadcast=False)
     if thread is None:
         thread = Thread(target=check_openfaas_thread)
         thread.start()
@@ -349,6 +352,11 @@ if __name__ == '__main__':
     if direct != 'true' and direct != 'false':
         print('-d , --direct can only be true or false')
         exit()
+
+    if url is None:
+        ALLOWPROXY = False
+    else:
+        ALLOWPROXY = True
 
     if url is None and extern == False and LOCAL == False:
         print('please provide an openfaasurl using -u or -e or use -l if you dont want to use an openfaas server')
