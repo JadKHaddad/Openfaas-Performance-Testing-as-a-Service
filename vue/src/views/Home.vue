@@ -116,7 +116,7 @@ export default {
         .then((data) => {
           if (data.success) {
             this.projects = data.projects;
-            console.log(data);
+            //console.log(data);
           } else {
             this.$emit("info", "Could not connect to server", "red");
           }

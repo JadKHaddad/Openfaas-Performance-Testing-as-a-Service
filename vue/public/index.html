@@ -45,7 +45,6 @@
         document.cookie = cookie;
       }
     }
-
     function getCookie(name) {
       // Split cookie string and get all individual name=value pairs in an array
       var cookieArr = document.cookie.split(";");
@@ -64,32 +63,28 @@
       // Return null if not found
       return null;
     }
-    
-
-
   </script>
 </head>
 
 <body>
+
   <noscript>
     <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
         Please enable it to continue.</strong>
   </noscript>
+<div id="teleported">
+
+</div>
 
   <div class="content" id="content">
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </div>
 
-  <footer class="bg-light text-center text-white footer">
-    <!-- Copyright -->
-    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-      <a class="text-white" href="https://www.uni-muenster.de/">Westfälische Wilhelms-Universität Münster</a>
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a class="text-white" href="https://www.gselectronic.com/">GS Electronic</a>
-    </div>
-    <!-- Copyright -->
-  </footer>
+  <div id="teleported-footer">
+
+  </div>
+
 
   <!-- MDB -->
   <script type="text/javascript" src="<%= BASE_URL %>js/mdb.min.js"></script>

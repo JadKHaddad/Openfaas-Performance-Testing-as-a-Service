@@ -253,6 +253,8 @@ export default {
             };
             console.log(test);
             this.tests.push(test);
+          }else{
+            this.$emit("info", data.message, "red");
           }
         })
         .catch(() => {

@@ -20,6 +20,8 @@ body {
   flex-shrink: 0;
 }
 
+
+
 .test-container{
   margin-top: 40px;
   border-top:1px solid rgba(0,0,0,.125);
@@ -142,3 +144,33 @@ h3 {
 .nr *:not(.spinner){
   border-radius:0rem !important;
 }
+
+.dark .navbar{
+  background-color: #262626 !important;
+}
+
+.dark .nav-item * {
+  color: #757575 !important;
+}
+
+.dark .nav-item :hover{
+  color: white !important;
+}
+
+.dark #server-stats{
+  color: white !important;
+}
+
+.background-dark{
+  position:absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: #303030 !important;
+}
+
+.dark .footer  *{
+  background-color: #262626 !important;
+}
+
+

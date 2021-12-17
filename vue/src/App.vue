@@ -1,7 +1,8 @@
 <template>
   <div
     :class="{
-      'nr': noRedges,
+      nr: noRedges,
+      dark: darkTheme,
     }"
   >
     <NavBar
@@ -104,16 +105,29 @@
         </div>
       </div>
     </div>
+    <teleport v-if="darkTheme" to="#teleported">
+      <div class="background-dark"></div>
+    </teleport>
+    <teleport to="#teleported-footer">
+      <Footer
+        :class="{
+          dark: darkTheme,
+          'bg-light': !darkTheme
+        }"
+      />
+    </teleport>
   </div>
 </template>
 
 <script>
 import NavBar from "@/components/NavBar.vue";
+import Footer from "@/components/Footer.vue";
 
 export default {
   name: "App",
   components: {
     NavBar,
+    Footer,
   },
   data() {
     return {
@@ -121,13 +135,10 @@ export default {
       direct: true,
       noOpenfaas: true,
       functionName: "ptas",
-
       darkTheme: false,
       noRedges: false,
       minimizeTests: false,
-
       update: false,
-
       url: "/local",
       runningTests: 0,
       socket: null,
@@ -192,41 +203,26 @@ export default {
       localStorage.setItem("darkTheme", this.darkTheme);
       localStorage.setItem("noRedges", this.noRedges);
       localStorage.setItem("minimizeTests", this.minimizeTests);
-
       this.update = true;
-      console.log("updated");
-      console.log(settings);
+      console.log("new openfaasUrl: " + this.openfaasUrl);
+      console.log("new baseUrl: " + this.url);
     },
     updated() {
+      console.log("updated");
       this.update = false;
     },
-    setDefaults() {
-      fetch("/defaults", { method: "POST" })
-        .then((data) => data.json())
-        .then((data) => {
-          if (data.openfaas_url) {
-            this.noOpenfaas = false;
-            this.openfaasUrl = data.openfaas_url;
-            this.url = `${this.openfaasUrl}/function/ptas`;
-            if (!data.direct) {
-              this.url = "/proxy";
-            }
-          } else {
-            this.openfaasUrl = "None";
-            this.url = "/local";
-            this.noOpenfaas = true;
-          }
-          this.direct = data.direct;
-
-          localStorage.setItem("url", this.url);
-          localStorage.setItem("openfaasUrl", this.openfaasUrl);
-          localStorage.setItem("direct", this.direct);
-          localStorage.setItem("noOpenfaas", this.noOpenfaas);
-
-          console.log(this.openfaasUrl);
-          console.log(this.url);
-        })
-        .catch(() => {});
+    setDefaults(settings) {
+      this.url = settings.baseUrl;
+      this.openfaasUrl = settings.openfaasUrl;
+      this.direct = settings.direct;
+      this.noOpenfaas = settings.noOpenfaas;
+      localStorage.setItem("url", this.url);
+      localStorage.setItem("openfaasUrl", this.openfaasUrl);
+      localStorage.setItem("direct", this.direct);
+      localStorage.setItem("noOpenfaas", this.noOpenfaas);
+      this.update = true;
+      console.log("default openfaasUrl: " + this.openfaasUrl);
+      console.log("default baseUrl: " + this.url);
     },
   },
   created() {
@@ -243,7 +239,6 @@ export default {
       this.noRedges = JSON.parse(localStorage.getItem("noRedges"));
     if (localStorage.getItem("minimizeTests"))
       this.minimizeTests = JSON.parse(localStorage.getItem("minimizeTests"));
-
     if (
       !localStorage.getItem("url") ||
       !localStorage.getItem("openfaasUrl") ||
@@ -261,6 +256,8 @@ export default {
       new mdb.Input(formOutline).init();
     });
     this.configureConnections();
+    console.log("current openfaasUrl: " + this.openfaasUrl);
+    console.log("current baseUrl: " + this.url);
   },
 };
 </script>

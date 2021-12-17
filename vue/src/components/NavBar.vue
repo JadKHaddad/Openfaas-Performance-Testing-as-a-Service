@@ -2,9 +2,7 @@
   <div>
     <header>
       <!-- Navbar -->
-      <nav
-        class="navbar navbar-expand-lg navbar-light bg-white fixed-top"
-      >
+      <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container-fluid">
           <button
             class="navbar-toggler"
@@ -61,7 +59,7 @@
                   data-mdb-target="#Url-Modal"
                   ><i class="fas fa-cog" id="gear"></i>
                   <label id="url" style="font-weight: bold">
-                    {{ openfaasUrl }}
+                  &nbsp;{{ openfaasUrl }}
                   </label></a
                 >
               </li>
@@ -193,6 +191,7 @@
               class="btn btn-danger"
               id="restore-defaults-btn"
               @click="restoreDefault"
+              :disabled="loading"
             >
               Restore defaults
             </button>
@@ -270,8 +269,39 @@ export default {
       this.error = false;
     },
     restoreDefault() {
-      this.$refs.dismissBtn.click();
-      this.$emit("default");
+      this.loading = true;
+      this.error = false;
+      fetch("/defaults", { method: "POST" })
+        .then((data) => data.json())
+        .then((data) => {
+          if (data.openfaas_url) {
+            this.tempNoOpenfaas = false;
+            var newOpenfaasUrl = data.openfaas_url;
+            var newBaseUrl = `${newOpenfaasUrl}/function/ptas`;
+            if (!data.direct) {
+              newBaseUrl = "/proxy";
+            }
+          } else {
+            newOpenfaasUrl = "None";
+            newBaseUrl = "/local";
+            this.tempNoOpenfaas = true;
+          }
+          this.tempDirect = data.direct;
+          this.loading = false;
+          var settings = {
+            baseUrl: newBaseUrl,
+            openfaasUrl: newOpenfaasUrl,
+            direct: this.tempDirect,
+            noOpenfaas: this.tempNoOpenfaas,
+          };
+          this.$refs.dismissBtn.click();
+          this.$emit("default", settings);
+        })
+        .catch(() => {
+          this.$refs.dismissBtn.click();
+          this.loading = false;
+          this.error = true;
+        });
     },
     ok() {
       var onSuccess = (newOpenfaasurl, newBaseUrl) => {
