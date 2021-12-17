@@ -6,6 +6,7 @@
         v-for="script in scripts"
         :key="script"
         :id="script"
+        @click="navigateToScript(script)"
         class="list-group-item list-group-item-action"
       >
         <router-link :to="{ name: 'Script', params: { pid: id, id: script } }">
@@ -41,6 +42,9 @@ export default {
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
+    },
+    navigateToScript(script) {
+      this.$router.push({ name: "Script", params: { pid: this.id, id: script } });
     },
   },
   mounted() {

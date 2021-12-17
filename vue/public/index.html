@@ -72,9 +72,9 @@
     <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
         Please enable it to continue.</strong>
   </noscript>
-<div id="teleported">
+  <div id="teleported">
 
-</div>
+  </div>
 
   <div class="content" id="content">
     <div id="app"></div>
@@ -84,8 +84,11 @@
   <div id="teleported-footer">
 
   </div>
-
-
+  <div id="vue-container" class="animate-bottom-out">
+    <div class="animate-bottom vue-logo">
+      <img src="<%= BASE_URL %>fav/vue.png" alt="Vue Logo">
+    </div>
+  </div>
   <!-- MDB -->
   <script type="text/javascript" src="<%= BASE_URL %>js/mdb.min.js"></script>
 </body>

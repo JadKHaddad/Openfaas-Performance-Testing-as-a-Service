@@ -21,11 +21,13 @@
         Delete
       </button>
     </div>
-    <div class="list-group">
+    <div 
+        class="list-group"  >
       <a
-        v-for="project in projects"
-        :key="project"
+      v-for="project in projects"
+        :key="project" 
         class="list-group-item list-group-item-action"
+        @click="navigateToProject(project)"
       >
         <div class="form-check">
           <input
@@ -34,6 +36,7 @@
             :value="project"
             v-model="markedProjects"
             :id="project"
+            @click.stop="stopTheEvent"
           />
           <router-link :to="{ name: 'Project', params: { id: project } }">
             <label class="test-label">{{ project }}</label>
@@ -214,10 +217,16 @@ export default {
         }
       );
     },
+    navigateToProject(project){
+      this.$router.push({ name: 'Project', params: { id: project } })
+    },
     freeSocket(){
       this.socket.off(this.projectId);
       if (this.socketIntv) clearInterval(this.socketIntv);
-    }
+    },
+    stopTheEvent(event){
+      event.stopPropagation() 
+      }
   },
   computed: {
     enableDelete() {
