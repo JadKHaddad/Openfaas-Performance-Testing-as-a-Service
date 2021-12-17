@@ -6,7 +6,7 @@ Get [multipass.run](https://multipass.run)<br /><br />
 Get **cloud-config-kubernetes.txt**<br />
 
 ```sh
-curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-kubernetes.txt
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/vanillajavascript/cloud-config-kubernetes.txt
 ```
 Replace the public key in **cloud-config-kubernetes.txt** with your own public key<br /><br />
 Boot the VM:

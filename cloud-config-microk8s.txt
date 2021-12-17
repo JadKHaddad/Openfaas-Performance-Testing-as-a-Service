@@ -26,7 +26,7 @@ runcmd:
 - sudo microk8s.enable openfaas
 - curl -sSL https://cli.openfaas.com | sudo -E sh
 
-- sudo git clone -b main --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
+- sudo git clone -b vanillajavascript --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s-runtime.sh
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon-k8s.json /etc/docker/daemon.json

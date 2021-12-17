@@ -6,7 +6,7 @@ Get [multipass.run](https://multipass.run)<br /><br />
 Get **cloud-config-microk8s.txt**<br />
 
 ```sh
-curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-microk8s.txt
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/vanillajavascript/cloud-config-microk8s.txt
 ```
 Replace the public key in **cloud-config-microk8s.txt** with your own public key<br /><br />
 Boot the VM:

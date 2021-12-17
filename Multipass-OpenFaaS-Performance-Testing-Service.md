@@ -6,7 +6,7 @@ Get [multipass.run](https://multipass.run)<br /><br />
 Get **cloud-config.txt**<br />
 
 ```sh
-curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-faasd.txt
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/vanillajavascript/cloud-config-faasd.txt
 ```
 Replace the public key in **cloud-config-faasd.txt** with your own public key<br /><br />
 Boot the VM:

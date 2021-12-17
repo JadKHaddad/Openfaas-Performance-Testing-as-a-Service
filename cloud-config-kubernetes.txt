@@ -28,7 +28,7 @@ runcmd:
 - sudo bash ./kind-with-registry.sh
 - sudo arkade install openfaas
 
-- sudo git clone -b main --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
+- sudo git clone -b vanillajavascript --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-kube-runtime.sh
 - sudo cp /etc/Openfaas-Performance-Testing-as-a-Service/daemon.json /etc/docker/daemon.json

@@ -1,3 +1,5 @@
+# This branch is not supported anymore!
+
 # Performance Testing
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![OpenFaaS](https://img.shields.io/static/v1?label=OpenFaaS&message=Serverless&color=blue)](https://www.openfaas.com/)
@@ -10,7 +12,7 @@ Get [multipass.run](https://multipass.run)<br /><br />
 Get **cloud-config-local.txt**<br />
 
 ```sh
-curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/main/cloud-config-local.txt
+curl -sSLO https://raw.githubusercontent.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service/vanillajavascript/cloud-config-local.txt
 ```
 Replace the public key in **cloud-config-local.txt** with your own public key<br /><br />
 Boot the VM:

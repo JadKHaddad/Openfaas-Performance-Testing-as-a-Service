@@ -16,7 +16,7 @@ runcmd:
 - printf "*    soft nofile 64000\n*    hard nofile 64000\nroot soft nofile 64000\nroot hard nofile 64000" | sudo tee -a /etc/security/limits.conf
 - printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session
 - printf "session required pam_limits.so" | sudo tee -a /etc/pam.d/common-session-noninteractive
-- sudo git clone -b main --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
+- sudo git clone -b vanillajavascript --single-branch https://github.com/JadKHaddad/Openfaas-Performance-Testing-as-a-Service.git /etc/Openfaas-Performance-Testing-as-a-Service --depth 1
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/server/server.py
 - sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/requirements.txt
 - sudo pip3 install -r /etc/Openfaas-Performance-Testing-as-a-Service/ptas/requirements.txt
