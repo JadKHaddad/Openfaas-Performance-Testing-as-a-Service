@@ -46,7 +46,6 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="ModalLabel">Start</h5>
-            
           </div>
           <div class="modal-body">
             <form>
@@ -248,7 +247,7 @@ export default {
             };
             console.log(test);
             this.tests.push(test);
-          }else{
+          } else {
             this.$emit("info", data.message, "red");
           }
         })
@@ -257,9 +256,11 @@ export default {
         });
     },
     startFromModal() {
-      this.host = this.host.replace("http://", "").replace("https://", "");
-      if (this.host != "") {
-        this.host = "http://" + this.host;
+      if (this.host != null) {
+        this.host = this.host.replace("http://", "").replace("https://", "");
+        if (this.host != "") {
+          this.host = "http://" + this.host;
+        }
       }
       // handle false inputs
       if (this.users === "") {

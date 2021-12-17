@@ -158,15 +158,16 @@ export default {
         this.socket.emit("server_stats", { openfaasurl: this.openfaasUrl });
       }, 1000);
       this.socket.on("server_stats", (msg) => {
-        console.log(msg);
+        //console.log(msg);
         if (IsJsonString(msg.data)) {
           const data = JSON.parse(msg.data);
           if (data.success) {
             this.runningTests = data.count;
-          } else {
-            clearInterval(this.socketIntv);
-            this.runningTests = 0;
-          }
+          } 
+          // else {
+          //   clearInterval(this.socketIntv);
+          //   this.runningTests = 0;
+          // }
         }
       });
     },

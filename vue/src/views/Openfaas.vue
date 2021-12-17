@@ -24,7 +24,7 @@ export default {
     fetch("/openfaas", { method: "POST" })
       .then((data) => data.json())
       .then((data) => {
-        console.log(data);
+        //console.log(data);
         this.message = data.message;
         var check = JSON.parse(data.check);
         if (check) {

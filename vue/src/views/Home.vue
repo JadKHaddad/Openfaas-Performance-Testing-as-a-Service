@@ -134,25 +134,27 @@ export default {
         });
     },
     upload() {
-      this.uploading = true;
-      this.loading = true;
+      
+
       const files = this.$refs.files.files;
       if (files.length < 1) {
         this.$emit("info", "Please select a directory to upload", "red");
-        this.loading = false;
         return false;
       }
       var data = new FormData();
       for (var i = 0; i < files.length; i++) {
         data.append("file" + i, files[i]);
       }
+      this.uploading = true;
       fetch(this.url, { method: "POST", body: data })
         .then((data) => data.json())
         .then((data) => {
           this.uploading = false;
+          
           this.$refs.dismissBtn.click();
           console.log(data);
           if (data.success) {
+            this.loading = true;
             this.projectId = data.task_id;
             this.socketIntv = setInterval(() => {
               this.socket.emit("task_stats", {
@@ -187,6 +189,7 @@ export default {
               }
             });
           } else {
+            this.uploading = false;
             this.loading = false;
             this.$emit("info", data.message, "red");
           }
