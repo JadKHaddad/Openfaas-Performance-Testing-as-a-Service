@@ -28,7 +28,7 @@ export default {
         this.message = data.message;
         var check = JSON.parse(data.check);
         if (check) {
-          this.log = true;
+          this.loading = true;
           this.socket.emit("openfaas");
           this.socket.on("openfaas", (msg) => {
             console.log(msg)

@@ -277,6 +277,9 @@ export default {
           if (data.openfaas_url) {
             this.tempNoOpenfaas = false;
             var newOpenfaasUrl = data.openfaas_url;
+            if (newOpenfaasUrl.slice(-1) == "/") {
+              newOpenfaasUrl = newOpenfaasUrl.slice(0, -1);
+            }
             var newBaseUrl = `${newOpenfaasUrl}/function/ptas`;
             if (!data.direct) {
               newBaseUrl = "/proxy";
