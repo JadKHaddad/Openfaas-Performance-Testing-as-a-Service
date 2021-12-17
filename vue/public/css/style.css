@@ -1,0 +1,278 @@
+html, body {
+    height: 100%;
+    scroll-behavior: smooth;
+  }
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+  
+.content {
+  flex: 1 0 auto;
+  padding-top: 70px;
+  padding-bottom: 50px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.footer {
+  flex-shrink: 0;
+}
+
+
+
+.test-container{
+  margin-top: 40px;
+  border-top:1px solid rgba(0,0,0,.125);
+}
+
+.card{
+  margin-top:10px;
+  margin-bottom:40px;
+  min-width: 1500px;
+}
+
+.license{
+  max-width: 500px !important;
+}
+
+.list-group{
+  margin-top:20px;
+  margin-bottom:10px;
+}
+
+.row {
+  --mdb-gutter-x: 3rem;
+  align-items: center;
+}
+
+.info-message-container{
+  align-items: center;
+}
+
+.buttons{
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.hidden{
+  display:none;
+}
+
+.red{
+  color:#F44336;
+}
+
+.green{
+  color:#4CAF50;
+}
+
+.btn-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.btn-container button{
+  margin-left:5px;
+  margin-right:5px;
+}
+
+.img-container{
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.img-container img{
+  max-width: 500px;
+}
+
+a {
+  color: rgba(0,0,0,.55);
+}
+
+.dark a :hover{
+  color: white !important;
+}
+
+a :hover{
+  color: #4f4f4f;
+}
+
+h3 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.control-btn-container{
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20px;
+  width: 200px;
+}
+
+.path{
+  margin-left: 20px;
+  font-weight: bold;
+}
+
+.path i{
+  color: rgb(182, 182, 182) !important;
+}
+
+.egg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+#server-stats{
+  position:fixed;
+  z-index: 1031;
+  right:20px;
+  top  :15px;
+}
+
+#url:hover{
+  cursor: pointer;
+}
+
+.stop-install-project:hover{
+  color:#F44336;
+  font-size: x-large;
+}
+
+.projects{
+  margin-top: 30px;
+}
+
+.nr *:not(.spinner){
+  border-radius:0rem !important;
+}
+
+.dark .navbar{
+  background-color: #262626 !important;
+}
+
+.dark .nav-item * {
+  color: #757575 !important;
+}
+
+.dark .nav-item :hover{
+  color: white !important;
+}
+
+.dark #server-stats{
+  color: white !important;
+}
+
+.background-dark{
+  position:fixed;
+  padding:0;
+  margin:0;
+
+  top:0;
+  left:0;
+
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: #303030 !important;
+}
+
+.dark .footer  *{
+  background-color: #262626 !important;
+}
+
+.dark .modal-content{
+  background-color: #262626 !important;
+}
+
+.dark .form-outline .form-control:disabled{
+  background-color: #303030 !important;
+}
+
+.dark .form-label, .dark .modal-title, .dark .modal-content, .dark .navbar .navbar-toggler, .dark .card *:not(.spinner), .dark a, .dark h3, .dark h1, .dark h4{
+  color: hsla(0,0%,100%,.7) !important;
+}
+
+.dark .modal-header{
+  border-bottom: 0px !important;
+}
+
+.dark .modal-footer{
+  border-top: 0px !important;
+}
+
+.dark .card, .dark .list-group-item{
+  background-color: #424242 !important;
+  border: none !important;
+}
+
+.dark .list-group :hover{
+  background-color: #333333 !important;
+  transition: .5s !important;
+}
+
+.form-check-input[type=checkbox]{
+  background-color: inherit;
+}
+
+.form-check-input[type=checkbox]:checked:focus {
+  background-color: #1266f1 !important;
+}
+
+#vue-container{
+  position:fixed;
+  z-index: 1031;
+  right:20px;
+  bottom:15px;
+  animation-delay: 3s;
+}
+
+.vue-logo img{
+  width: 30px;
+}
+
+.animate-bottom{
+  position:relative;
+  animation:animatebottom 1s
+}
+
+@keyframes animatebottom{
+  from{
+    bottom:-300px;
+    opacity:0
+  } 
+  to{
+    bottom:0;
+    opacity:1
+  }
+}
+
+.animate-bottom-out{
+  animation-name: animatebottomout;
+  animation-duration: 1500ms;
+  animation-fill-mode: forwards;
+}
+
+@keyframes animatebottomout{
+  from{
+    opacity: 1;
+  }
+  to{
+    display: none;
+    opacity: 0;
+    bottom:-300px;
+  }
+}
+
+
+

@@ -2,7 +2,8 @@
 
 import platform
 import subprocess
-from flask import Flask, render_template, request, Response, jsonify
+import datetime
+from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from waitress import serve
 import requests
@@ -40,7 +41,9 @@ DIRECT = None
 
 thread = None
 
-app = Flask(__name__)
+dist_dir = os.path.abspath('./dist/')
+
+app = Flask(__name__, template_folder=dist_dir, static_url_path='')
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 # static functions
@@ -99,87 +102,68 @@ def check_openfaas_thread():
             break
         socketio.sleep(3)
     thread = None
-    
+
+#definining all this junk because we want to build our frontend and use it out of the box. just build it and paste it in dist folder    
+#for vue    
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory(f'{dist_dir}/js', path)
+
+#for vue
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory(f'{dist_dir}/css', path)
+
+#for errors
+@app.route('/favicon.png')
+def send_favs():
+    return send_from_directory(f'{dist_dir}/fav', 'favicon.png')
+
+#for vue
+@app.route('/fav/<path:path>')
+def send_fav(path):
+    return send_from_directory(f'{dist_dir}/fav', path)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('index.html'), 404
+
 # app routes    
 @app.route('/')
 def index():
-    return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
-@app.route('/task/<task_id>')
-def task(task_id):
-    url = extract_url(request.cookies.get('openfaasurl'))
-    if url == 'None':
-        data = {'command':2,'task_id': task_id}
-        def task_stream():
-            while True:
-                response = handler.handle(json.dumps(data), True)
-                yield f'data: {response}\n\n'
-                gevent.sleep(1)
-        return Response(task_stream(), mimetype="text/event-stream")
-    else:
-        data = {'command':2,'task_id': task_id}
-        def task_stream():
-            while True:
-                response = requests.post(url, data=json.dumps(data))
-                yield f'data: {response.text}\n\n'
-                gevent.sleep(1)
-        return Response(task_stream(), mimetype="text/event-stream")
+    return render_template('index.html')
+    #return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/project/<name>')
 def project(name):
-    return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
 
 @app.route('/project/<project_name>/<script_name>')
 def script(project_name, script_name):
-    return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
-
-@app.route('/stream/<project_name>/<script_name>/<id>')
-def stream(project_name,script_name,id):
-    url = extract_url(request.cookies.get('openfaasurl'))
-    if url == 'None':
-        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
-        def stats_stream():
-            while True:
-                response = handler.handle(json.dumps(data), True)
-                yield f'data: {response}\n\n'
-                gevent.sleep(1)
-        return Response(stats_stream(), mimetype="text/event-stream")
-    else:
-        data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
-        def stats_stream():
-            while True:
-                response = requests.post(url, data=json.dumps(data))
-                yield f'data: {response.text}\n\n'
-                gevent.sleep(1)
-        return Response(stats_stream(), mimetype="text/event-stream")
-
-@app.route('/openfaas_stream')
-def openfaas_stream():
-    def stream():
-        while True:
-            installed, check, message = check_openfaas()
-            if installed:
-                return f'data: {json.dumps({"installed": installed})}\n\n'
-            yield f'data: {json.dumps({"installed": installed})}\n\n'
-            gevent.sleep(1)
-    return Response(stream(), mimetype="text/event-stream")
+    return render_template('index.html')
+    #return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
 
 @app.route('/license')
 def license():
-    return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/control')
 def control():
-    return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/openfaas')
 def openfaas_stats():
-    installed, check, message = check_openfaas()
-    return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
+    return render_template('index.html')
+    #installed, check, message = check_openfaas()
+    #return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
 
 @app.route('/egg')
 def egg():
-    return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
+    return render_template('index.html')
+    #return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
@@ -192,9 +176,8 @@ def proxy():
             url = PROXYFUNCTIONURL
     else:
         if not ALLOWPROXY:
-            return jsonify(success=False, message="Check your cookies"), 404
+            return jsonify(success=False)
         url = PROXYFUNCTIONURL
-
     if 'file0' in request.files:
         ran = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 10)))    
         path = f'temp/{ran}'
@@ -235,15 +218,38 @@ def check_connection():
     url = json.loads(request.data)['url']
     url = url[:-1] if url[-1] == '/' else url
     try:
-        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)   
-        return Response(
+        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)  
+        response = Response(
             response=res.content,
             status=res.status_code,
             headers=dict(res.headers)
         )
-    except:
-        return jsonify(success=False)
 
+        expire_date = datetime.datetime.now()
+        expire_date = expire_date + datetime.timedelta(days=90)
+        response.set_cookie('openfaasurl', url, expires=expire_date)
+        return response 
+    except:
+        response = jsonify(success=False)
+        return response
+
+@app.route('/defaults', methods=['POST'])
+def defaults():
+    response = jsonify(openfaas_url=OPENFAASULR, direct=DIRECT)
+    url = OPENFAASULR
+    if url is None:
+        url = 'None'
+
+    expire_date = datetime.datetime.now()
+    expire_date = expire_date + datetime.timedelta(days=90)
+    response.set_cookie('openfaasurl', url, expires=expire_date)
+    return response 
+
+@app.route('/openfaas', methods=['POST'])
+def openfaas_info():
+    installed, check, message = check_openfaas()
+    return jsonify(installed=installed, check=check, message=message)
+    
 # socket
 @socketio.on('stats')
 def stats(message):
@@ -251,52 +257,53 @@ def stats(message):
     script_name = message.get('script_name')
     id = message.get('id')
     if project_name is None or script_name is None or id is None:
-        emit(id, {'data': None},broadcast=False)
+        emit(id, {'data': None}, broadcast=False)
         return 
-    url = extract_url(request.cookies.get('openfaasurl'))
+    url = extract_url(message.get('openfaasurl'))
     if url == 'None':
         data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id, 'local':True}
         response = handler.handle(json.dumps(data), True)
-        emit(id, {'data': response},broadcast=False)
+        emit(id, {'data': response}, broadcast=False)
         return
     else:
         data = {'command':6,'project_name':project_name, 'script_name':script_name, 'id': id}
         response = requests.post(url, data=json.dumps(data))
-        emit(id, {'data': response.text},broadcast=False)
+        emit(id, {'data': response.text}, broadcast=False)
         return
     
 @socketio.on('task_stats')
 def task_stats(message):
     project_name = message.get('project_name')
     if project_name is None:
-        emit(project_name, {'data': None},broadcast=False)
+        emit(project_name, {'data': None}, broadcast=False)
         return 
-    url = extract_url(request.cookies.get('openfaasurl'))
+    url = extract_url(message.get('openfaasurl'))
     data = {'command':2,'task_id': project_name}
     if url == 'None':
         response = handler.handle(json.dumps(data), True)
-        emit(project_name, {'data': response},broadcast=False)
+        emit(project_name, {'data': response}, broadcast=False)
         return
     else:
         response = requests.post(url, data=json.dumps(data))
-        emit(project_name, {'data': response.text},broadcast=False)
+        emit(project_name, {'data': response.text}, broadcast=False)
         return
 
 @socketio.on('server_stats')
-def server_stats():
-    url = extract_url(request.cookies.get('openfaasurl'))
+def server_stats(message):
+    url = extract_url(message.get('openfaasurl'))
+    #print("getting from: " + url)
     if url == 'None':
         data = {'command':14, 'local':True}
         response = handler.handle(json.dumps(data), True)
-        socketio.emit('server_stats', {'data': response},broadcast=False)
+        socketio.emit('server_stats', {'data': response} , broadcast=False)
         return 
     else:    
         data = {'command':14}
         try:
             response = requests.post(url, data=json.dumps(data), timeout=2)
-            socketio.emit('server_stats', {'data': response.text},broadcast=False)
+            socketio.emit('server_stats', {'data': response.text}, broadcast=False)
         except:
-            socketio.emit('server_stats', {'data': {'stop':True}},broadcast=False)
+            socketio.emit('server_stats', {'data': {'stop':True}}, broadcast=False)
         finally:
             return
        
@@ -314,7 +321,7 @@ def disconnect():
 def openfass_socket():
     global thread
     installed, check, message = check_openfaas()
-    socketio.emit('openfaas', {'data': installed},broadcast=False)
+    socketio.emit('openfaas', {'data': installed}, broadcast=False)
     if thread is None:
         thread = Thread(target=check_openfaas_thread)
         thread.start()
