@@ -96,7 +96,7 @@ a {
 }
 
 .dark a :hover{
-  color: white;
+  color: white !important;
 }
 
 a :hover{
@@ -221,6 +221,13 @@ h3 {
   transition: .5s !important;
 }
 
+.form-check-input[type=checkbox]{
+  background-color: inherit;
+}
+
+.form-check-input[type=checkbox]:checked:focus {
+  background-color: #1266f1 !important;
+}
 
 #vue-container{
   position:fixed;

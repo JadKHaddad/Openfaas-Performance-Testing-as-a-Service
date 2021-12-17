@@ -9,34 +9,4 @@
         return false;
       }
       return true;
-    }
-    function setCookie(name, value, daysToLive) {
-      // Encode value in order to escape semicolons, commas, and whitespace
-      var cookie = name + "=" + encodeURIComponent(value);
-
-      if (typeof daysToLive === "number") {
-        /* Sets the max-age attribute so that the cookie expires
-        after the specified number of days */
-        cookie += "; max-age=" + (daysToLive * 24 * 60 * 60) + ";path=/";
-
-        document.cookie = cookie;
-      }
-    }
-    function getCookie(name) {
-      // Split cookie string and get all individual name=value pairs in an array
-      var cookieArr = document.cookie.split(";");
-
-      // Loop through the array elements
-      for (var i = 0; i < cookieArr.length; i++) {
-        var cookiePair = cookieArr[i].split("=");
-
-        /* Removing whitespace at the beginning of the cookie name
-        and compare it with the given string */
-        if (name == cookiePair[0].trim()) {
-          // Decode the cookie value and return
-          return decodeURIComponent(cookiePair[1]);
-        }
-      }
-      // Return null if not found
-      return null;
-    }</script><link href="/js/app.392db0d4.js" rel="preload" as="script"><link href="/js/chunk-vendors.e216b535.js" rel="preload" as="script"></head><body><noscript><strong>We're sorry but frontend doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="teleported"></div><div class="content" id="content"><div id="app"></div></div><div id="teleported-footer"></div><div id="vue-container" class="animate-bottom-out"><div class="animate-bottom vue-logo"><img src="/fav/vue.png" alt="Vue Logo"></div></div><script src="/js/mdb.min.js"></script><script src="/js/chunk-vendors.e216b535.js"></script><script src="/js/app.392db0d4.js"></script></body></html>
+    }</script><link href="/js/app.f457526e.js" rel="preload" as="script"><link href="/js/chunk-vendors.e216b535.js" rel="preload" as="script"></head><body><noscript><strong>We're sorry but frontend doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="teleported"></div><div class="content" id="content"><div id="app"></div></div><div id="teleported-footer"></div><div id="vue-container" class="animate-bottom-out"><div class="animate-bottom vue-logo"><img src="/fav/vue.png" alt="Vue Logo"></div></div><script src="/js/mdb.min.js"></script><script src="/js/chunk-vendors.e216b535.js"></script><script src="/js/app.f457526e.js"></script></body></html>
