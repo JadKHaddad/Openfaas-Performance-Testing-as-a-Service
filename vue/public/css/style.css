@@ -91,6 +91,18 @@ body {
   max-width: 500px;
 }
 
+a {
+  color: rgba(0,0,0,.55);
+}
+
+.dark a :hover{
+  color: white;
+}
+
+a :hover{
+  color: #4f4f4f;
+}
+
 h3 {
   margin-bottom: 20px;
   text-align: center;
@@ -162,7 +174,13 @@ h3 {
 }
 
 .background-dark{
-  position:absolute;
+  position:fixed;
+  padding:0;
+  margin:0;
+
+  top:0;
+  left:0;
+
   width: 100%;
   height: 100%;
   z-index: -1;
@@ -172,5 +190,37 @@ h3 {
 .dark .footer  *{
   background-color: #262626 !important;
 }
+
+.dark .modal-content{
+  background-color: #262626 !important;
+}
+
+.dark .form-outline .form-control:disabled{
+  background-color: #303030 !important;
+}
+
+.dark .form-label, .dark .modal-title, .dark .modal-content, .dark .navbar .navbar-toggler, .dark .card *:not(.spinner), .dark a, .dark h3, .dark h1, .dark h4{
+  color: hsla(0,0%,100%,.7) !important;
+}
+
+.dark .modal-header{
+  border-bottom: 0px !important;
+}
+
+.dark .modal-footer{
+  border-top: 0px !important;
+}
+
+.dark .card, .dark .list-group-item{
+  background-color: #424242 !important;
+  border: none !important;
+}
+
+.dark .list-group :hover{
+  background-color: #333333 !important;
+  transition: .5s !important;
+}
+
+
 
 
