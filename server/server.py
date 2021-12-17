@@ -303,7 +303,7 @@ def server_stats(message):
             response = requests.post(url, data=json.dumps(data), timeout=2)
             socketio.emit('server_stats', {'data': response.text}, broadcast=False)
         except:
-            socketio.emit('server_stats', {'data': {'stop':True}}, broadcast=False)
+            socketio.emit('server_stats', {'data': {'success': False, 'stop':True}}, broadcast=False)
         finally:
             return
        

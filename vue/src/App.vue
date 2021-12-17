@@ -158,13 +158,15 @@ export default {
         this.socket.emit("server_stats", { openfaasurl: this.openfaasUrl });
       }, 1000);
       this.socket.on("server_stats", (msg) => {
-        // console.log(msg);
-        const data = JSON.parse(msg.data);
-        if (data.success) {
-          this.runningTests = data.count;
-        } else {
-          clearInterval(this.socketIntv);
-          this.runningTests = 0;
+        console.log(msg);
+        if (IsJsonString(msg.data)) {
+          const data = JSON.parse(msg.data);
+          if (data.success) {
+            this.runningTests = data.count;
+          } else {
+            clearInterval(this.socketIntv);
+            this.runningTests = 0;
+          }
         }
       });
     },
@@ -212,6 +214,7 @@ export default {
       this.update = false;
     },
     setDefaults(settings) {
+      console.log(settings);
       this.url = settings.baseUrl;
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
@@ -244,7 +247,36 @@ export default {
       !localStorage.getItem("openfaasUrl") ||
       !localStorage.getItem("direct")
     ) {
-      this.setDefaults();
+      fetch("/defaults", { method: "POST" })
+        .then((data) => data.json())
+        .then((data) => {
+          if (data.openfaas_url) {
+            this.tempNoOpenfaas = false;
+            var newOpenfaasUrl = data.openfaas_url;
+            if (newOpenfaasUrl.slice(-1) == "/") {
+              newOpenfaasUrl = newOpenfaasUrl.slice(0, -1);
+            }
+            var newBaseUrl = `${newOpenfaasUrl}/function/ptas`;
+            if (!data.direct) {
+              newBaseUrl = "/proxy";
+            }
+          } else {
+            newOpenfaasUrl = "None";
+            newBaseUrl = "/local";
+            this.tempNoOpenfaas = true;
+          }
+          this.tempDirect = data.direct;
+          this.loading = false;
+          var settings = {
+            baseUrl: newBaseUrl,
+            openfaasUrl: newOpenfaasUrl,
+            direct: this.tempDirect,
+            noOpenfaas: this.tempNoOpenfaas,
+          };
+          this.$refs.dismissBtn.click();
+          this.setDefaults(settings);
+        })
+        .catch(() => {});
     }
   },
   // updated(){
