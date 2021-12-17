@@ -44,7 +44,10 @@ export default {
         });
     },
     navigateToScript(script) {
-      this.$router.push({ name: "Script", params: { pid: this.id, id: script } });
+      this.$router.push({
+        name: "Script",
+        params: { pid: this.id, id: script },
+      });
     },
   },
   mounted() {

@@ -112,7 +112,7 @@
       <Footer
         :class="{
           dark: darkTheme,
-          'bg-light': !darkTheme
+          'bg-light': !darkTheme,
         }"
       />
     </teleport>

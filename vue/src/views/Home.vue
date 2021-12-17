@@ -21,11 +21,10 @@
         Delete
       </button>
     </div>
-    <div 
-        class="list-group"  >
+    <div class="list-group">
       <a
-      v-for="project in projects"
-        :key="project" 
+        v-for="project in projects"
+        :key="project"
         class="list-group-item list-group-item-action"
         @click="navigateToProject(project)"
       >
@@ -82,7 +81,13 @@
                 Add
               </button>
             </form>
-            <button type="button" class="btn btn-primary hidden" data-mdb-dismiss="modal" id="dismiss-btn" ref="dismissBtn"></button>
+            <button
+              type="button"
+              class="btn btn-primary hidden"
+              data-mdb-dismiss="modal"
+              id="dismiss-btn"
+              ref="dismissBtn"
+            ></button>
           </div>
         </div>
       </div>
@@ -129,7 +134,7 @@ export default {
         });
     },
     upload() {
-      this.uploading = true
+      this.uploading = true;
       this.loading = true;
       const files = this.$refs.files.files;
       if (files.length < 1) {
@@ -217,16 +222,16 @@ export default {
         }
       );
     },
-    navigateToProject(project){
-      this.$router.push({ name: 'Project', params: { id: project } })
+    navigateToProject(project) {
+      this.$router.push({ name: "Project", params: { id: project } });
     },
-    freeSocket(){
+    freeSocket() {
       this.socket.off(this.projectId);
       if (this.socketIntv) clearInterval(this.socketIntv);
     },
-    stopTheEvent(event){
-      event.stopPropagation() 
-      }
+    stopTheEvent(event) {
+      event.stopPropagation();
+    },
   },
   computed: {
     enableDelete() {

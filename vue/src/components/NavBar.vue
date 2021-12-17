@@ -59,7 +59,7 @@
                   data-mdb-target="#Url-Modal"
                   ><i class="fas fa-cog" id="gear"></i>
                   <label id="url" style="font-weight: bold">
-                  &nbsp;{{ openfaasUrl }}
+                    &nbsp;{{ openfaasUrl }}
                   </label></a
                 >
               </li>
