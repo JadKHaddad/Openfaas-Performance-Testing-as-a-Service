@@ -16,7 +16,7 @@ export default {
   props: ["socket"],
   data() {
     return {
-      message: "hi",
+      message: "",
       loading: false,
     };
   },
