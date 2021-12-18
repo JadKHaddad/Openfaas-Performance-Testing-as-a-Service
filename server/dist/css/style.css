@@ -199,8 +199,15 @@ h3 {
   background-color: #303030 !important;
 }
 
-.dark .form-label, .dark .modal-title, .dark .modal-content, .dark .navbar .navbar-toggler, .dark .card *:not(.spinner), .dark a, .dark h3, .dark h1, .dark h4{
+.dark .form-label, .dark .modal-title, .dark .modal-content, .dark .navbar .navbar-toggler,  .dark a, .dark h3, .dark h1, .dark h4{
   color: hsla(0,0%,100%,.7) !important;
+}
+.dark .card *:not(.spinner){
+  color: hsla(0,0%,100%,.7);
+}
+
+.dark .green *{
+  color:#4CAF50 !important;
 }
 
 .dark .modal-header{
