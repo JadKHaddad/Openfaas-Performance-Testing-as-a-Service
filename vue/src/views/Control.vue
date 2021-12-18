@@ -69,7 +69,7 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
-            this.tests = data.tests;
+            this.tests = data.tests.reverse();
           }
         })
         .catch(() => {

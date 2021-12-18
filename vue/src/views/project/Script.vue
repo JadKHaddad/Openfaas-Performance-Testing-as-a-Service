@@ -173,7 +173,7 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
-            this.tests = data.tests;
+            this.tests = data.tests.reverse();
             console.log(this.tests[0]);
           }
         })
@@ -246,7 +246,8 @@ export default {
               data: JSON.stringify([]),
             };
             console.log(test);
-            this.tests.push(test);
+            this.tests = prependArray(test, this.tests)
+            //this.tests.push(test);
           } else {
             this.$emit("info", data.message, "red");
           }

@@ -33,6 +33,15 @@
       }
       return true;
     }
+    function prependArray(value, oldArray) {
+      var newArray = new Array(value);
+
+      for (var i = 0; i < oldArray.length; ++i) {
+        newArray.push(oldArray[i]);
+      }
+
+      return newArray;
+    }
   </script>
 </head>
 
