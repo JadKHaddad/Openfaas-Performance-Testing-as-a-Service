@@ -239,7 +239,8 @@ export default {
       return !this.running && !this.valid;
     },
     renderData() {
-      return this.data.length > 0;
+      if (this.data != null) return this.data.length > 0;
+      else return false
     },
     showResultsComp() {
       return this.enoughData && !this.running && !this.loadingImages;

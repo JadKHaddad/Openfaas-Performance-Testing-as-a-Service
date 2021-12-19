@@ -357,7 +357,7 @@ def handle(req, no_request=False):
                         command = worker_command + master_command
                     else:
                         command = f'cd .\{projects_dir}\{project_name} && ..\..\env\{project_name}\Scripts\locust.exe -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
-                    tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                    tasks[task_id] = subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
     
                 else: # linux
                     if workers_count > 0:
@@ -571,9 +571,6 @@ def handle(req, no_request=False):
                     return json.dumps({'success':True,'exit_code':0,'tests':running_tests,'message':'running tests'})
                 return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
 
-                
-                
-
         if command == 14: # get count of running tests
             local = data.get('local') or None
             with LOCK2:
@@ -625,6 +622,46 @@ def handle(req, no_request=False):
                 if Path(script_path).exists():
                     shutil.rmtree(script_path)
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
+
+        if command == 17: # get all running tests of a script
+            project_name = data.get("project_name") or None
+            script_name = data.get("script_name") or None
+            ids = data.get("ids") or None
+            
+            local = data.get('local') or None
+            if project_name is None or script_name is None:
+                if local is not None:
+                    return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
+            if ids is None:
+                ids = []
+            tests = []
+            with LOCK2:
+                for id in ids:    
+                    task_id = create_task_id(project_name, script_name, id)
+                    if task_id in tasks:
+                        test_dir = get_test_dir(project_name, script_name, id)
+                        csv_file_path = f'{test_dir}/results_stats.csv'
+                        if tasks[task_id].poll() is not None: # process finished
+                            if not Path(csv_file_path).exists(): # test is not valid
+                                del tasks[task_id]
+                                tests.append({'id':id, 'status':4, 'message':'test is not valid'})
+                                continue
+                            del tasks[task_id]
+                        if not Path(csv_file_path).exists():
+                            tests.append({'id':id, 'status':3, 'message':'csv file does not exist'})
+                            continue
+                        j = None
+                        if not os.stat(csv_file_path).st_size == 0:
+                            pd_data = pd.read_csv(csv_file_path) 
+                            j = pd_data.to_json(orient='records')
+                        tests.append({'id':id, 'status':1, 'data':j,'message':'test running'}) # status 1 -> test is running
+                        continue
+                    tests.append({'id':id, 'status':0, 'data':None,'message':'test is not runnig'}) # status 0 -> test not running
+
+            if local is not None:
+                return json.dumps({'success':True,'tests':tests})
+            return jsonify(success=True,tests=tests), headers 
 
         if command == 911: # kill all running tasks -> sync
             with LOCK:

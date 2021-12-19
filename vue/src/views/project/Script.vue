@@ -155,13 +155,20 @@ export default {
     };
   },
   methods: {
-    register(){
+    register(test_ids){
       this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id)
-      this.socket.emit("register_script", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id})
+      this.socket.emit("register_script", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_ids: test_ids})
       this.socket.on(this.openfaasUrl + "_" + this.pid + "_" + this.id, (msg) => {
         console.log(msg)
       })
       console.log("script registered")
+    },
+    registerTest(test_id){
+      this.socket.emit("register_test", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_id: test_id})
+    },
+    disconnectTest(test_id){
+      console.log("disconnecting")
+      this.socket.emit("disconnect_test", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_id: test_id})
     },
     init() {
       //get host
@@ -182,13 +189,22 @@ export default {
         .then((data) => {
           if (data.success) {
             this.tests = data.tests.reverse();
-            console.log(this.tests[0]);
+
+            var test_ids = []
+            for(var i = 0; i< this.tests.length; i++){
+              if (this.tests[i].status === 1){
+                test_ids.push(this.tests[0].id)
+              }
+            }
+            this.register(test_ids)
+            //console.log(this.tests);
           }
         })
-        .catch(() => {
+        .catch((e) => {
+          console.log(e)
           this.$emit("info", "Could not connect to server", "red");
         });
-      this.register();
+      //this.register();
     },
     deleteAll() {
       this.$root.setUpConfirmation(
@@ -257,6 +273,7 @@ export default {
             console.log(test);
             this.tests = prependArray(test, this.tests)
             //this.tests.push(test);
+          this.registerTest(id)
           } else {
             this.$emit("info", data.message, "red");
           }

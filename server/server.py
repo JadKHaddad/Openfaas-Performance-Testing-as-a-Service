@@ -311,9 +311,9 @@ def T_TASK():
         for key, client in current_connected_clients.items():
             url = client['url']
             events = client['events']
-            for event in events:
+            for event, params in events.items():
                 #control
-                if event['name'] == 'control':
+                if event == 'control':
                     if url + '_control' not in sent:
                         if url == 'None':
                             data = {'command':13, 'local':True}
@@ -331,29 +331,32 @@ def T_TASK():
                                 socketio.emit(url + '_control', {'success': False})
                         print('sent to: ', url + '_control')
                         sent[url + '_control'] = None
+                    continue
                 #script
-                if event['name'] == 'script':
-                    project_name = event['params']['project_name']
-                    script_name = event['params']['script_name']
-                    if url + '_' + project_name + '_' + script_name not in sent:
-                        if url == 'None':
-                            #todo
-                            data = {'command':13, 'local':True}
-                            response = handler.handle(json.dumps(data), True)
-                            socketio.emit(url + '_' + project_name + '_' + script_name, response)
-                        else:
-                            data = {'command':13}
-                            post_url = unquote(url)
-                            post_url = urljoin(post_url, 'function/')
-                            post_url = urljoin(post_url, FUNCTION)
-                            try:
-                                #todo
-                                response = requests.post(post_url, data=json.dumps(data), timeout=2)
-                                socketio.emit(url + '_' + project_name + '_' + script_name, response.text)
-                            except:
-                                socketio.emit(url + '_' + project_name + '_' + script_name, {'success': False})
-                        print('sent to: ', url + '_' + project_name + '_' + script_name)
-                        sent[url + '_' + project_name + '_' + script_name] = None
+                if event == 'script':
+                    for key, value in params.items():
+                        project_name = value['project_name']
+                        script_name = value['script_name']
+                        ids = value['test_ids']
+                        
+                        if url + '_' + project_name + '_' + script_name not in sent:
+                            if url == 'None':
+                                data = {'command':17, 'project_name':project_name, 'script_name':script_name, 'ids': ids,'local':True}
+                                response = handler.handle(json.dumps(data), True)
+                                socketio.emit(url + '_' + project_name + '_' + script_name, response)
+                            else:
+                                data = {'command':17, 'project_name':project_name, 'script_name':script_name, 'ids': ids}
+                                post_url = unquote(url)
+                                post_url = urljoin(post_url, 'function/')
+                                post_url = urljoin(post_url, FUNCTION)
+                                try:
+                                    response = requests.post(post_url, data=json.dumps(data), timeout=2)
+                                    socketio.emit(url + '_' + project_name + '_' + script_name, response.text)
+                                except:
+                                    socketio.emit(url + '_' + project_name + '_' + script_name, {'success': False})
+                            print('sent to: ', url + '_' + project_name + '_' + script_name)
+                            sent[url + '_' + project_name + '_' + script_name] = None
+                    continue
                 #openfaas
                 if event['name'] == 'openfaas':
                     pass
@@ -385,11 +388,10 @@ def register(message):
     if url is None:
         url = 'None',
     with T_LOCK:
-        if client in CONNECTED_CLIENTS:
-            events = CONNECTED_CLIENTS[client]['events']
-            CONNECTED_CLIENTS[client] = {'url':url, 'events':events}
+        if client in CONNECTED_CLIENTS: #just update the url bro! o_O
+            CONNECTED_CLIENTS[client]['url'] = url
         else:    
-            CONNECTED_CLIENTS[client] = {'url':url, 'events':[]}
+            CONNECTED_CLIENTS[client] = {'url':url, 'events':{}}
     print('\nT Client registered: ', client)
     print('T OpenFaas Url: ', url)
     print('T Current connected clients: ', CONNECTED_CLIENTS)
@@ -406,7 +408,7 @@ def register_control(message):
     if url is None:
         url = 'None',
     with T_LOCK:
-        CONNECTED_CLIENTS[client]['events'].append({'name':'control'})
+        CONNECTED_CLIENTS[client]['events']['control'] = None
     print('\nClient registered control: ', client)
     print('OpenFaas Url: ', url)
     print('Current connected clients: ', CONNECTED_CLIENTS)
@@ -417,7 +419,7 @@ def disconnect_control():
     client = request.sid
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-           CONNECTED_CLIENTS[client]['events'].remove({'name':'control'})
+           del CONNECTED_CLIENTS[client]['events']['control']
     print('\nClient unsunscribed control', client)
     print('Current connected clients: ', CONNECTED_CLIENTS)
 
@@ -427,10 +429,13 @@ def register_script(message):
     url = message.get('openfaasurl')
     project_name = message.get('project_name')
     script_name = message.get('script_name')
+    test_ids = message.get('test_ids')
+    if test_ids is None:
+        test_ids = []
     if url is None:
         url = 'None',
     with T_LOCK:
-        CONNECTED_CLIENTS[client]['events'].append({'name':'script','params':{'project_name':project_name, 'script_name':script_name}})
+        CONNECTED_CLIENTS[client]['events']['script'] = {project_name + '_' + script_name: {'project_name':project_name, 'script_name':script_name,'test_ids':test_ids}}
     print('\nClient registered script: ', client)
     print('OpenFaas Url: ', url)
     print('Current connected clients: ', CONNECTED_CLIENTS)
@@ -442,9 +447,37 @@ def disconnect_script(message):
     script_name = message.get('script_name')
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-           CONNECTED_CLIENTS[client]['events'].remove({'name':'script','params':{'project_name':project_name, 'script_name':script_name}})
+           del CONNECTED_CLIENTS[client]['events']['script']
     print('\nClient unsunscribed script', client)
     print('Current connected clients: ', CONNECTED_CLIENTS)
+
+@socketio.on('register_test')
+def register_test(message):
+    client = request.sid
+    url = message.get('openfaasurl')
+    project_name = message.get('project_name')
+    script_name = message.get('script_name')
+    test_id = message.get('test_id')
+    if url is None:
+        url = 'None',
+    with T_LOCK:
+        CONNECTED_CLIENTS[client]['events']['script'][project_name + '_' + script_name]['test_ids'].append(test_id)
+    print('\nClient registered test: ', client)
+    print('OpenFaas Url: ', url)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
+@socketio.on('disconnect_test')
+def disconnect_script(message):
+    client = request.sid
+    project_name = message.get('project_name')
+    script_name = message.get('script_name')
+    test_id = message.get('test_id')
+    with T_LOCK:
+        if client in CONNECTED_CLIENTS:
+           CONNECTED_CLIENTS[client]['events']['script'][project_name + '_' + script_name]['test_ids'].remove(test_id)
+    print('\nClient unsunscribed test', client)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
 
 @socketio.on('disconnect')
 def disconnect():
