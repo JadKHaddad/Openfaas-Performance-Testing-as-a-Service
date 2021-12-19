@@ -51,6 +51,7 @@ def create_task_id(project_name, script_name, id):
     return f'TASK_{project_name}_{script_name}_{id}' 
 
 def kill_running_tasks():
+    print("killing all tasks")
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -548,6 +549,7 @@ def handle(req, no_request=False):
                     return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 13: # get all running tests -> sync
+            local = data.get('local') or None
             running_tests = []
             with LOCK2:
                 for p in os.scandir(projects_dir):
@@ -565,7 +567,12 @@ def handle(req, no_request=False):
                                             if task_id in tasks:
                                                 if tasks[task_id].poll() == None: # still running
                                                     running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
+                if local is not None:
+                    return json.dumps({'success':True,'exit_code':0,'tests':running_tests,'message':'running tests'})
                 return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
+
+                
+                
 
         if command == 14: # get count of running tests
             local = data.get('local') or None

@@ -142,7 +142,6 @@ export default {
       url: "/local",
       runningTests: 0,
       socket: null,
-      socketIntv: null,
       infoMessage: "info",
       infoColor: "green",
       infoError: true,
@@ -152,24 +151,28 @@ export default {
     };
   },
   methods: {
+    disconnect(){
+      this.socket.off(this.openfaasUrl)
+      console.log("disconnected from: " + this.openfaasUrl)
+    },
+    register(){
+      this.socket.emit("register", { openfaasurl: this.openfaasUrl })
+      this.socket.on(this.openfaasUrl, (msg) => {
+        console.log(msg)
+        if (IsJsonString(msg)){
+          msg = JSON.parse(msg)
+          if(msg.success) this.runningTests = msg.count;
+        }
+
+      })
+      console.log("connected to: " + this.openfaasUrl)
+    },
     configureConnections() {
       this.socket = io(process.env.VUE_APP_ROOT_API);
-      this.socketIntv = setInterval(() => {
-        this.socket.emit("server_stats", { openfaasurl: this.openfaasUrl });
-      }, 1000);
-      this.socket.on("server_stats", (msg) => {
-        //console.log(msg);
-        if (IsJsonString(msg.data)) {
-          const data = JSON.parse(msg.data);
-          if (data.success) {
-            this.runningTests = data.count;
-          } 
-          // else {
-          //   clearInterval(this.socketIntv);
-          //   this.runningTests = 0;
-          // }
-        }
-      });
+      this.socket.on("connect", () => this.register())
+      console.log("current openfaasUrl: " + this.openfaasUrl);
+      console.log("current baseUrl: " + this.url);
+    
     },
     showInfo(message, color, error) {
       this.infoMessage = message;
@@ -190,6 +193,7 @@ export default {
       $(this.$refs.confirmationModalButton).click();
     },
     updateSettings(settings) {
+      this.disconnect()
       this.url = settings.baseUrl;
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
@@ -207,6 +211,7 @@ export default {
       localStorage.setItem("noRedges", this.noRedges);
       localStorage.setItem("minimizeTests", this.minimizeTests);
       this.update = true;
+      this.register()
       console.log("new openfaasUrl: " + this.openfaasUrl);
       console.log("new baseUrl: " + this.url);
     },
@@ -215,6 +220,7 @@ export default {
       this.update = false;
     },
     setDefaults(settings) {
+      this.disconnect()
       console.log(settings);
       this.url = settings.baseUrl;
       this.openfaasUrl = settings.openfaasUrl;
@@ -225,6 +231,7 @@ export default {
       localStorage.setItem("direct", this.direct);
       localStorage.setItem("noOpenfaas", this.noOpenfaas);
       this.update = true;
+      this.register()
       console.log("default openfaasUrl: " + this.openfaasUrl);
       console.log("default baseUrl: " + this.url);
     },
@@ -289,8 +296,6 @@ export default {
       new mdb.Input(formOutline).init();
     });
     this.configureConnections();
-    console.log("current openfaasUrl: " + this.openfaasUrl);
-    console.log("current baseUrl: " + this.url);
   },
 };
 </script>

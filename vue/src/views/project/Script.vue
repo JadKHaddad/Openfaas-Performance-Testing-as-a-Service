@@ -155,6 +155,14 @@ export default {
     };
   },
   methods: {
+    register(){
+      this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id)
+      this.socket.emit("register_script", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id})
+      this.socket.on(this.openfaasUrl + "_" + this.pid + "_" + this.id, (msg) => {
+        console.log(msg)
+      })
+      console.log("script registered")
+    },
     init() {
       //get host
       this.host = localStorage.getItem("last_host");
@@ -180,6 +188,7 @@ export default {
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
+      this.register();
     },
     deleteAll() {
       this.$root.setUpConfirmation(
@@ -315,6 +324,11 @@ export default {
     deleteTest(test) {
       this.tests = this.tests.filter((t) => t !== test);
     },
+  },
+  beforeUnmount(){
+    this.socket.emit("disconnect_script", {project_name: this.pid, script_name: this.id})
+    this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id)
+    console.log("script disconnected")
   },
   mounted() {
     this.init();

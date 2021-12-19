@@ -8,7 +8,6 @@ from flask_socketio import SocketIO, emit
 from waitress import serve
 import requests
 import json
-import gevent
 import argparse
 from urllib.parse import urljoin, unquote
 import os, sys
@@ -16,7 +15,7 @@ import random
 import string
 import pathlib
 import shutil
-from threading import Thread
+from threading import Thread, Lock
 
 # handler is needed if openfaas is not being used
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -132,39 +131,31 @@ def page_not_found(e):
 @app.route('/')
 def index():
     return render_template('index.html')
-    #return render_template('index.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
+    
 @app.route('/project/<name>')
 def project(name):
     return render_template('index.html')
-    #return render_template('project.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=name, websocket=WEBSOCKET)
-
+    
 @app.route('/project/<project_name>/<script_name>')
 def script(project_name, script_name):
     return render_template('index.html')
-    #return render_template('script.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), project_name=project_name, script_name=script_name, websocket=WEBSOCKET)
-
+    
 @app.route('/license')
 def license():
     return render_template('index.html')
-    #return render_template('license.html', noredges=get_noredges(),openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
+    
 @app.route('/control')
 def control():
     return render_template('index.html')
-    #return render_template('control.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
+    
 @app.route('/openfaas')
 def openfaas_stats():
     return render_template('index.html')
-    #installed, check, message = check_openfaas()
-    #return render_template('openfaas.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET,check=check, message=message)
-
+    
 @app.route('/egg')
 def egg():
     return render_template('index.html')
-    #return render_template('egg.html', noredges=get_noredges(), openfaas_url=OPENFAASULR, function_name=FUNCTION, direct=DIRECT, theme=get_theme(), websocket=WEBSOCKET)
-
+    
 @app.route('/proxy', methods=['POST'])
 def proxy():
     url = request.cookies.get('openfaasurl')
@@ -287,35 +278,11 @@ def task_stats(message):
         response = requests.post(url, data=json.dumps(data))
         emit(project_name, {'data': response.text}, broadcast=False)
         return
-
-@socketio.on('server_stats')
-def server_stats(message):
-    url = extract_url(message.get('openfaasurl'))
-    #print("getting from: " + url)
-    if url == 'None':
-        data = {'command':14, 'local':True}
-        response = handler.handle(json.dumps(data), True)
-        socketio.emit('server_stats', {'data': response} , broadcast=False)
-        return 
-    else:    
-        data = {'command':14}
-        try:
-            response = requests.post(url, data=json.dumps(data), timeout=2)
-            socketio.emit('server_stats', {'data': response.text}, broadcast=False)
-        except:
-            socketio.emit('server_stats', {'data': {'success': False, 'stop':True}}, broadcast=False)
-        finally:
-            return
        
 @socketio.on('connect')
 def connect():
     session_id = request.sid
     print('Client connected', session_id)
-
-@socketio.on('disconnect')
-def disconnect():
-    session_id = request.sid
-    print('Client disconnected', session_id)
 
 @socketio.on('openfaas')
 def openfass_socket():
@@ -325,6 +292,169 @@ def openfass_socket():
     if thread is None:
         thread = Thread(target=check_openfaas_thread)
         thread.start()
+
+
+CONNECTED_CLIENTS = {}
+T = None
+T_LOCK = Lock()
+
+def T_TASK():
+    global T
+    while True:
+        #copy
+        with T_LOCK:
+            current_connected_clients = CONNECTED_CLIENTS
+        if(len(current_connected_clients) < 1): break
+
+        print('T is running')
+        sent = {}
+        for key, client in current_connected_clients.items():
+            url = client['url']
+            events = client['events']
+            for event in events:
+                #control
+                if event['name'] == 'control':
+                    if url + '_control' not in sent:
+                        if url == 'None':
+                            data = {'command':13, 'local':True}
+                            response = handler.handle(json.dumps(data), True)
+                            socketio.emit(url + '_control', response)
+                        else:
+                            data = {'command':13}
+                            post_url = unquote(url)
+                            post_url = urljoin(post_url, 'function/')
+                            post_url = urljoin(post_url, FUNCTION)
+                            try:
+                                response = requests.post(post_url, data=json.dumps(data), timeout=2)
+                                socketio.emit(url + '_control', response.text)
+                            except:
+                                socketio.emit(url + '_control', {'success': False})
+                        print('sent to: ', url + '_control')
+                        sent[url + '_control'] = None
+                #script
+                if event['name'] == 'script':
+                    project_name = event['params']['project_name']
+                    script_name = event['params']['script_name']
+                    if url + '_' + project_name + '_' + script_name not in sent:
+                        if url == 'None':
+                            #todo
+                            data = {'command':13, 'local':True}
+                            response = handler.handle(json.dumps(data), True)
+                            socketio.emit(url + '_' + project_name + '_' + script_name, response)
+                        else:
+                            data = {'command':13}
+                            post_url = unquote(url)
+                            post_url = urljoin(post_url, 'function/')
+                            post_url = urljoin(post_url, FUNCTION)
+                            try:
+                                #todo
+                                response = requests.post(post_url, data=json.dumps(data), timeout=2)
+                                socketio.emit(url + '_' + project_name + '_' + script_name, response.text)
+                            except:
+                                socketio.emit(url + '_' + project_name + '_' + script_name, {'success': False})
+                        print('sent to: ', url + '_' + project_name + '_' + script_name)
+                        sent[url + '_' + project_name + '_' + script_name] = None
+                #openfaas
+                if event['name'] == 'openfaas':
+                    pass
+            if url not in sent:
+                if url == 'None':
+                    data = {'command':14, 'local':True}
+                    response = handler.handle(json.dumps(data), True)
+                    socketio.emit(url, response)
+                else:
+                    data = {'command':14}
+                    post_url = unquote(url)
+                    post_url = urljoin(post_url, 'function/')
+                    post_url = urljoin(post_url, FUNCTION)
+                    try:
+                        response = requests.post(post_url, data=json.dumps(data), timeout=2)
+                        socketio.emit(url, response.text)
+                    except:
+                        socketio.emit(url, {'success': False})
+                print('sent to: ', url)
+                sent[url] = None
+        socketio.sleep(2)
+    print('T has stopped')
+    T = None   
+
+@socketio.on('register')
+def register(message):
+    client = request.sid
+    url = message.get('openfaasurl')
+    if url is None:
+        url = 'None',
+    with T_LOCK:
+        if client in CONNECTED_CLIENTS:
+            events = CONNECTED_CLIENTS[client]['events']
+            CONNECTED_CLIENTS[client] = {'url':url, 'events':events}
+        else:    
+            CONNECTED_CLIENTS[client] = {'url':url, 'events':[]}
+    print('\nT Client registered: ', client)
+    print('T OpenFaas Url: ', url)
+    print('T Current connected clients: ', CONNECTED_CLIENTS)
+    global T
+    if T is None:
+        T = Thread(target=T_TASK)
+        T.daemon = True
+        T.start()
+
+@socketio.on('register_control')
+def register_control(message):
+    client = request.sid
+    url = message.get('openfaasurl')
+    if url is None:
+        url = 'None',
+    with T_LOCK:
+        CONNECTED_CLIENTS[client]['events'].append({'name':'control'})
+    print('\nClient registered control: ', client)
+    print('OpenFaas Url: ', url)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
+
+@socketio.on('disconnect_control')
+def disconnect_control():
+    client = request.sid
+    with T_LOCK:
+        if client in CONNECTED_CLIENTS:
+           CONNECTED_CLIENTS[client]['events'].remove({'name':'control'})
+    print('\nClient unsunscribed control', client)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
+@socketio.on('register_script')
+def register_script(message):
+    client = request.sid
+    url = message.get('openfaasurl')
+    project_name = message.get('project_name')
+    script_name = message.get('script_name')
+    if url is None:
+        url = 'None',
+    with T_LOCK:
+        CONNECTED_CLIENTS[client]['events'].append({'name':'script','params':{'project_name':project_name, 'script_name':script_name}})
+    print('\nClient registered script: ', client)
+    print('OpenFaas Url: ', url)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
+@socketio.on('disconnect_script')
+def disconnect_script(message):
+    client = request.sid
+    project_name = message.get('project_name')
+    script_name = message.get('script_name')
+    with T_LOCK:
+        if client in CONNECTED_CLIENTS:
+           CONNECTED_CLIENTS[client]['events'].remove({'name':'script','params':{'project_name':project_name, 'script_name':script_name}})
+    print('\nClient unsunscribed script', client)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
+@socketio.on('disconnect')
+def disconnect():
+    client = request.sid
+    with T_LOCK:
+        if client in CONNECTED_CLIENTS:
+            del CONNECTED_CLIENTS[client]
+    print('\nClient disconnected', client)
+    print('Current connected clients: ', CONNECTED_CLIENTS)
+
 
 if __name__ == '__main__':
     extern = False

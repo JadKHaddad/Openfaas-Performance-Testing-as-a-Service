@@ -63,6 +63,14 @@ export default {
     };
   },
   methods: {
+    register(){
+      this.socket.off(this.openfaasUrl + "_control")
+      this.socket.emit("register_control", { openfaasurl: this.openfaasUrl })
+      this.socket.on(this.openfaasUrl + "_control", (msg) => {
+        console.log(msg)
+      })
+      console.log("control registered")
+    },
     init() {
       //get running tests
       fetch(this.url, { method: "POST", body: JSON.stringify({ command: 13 }) })
@@ -88,6 +96,7 @@ export default {
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
+      this.register();
     },
     killRunningTasks() {
       this.$root.setUpConfirmation(
@@ -202,6 +211,11 @@ export default {
     deleteProject(project) {
       this.projects = this.projects.filter((p) => p !== project);
     },
+  },
+  beforeUnmount(){
+    this.socket.emit("disconnect_control")
+    this.socket.off(this.openfaasUrl + "_control")
+    console.log("control disconnected")
   },
   mounted() {
     this.init();
