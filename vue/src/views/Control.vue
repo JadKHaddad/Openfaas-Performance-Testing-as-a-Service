@@ -74,14 +74,33 @@ export default {
         if (IsJsonString(msg)) {
           msg = JSON.parse(msg);
           if (msg.success) {
-            for (var key in msg.tests) {
-              //console.log(msg.tests[key]);
-              const id = msg.tests[key].id;
-              if (id in this.tests) {
-                this.tests[id].data = msg.tests[key].data;
-                this.tests[id].valid = msg.tests[key].valid;
-              } else {
-                this.tests[id] = msg.tests[key];
+            if (
+              Object.keys(msg.tests).length >= Object.keys(this.tests).length
+            ) {
+              for (var key in msg.tests) {
+                //console.log(msg.tests[key]);
+                const id = msg.tests[key].id;
+                if (id in this.tests) {
+                  this.tests[id].data = msg.tests[key].data;
+                  this.tests[id].valid = msg.tests[key].valid;
+                } else {
+                  this.tests[id] = msg.tests[key];
+                }
+              }
+            } else {
+              for (var key in this.tests) {
+                if (key in msg.tests) {
+                  //console.log(msg.tests[key]);
+                  const id = msg.tests[key].id;
+                  if (id in this.tests) {
+                    this.tests[id].data = msg.tests[key].data;
+                    this.tests[id].valid = msg.tests[key].valid;
+                  } else {
+                    this.tests[id] = msg.tests[key];
+                  }
+                } else {
+                  this.tests[key].status = 0;
+                }
               }
             }
           }

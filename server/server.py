@@ -175,7 +175,9 @@ def check_connection():
     url = json.loads(request.data)['url']
     url = url[:-1] if url[-1] == '/' else url
     try:
-        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)  
+        res = requests.post(f'{url}/function/{FUNCTION}' , data=json.dumps({'command': 914}).encode('UTF-8'), timeout=3)
+        if(res.status_code >= 400 or res.status_code < 200):
+            return jsonify(success=False)
         response = Response(
             response=res.content,
             status=res.status_code,
@@ -186,9 +188,9 @@ def check_connection():
         expire_date = expire_date + datetime.timedelta(days=90)
         response.set_cookie('openfaasurl', url, expires=expire_date)
         return response 
+        
     except:
-        response = jsonify(success=False)
-        return response
+        return jsonify(success=False)
 
 @app.route('/defaults', methods=['POST'])
 def defaults():
@@ -261,8 +263,6 @@ def T_TASK():
         with T_LOCK:
             current_connected_clients = CONNECTED_CLIENTS.copy()
         if(len(current_connected_clients) < 1): break
-
-        print('T is running')
         sent = {}
         for key, client in current_connected_clients.items():
             url = client['url']
@@ -285,7 +285,7 @@ def T_TASK():
                                 socketio.emit(url + '_control', response.text)
                             except:
                                 socketio.emit(url + '_control', {'success': False})
-                        print('sent to: ', url + '_control')
+                        #print('sent to: ', url + '_control')
                         sent[url + '_control'] = None
                     continue
                 #script
@@ -310,7 +310,7 @@ def T_TASK():
                                         socketio.emit(url + '_' + project_name + '_' + script_name, response.text)
                                     except:
                                         socketio.emit(url + '_' + project_name + '_' + script_name, {'success': False})
-                                print('sent to: ', url + '_' + project_name + '_' + script_name)
+                                #print('sent to: ', url + '_' + project_name + '_' + script_name)
                                 sent[url + '_' + project_name + '_' + script_name] = None
                     continue
             if url not in sent:
@@ -328,7 +328,7 @@ def T_TASK():
                         socketio.emit(url, response.text)
                     except:
                         socketio.emit(url, {'success': False})
-                print('sent to: ', url)
+                #print('sent to: ', url)
                 sent[url] = None
         socketio.sleep(2)
     print('T has stopped')
@@ -353,6 +353,7 @@ def register(message):
         T = Thread(target=T_TASK)
         T.daemon = True
         T.start()
+        print('T started')
 
 @socketio.on('register_control')
 def register_control(message):
