@@ -332,7 +332,8 @@ def T_TASK():
                 sent[url] = None
         socketio.sleep(2)
     print('T has stopped')
-    T = None   
+    with T_LOCK: 
+        T = None   
 
 @socketio.on('register')
 def register(message):
@@ -349,11 +350,12 @@ def register(message):
     #print('T OpenFaas Url: ', url)
     #print('T Current connected clients: ', CONNECTED_CLIENTS)
     global T
-    if T is None:
-        T = socketio.start_background_task(target=T_TASK)#Thread(target=T_TASK)
-        T.daemon = True
-        T.start()
-        print('T started')
+    with T_LOCK: 
+        if T is None:
+            T = socketio.start_background_task(target=T_TASK)#Thread(target=T_TASK)
+            T.daemon = True
+            T.start()
+            print('T started')
 
 @socketio.on('register_control')
 def register_control(message):
