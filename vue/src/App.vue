@@ -142,11 +142,11 @@ export default {
       url: "/local",
       runningTests: 0,
       socket: null,
-      infoMessage: "info",
+      infoMessage: "",
       infoColor: "green",
       infoError: true,
-      infoErrorText: "error",
-      confirmMessage: "confirm",
+      infoErrorText: "",
+      confirmMessage: "",
       confirmButtonText: "confirm",
     };
   },
@@ -280,10 +280,11 @@ export default {
             direct: this.tempDirect,
             noOpenfaas: this.tempNoOpenfaas,
           };
-          this.$refs.dismissBtn.click();
           this.setDefaults(settings);
         })
-        .catch(() => {});
+        .catch((e) => {
+          console.log(e)
+        });
     }
   },
   // updated(){

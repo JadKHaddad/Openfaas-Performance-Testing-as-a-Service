@@ -507,17 +507,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
+    parser.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
+    parser.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
+    parser.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: app will run with WSGIServer instead of waitress')
+    parser.add_argument('-t','--threads', help='waitress threads default 24',metavar='')
     requiredNamed = parser.add_argument_group('required arguments')
     requiredNamed.add_argument('-s', '--host', help='server host',metavar='')
     requiredNamed.add_argument('-p', '--port', help='server port',metavar='')
     requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
-    requiredNamed.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
-    requiredNamed.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
-    requiredNamed.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: app will run with WSGIServer instead of waitress')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
     requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
-    requiredNamed.add_argument('-t','--threads', help='waitress threads default 24',metavar='')
-
+    
     args = parser.parse_args()
 
     host = args.host or '0.0.0.0'
