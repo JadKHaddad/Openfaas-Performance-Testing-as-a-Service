@@ -94,8 +94,9 @@ def get_test_info(project_name, script_name, id):
 
     if not Path(csv_file_path).exists(): # test is not valid
         valid = False
-        if tasks[task_id].poll() == None:
-            valid = True
+        if task_id in tasks:
+            if tasks[task_id].poll() == None:
+                valid = True
         
     if task_id in tasks:
         data = {"id":id, "status":1, "data":j, "info":info,  "valid":valid, "project_name":project_name, "script_name":script_name} # status 1 -> test is running 

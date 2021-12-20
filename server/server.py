@@ -496,7 +496,7 @@ def disconnect():
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
             del CONNECTED_CLIENTS[client]
-    #print('\nClient disconnected', client)
+    print('Client disconnected', client)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
 
 

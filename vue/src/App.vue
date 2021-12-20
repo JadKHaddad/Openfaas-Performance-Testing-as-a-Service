@@ -253,6 +253,7 @@ export default {
       !localStorage.getItem("openfaasUrl") ||
       !localStorage.getItem("direct")
     ) {
+      console.log("no saved data found. restoring defaults..")
       fetch("/defaults", { method: "POST" })
         .then((data) => data.json())
         .then((data) => {
