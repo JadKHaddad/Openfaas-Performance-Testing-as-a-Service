@@ -1,24 +1,16 @@
-import json
+import json, os, shutil, subprocess, signal, platform, traceback, pathlib, socket, atexit
 from flask import jsonify, send_from_directory, request
 from os.path import join
 import time as t
 from pathlib import Path
-import os
-import shutil
 import pandas as pd
-import subprocess
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-import signal
-import platform
-import traceback
-import pathlib
-import socket
 from threading import Thread, Lock
 from time import sleep
-import atexit
+
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
@@ -48,7 +40,7 @@ def get_test_dir(project_name, script_name, id):
     return f'{projects_dir}/{project_name}/locust/{script_name}/{id}'
 
 def create_task_id(project_name, script_name, id):
-    return f'TASK_{project_name}_{script_name}_{id}' 
+    return f'TASK${project_name}${script_name}${id}' 
 
 def kill_running_tasks():
     print("killing all tasks")
@@ -71,6 +63,8 @@ def kill_running_tasks():
 
 def clean_up(): # deletes everything
     kill_running_tasks()
+    if platform.system() == 'Windows': # windows
+        sleep(2)
     if Path(projects_dir).exists():
         for f in os.scandir(projects_dir):
             if f.is_dir():
@@ -101,9 +95,9 @@ def get_test_info(project_name, script_name, id):
     if not Path(csv_file_path).exists(): # test is not valid
         valid = False
     if task_id in tasks:
-        data = {"id":id, "status":1, "data":j, "info":info,  "valid":valid} # status 1 -> test is running 
+        data = {"id":id, "status":1, "data":j, "info":info,  "valid":valid, "project_name":project_name, "script_name":script_name} # status 1 -> test is running 
     else:
-        data = {"id":id, "status":0, "data":j, "info":info, "valid":valid} # status 0 -> test is not running
+        data = {"id":id, "status":0, "data":j, "info":info, "valid":valid, "project_name":project_name, "script_name":script_name} # status 0 -> test is not running
     return data 
 
 def clean_up_cache(project_name, script_name, id): # cleans up cache of a locust test before download
@@ -421,12 +415,12 @@ def handle(req, no_request=False):
                     return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
                 return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
 
-        if command == 7: # get tests -> sync
+        if command == 7: # get all tests of a script-> sync
             project_name = data.get("project_name") or None
             script_name = data.get("script_name") or None
             if project_name is None or script_name is None :
                 return jsonify(success=False,exit_code=1,message="bad request"), headers
-            tests_folders = []
+            tests_folders = {}
             scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
 
             with LOCK2:
@@ -434,7 +428,7 @@ def handle(req, no_request=False):
                     for f in os.scandir(scrpit_folder_path):
                         if f.is_dir():
                             id = os.path.basename(f.path)
-                            tests_folders.append(get_test_info(project_name, script_name, id))
+                            tests_folders[id]= get_test_info(project_name, script_name, id)
 
                 return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
@@ -448,7 +442,7 @@ def handle(req, no_request=False):
             #stop the task
             with LOCK2:
                 if task_id not in tasks:
-                    return jsonify(success=False,exit_code=2,message="test is not deployed"), headers
+                    return jsonify(success=True,exit_code=0,message="test is stopped"), headers
                 if platform.system() == 'Windows': # windows
                     tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
                     tasks[task_id].kill()
@@ -470,6 +464,7 @@ def handle(req, no_request=False):
                     if platform.system() == 'Windows': # windows
                         tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
                         tasks[task_id].kill()
+                        sleep(1)
                     else:
                         os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
                     del tasks[task_id]
@@ -491,7 +486,7 @@ def handle(req, no_request=False):
                     # stop running tests
                     deleted = []
                     for task_id in tasks:
-                        if task_id.startswith(f'TASK_{name}_'):
+                        if task_id.startswith(f'TASK${name}$'):
                             deleted.append(task_id)
                             if platform.system() == 'Windows': # windows
                                 tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -550,23 +545,15 @@ def handle(req, no_request=False):
 
         if command == 13: # get all running tests -> sync
             local = data.get('local') or None
-            running_tests = []
+            running_tests = {}
             with LOCK2:
-                for p in os.scandir(projects_dir):
-                    if p.is_dir():
-                        project_name = os.path.basename(p.path)
-                        for s in os.scandir(f'{projects_dir}/{project_name}/locust/'):
-                            if s.is_dir():
-                                script_name = os.path.basename(s.path)
-                                scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
-                                if Path(scrpit_folder_path).exists():
-                                    for f in os.scandir(scrpit_folder_path):
-                                        if f.is_dir():
-                                            id = os.path.basename(f.path)
-                                            task_id = create_task_id(project_name, script_name, id)
-                                            if task_id in tasks:
-                                                if tasks[task_id].poll() == None: # still running
-                                                    running_tests.append({'project_name' : project_name, 'script_name': script_name, 'id' : id, 'info' : get_test_info(project_name, script_name, id)})
+                for task_id in tasks:
+                    task_id_splitted = task_id.split('$')
+                    project_name = task_id_splitted[1]
+                    script_name = task_id_splitted[2]
+                    id = task_id_splitted[3]
+                    if tasks[task_id].poll() == None: # still running
+                        running_tests[id] = get_test_info(project_name, script_name, id)
                 if local is not None:
                     return json.dumps({'success':True,'exit_code':0,'tests':running_tests,'message':'running tests'})
                 return jsonify(success=True,exit_code=0,tests=running_tests,message="running tests"), headers
@@ -605,7 +592,7 @@ def handle(req, no_request=False):
                 # stop running tests
                 stopped = []
                 for task_id in tasks:
-                    if task_id.startswith(f'TASK_{project_name}_{script_name}_'):
+                    if task_id.startswith(f'TASK${project_name}${script_name}$'):
                         print(task_id)
                         stopped.append(task_id)
                         if platform.system() == 'Windows': # windows
@@ -613,6 +600,8 @@ def handle(req, no_request=False):
                             tasks[task_id].kill()
                         else: # Linux
                             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+                if platform.system() == 'Windows': # windows
+                    sleep(2)
                 # delete stoped tasks
                 for stopped_task in stopped:
                     del tasks[stopped_task]
@@ -645,11 +634,11 @@ def handle(req, no_request=False):
                         if tasks[task_id].poll() is not None: # process finished
                             if not Path(csv_file_path).exists(): # test is not valid
                                 del tasks[task_id]
-                                tests.append({'id':id, 'status':4, 'message':'test is not valid'})
+                                tests.append({'id':id, 'status':3, 'message':'test is not valid'})
                                 continue
                             del tasks[task_id]
                         if not Path(csv_file_path).exists():
-                            tests.append({'id':id, 'status':3, 'message':'csv file does not exist'})
+                            tests.append({'id':id, 'status':2, 'message':'csv file does not exist'})
                             continue
                         j = None
                         if not os.stat(csv_file_path).st_size == 0:

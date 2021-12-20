@@ -132,10 +132,16 @@ export default {
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
+      this.socket.on(this.openfaasUrl + "_project_upload", (msg) => {
+        this.projects.push(msg);
+      });
+      this.socket.on(this.openfaasUrl + "_project_delete", (msg) => {
+        this.projects = this.projects.filter(
+          (project) => !msg.includes(project)
+        );
+      });
     },
     upload() {
-      
-
       const files = this.$refs.files.files;
       if (files.length < 1) {
         this.$emit("info", "Please select a directory to upload", "red");
@@ -150,9 +156,9 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           this.uploading = false;
-          
+
           this.$refs.dismissBtn.click();
-          console.log(data);
+          //console.log(data);
           if (data.success) {
             this.loading = true;
             this.projectId = data.task_id;
@@ -166,25 +172,29 @@ export default {
               //console.log(message);
               const data = JSON.parse(message.data);
               if (!data.success) {
-                console.log("Something went wrong");
+                //console.log("Something went wrong");
                 this.loading = false;
                 this.$emit("info", "Something went wrong", "red");
                 clearInterval(this.socketIntv);
               } else if (data.status_code === 3) {
-                console.log("thread is locking");
+                //console.log("thread is locking");
               } else if (data.status_code === 2) {
-                console.log("installing project");
+                //console.log("installing project");
               } else if (data.status_code === 1) {
-                console.log("installing failed");
+                //console.log("installing failed");
                 clearInterval(this.socketIntv);
                 this.loading = false;
                 this.$emit("info", "Installation failed", "red", data.error);
               } else {
-                console.log("Task is finished");
+                //console.log("Task is finished");
                 clearInterval(this.socketIntv);
                 this.$router.push({
                   name: "Project",
                   params: { id: this.projectId },
+                });
+                this.socket.emit("project_upload", {
+                  openfaasurl: this.openfaasUrl,
+                  project_name: this.projectId,
                 });
               }
             });
@@ -213,6 +223,10 @@ export default {
           })
             .then((data) => data.json())
             .then(() => {
+              this.socket.emit("project_delete", {
+                openfaasurl: this.openfaasUrl,
+                project_names: this.markedProjects,
+              });
               this.projects = this.projects.filter(
                 (project) => !this.markedProjects.includes(project)
               );
@@ -230,6 +244,8 @@ export default {
     },
     freeSocket() {
       this.socket.off(this.projectId);
+      this.socket.off(this.openfaasUrl + "_project_upload");
+      this.socket.off(this.openfaasUrl + "_project_delete");
       if (this.socketIntv) clearInterval(this.socketIntv);
     },
     stopTheEvent(event) {

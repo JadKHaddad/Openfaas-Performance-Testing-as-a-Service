@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div :id="test.id">
+    <div :id="id">
       <div class="test-container">
         <div class="buttons btn-container">
           <button
@@ -71,7 +71,7 @@
                 :class="{ green: running, red: !valid }"
               >
                 <label data-mdb-toggle="tooltip" title="Test id">{{
-                  test.id
+                  id
                 }}</label>
               </div>
               <div class="col-1" data-mdb-toggle="tooltip" title="Users">
@@ -206,18 +206,18 @@ export default {
     "showPath",
     "url",
     "openfaasUrl",
-    "socket",
     "pid",
     "sid",
     "startMinimized",
+    "info",
+    "data",
+    "status",
+    "valid",
+    "id",
   ],
   data() {
     return {
-      info: JSON.parse(this.test.info),
-      data: JSON.parse(this.test.data),
       running: false,
-      valid: JSON.parse(this.test.valid),
-      socketIntv: null,
       elapsed: "",
       elapsedIntv: null,
       enoughData: true,
@@ -240,7 +240,7 @@ export default {
     },
     renderData() {
       if (this.data != null) return this.data.length > 0;
-      else return false
+      else return false;
     },
     showResultsComp() {
       return this.enoughData && !this.running && !this.loadingImages;
@@ -263,14 +263,14 @@ export default {
           command: 8,
           project_name: this.pid,
           script_name: this.sid,
-          id: this.test.id,
+          id: this.id,
         }),
       })
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
             this.running = false;
-            clearInterval(this.socketIntv);
+            this.$emit("stop");
           } else {
             this.$root.showInfo("There was an error stopping the test", "red");
           }
@@ -284,7 +284,7 @@ export default {
     },
     deleteMe() {
       this.$root.setUpConfirmation(
-        this.test.id + ": Are you sure you want to delete this test?",
+        this.id + ": Are you sure you want to delete this test?",
         "Delete",
         () => {
           fetch(this.url, {
@@ -293,13 +293,13 @@ export default {
               command: 9,
               project_name: this.pid,
               script_name: this.sid,
-              id: this.test.id,
+              id: this.id,
             }),
           })
             .then((data) => data.json())
             .then((data) => {
               if (data.success) {
-                this.$emit("delete");
+                this.$emit("delete", this.id, this.pid, this.sid);
               } else {
                 this.$root.showInfo(
                   "There was an error deleting the test",
@@ -320,7 +320,7 @@ export default {
           command: 11,
           project_name: this.pid,
           script_name: this.sid,
-          id: this.test.id,
+          id: this.id,
         }),
       })
         .then((response) => response.blob())
@@ -345,7 +345,7 @@ export default {
             command: 12,
             project_name: this.pid,
             script_name: this.sid,
-            id: this.test.id,
+            id: this.id,
             type: 1,
           }),
         })
@@ -359,7 +359,7 @@ export default {
                     command: 12,
                     project_name: this.pid,
                     script_name: this.sid,
-                    id: this.test.id,
+                    id: this.id,
                     type: 2,
                   }),
                 })
@@ -373,7 +373,7 @@ export default {
                         command: 12,
                         project_name: this.pid,
                         script_name: this.sid,
-                        id: this.test.id,
+                        id: this.id,
                         type: 3,
                       }),
                     })
@@ -388,7 +388,7 @@ export default {
                       });
                   });
               } else if (data.status_code == 2) {
-                console.log("not enof");
+                // console.log("not enof");
                 this.$root.showInfo("Not enough data to analyse", "red");
                 this.showResultsBool = false;
                 this.enoughData = false;
@@ -404,52 +404,21 @@ export default {
   },
   created() {
     this.minimized = this.startMinimized;
-    if(this.minimized) this.tooltipText = "Double click to maximize";
+    if (this.minimized) this.tooltipText = "Double click to maximize";
   },
   beforeUnmount() {
-    this.socket.off(this.test.id);
-    if (this.socketIntv) clearInterval(this.socketIntv);
     if (this.elapsedIntv) clearInterval(this.elapsedIntv);
   },
+  updated() {
+    if (!this.valid || this.status === 0) this.running = false;
+  },
   mounted() {
-    this.running = JSON.parse(this.test.status) === 1 ? true : false;
+    this.running = JSON.parse(this.status) === 1 ? true : false;
     if (this.running) {
       this.elapsed = parseInt(Date.now() / 1000 - this.info.started_at);
       this.elapsedIntv = setInterval(() => {
         this.elapsed = parseInt(Date.now() / 1000 - this.info.started_at);
       }, 1000);
-      this.socketIntv = setInterval(() => {
-        this.socket.emit("stats", {
-          project_name: this.pid,
-          script_name: this.sid,
-          id: this.test.id,
-          openfaasurl: this.openfaasUrl,
-        });
-      }, 2000);
-
-      this.socket.on(this.test.id, (msg) => {
-        const data = JSON.parse(msg.data);
-        if (data.success) {
-          if (data.status == 0) {
-            // test is not running
-            clearInterval(this.socketIntv);
-            clearInterval(this.elapsedIntv);
-            this.running = false;
-            return;
-          }
-          this.data = JSON.parse(data.data);
-        } else if (data.exit_code == 4) {
-          this.$root.showInfo(
-            this.test.id + " There was an error running your locust file",
-            "red"
-          );
-
-          clearInterval(this.socketIntv);
-          clearInterval(this.elapsedIntv);
-          this.running = false;
-          this.valid = false;
-        }
-      });
     }
   },
 };

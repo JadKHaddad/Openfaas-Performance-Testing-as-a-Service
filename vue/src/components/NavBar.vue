@@ -298,7 +298,7 @@ export default {
             noOpenfaas: this.tempNoOpenfaas,
           };
           this.$refs.dismissBtn.click();
-          console.log(settings)
+          //console.log(settings)
           this.$emit("default", settings);
         })
         .catch(() => {

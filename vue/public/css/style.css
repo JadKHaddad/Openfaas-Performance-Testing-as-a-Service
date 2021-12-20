@@ -20,8 +20,6 @@ body {
   flex-shrink: 0;
 }
 
-
-
 .test-container{
   margin-top: 40px;
   border-top:1px solid rgba(0,0,0,.125);
@@ -113,6 +111,7 @@ h3 {
   margin-left: auto;
   margin-right: auto;
   margin-top: 20px;
+  margin-bottom: 30px;
   width: 200px;
 }
 

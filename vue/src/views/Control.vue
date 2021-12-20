@@ -28,19 +28,23 @@
       @delete="deleteProject(project)"
     >
     </InstallationProcess>
+
     <Test
-      v-for="test in tests"
-      :key="test"
-      :test="test.info"
+      v-for="test in reversedTests"
+      :key="test[0]"
+      :id="test[0]"
+      :info="JSON.parse(test[1].info)"
+      :data="JSON.parse(test[1].data)"
+      :status="test[1].status"
+      :valid="test[1].valid"
       :showPath="true"
       :url="url"
       :openfaasUrl="openfaasUrl"
-      :socket="socket"
-      :pid="test.project_name"
-      :sid="test.script_name"
+      :pid="test[1].project_name"
+      :sid="test[1].script_name"
       :startMinimized="minimizeTests"
       @restart="restart"
-      @delete="deleteTest(test)"
+      @delete="deleteTest"
     ></Test>
   </div>
 </template>
@@ -58,18 +62,32 @@ export default {
   props: ["url", "openfaasUrl", "socket", "minimizeTests", "update"],
   data() {
     return {
-      tests: [],
+      tests: {},
       projects: [],
     };
   },
   methods: {
-    register(){
-      this.socket.off(this.openfaasUrl + "_control")
-      this.socket.emit("register_control", { openfaasurl: this.openfaasUrl })
+    register() {
+      this.socket.off(this.openfaasUrl + "_control");
+      this.socket.emit("register_control", { openfaasurl: this.openfaasUrl });
       this.socket.on(this.openfaasUrl + "_control", (msg) => {
-        console.log(msg)
-      })
-      console.log("control registered")
+        if (IsJsonString(msg)) {
+          msg = JSON.parse(msg);
+          if (msg.success) {
+            for (var key in msg.tests) {
+              //console.log(msg.tests[key]);
+              const id = msg.tests[key].id;
+              if (id in this.tests) {
+                this.tests[id].data = msg.tests[key].data;
+                this.tests[id].valid = msg.tests[key].valid;
+              } else {
+                this.tests[id] = msg.tests[key];
+              }
+            }
+          }
+        }
+      });
+      // console.log("control registered")
     },
     init() {
       //get running tests
@@ -77,7 +95,7 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
-            this.tests = data.tests.reverse();
+            this.tests = data.tests;
           }
         })
         .catch(() => {
@@ -89,14 +107,24 @@ export default {
         .then((data) => {
           if (data.success) {
             this.projects = data.projects;
-            console.log(data.projects);
-            console.log(this.projects);
           }
         })
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
       this.register();
+      this.socket.on(this.openfaasUrl + "_control_test_delete", (msg) => {
+        for (var i = 0; i < msg.length; i++) {
+          if (msg[i] in this.tests) {
+            delete this.tests[msg[i]];
+          }
+        }
+      });
+      this.socket.on(this.openfaasUrl + "_control_test_stop", (msg) => {
+        if (msg in this.tests) {
+          this.tests[msg].status = 0;
+        }
+      });
     },
     killRunningTasks() {
       this.$root.setUpConfirmation(
@@ -111,6 +139,9 @@ export default {
             .then((data) => {
               if (data.success) {
                 this.$emit("info", "Success", "green");
+                for (var key in this.tests) {
+                  this.tests[key].status = 0;
+                }
               } else {
                 this.$emit(
                   "info",
@@ -135,6 +166,7 @@ export default {
           .then((data) => {
             if (data.success) {
               this.$emit("info", "Success", "green");
+              this.tests = {};
             } else {
               this.$emit("info", "There was an error deleting projects", "red");
             }
@@ -184,38 +216,52 @@ export default {
             });
             const status = 1;
             const valid = true;
-            const info_ = {
+            const test = {
               id: id,
               info: info,
               status: status,
               valid: valid,
-              data: JSON.stringify([]),
-            };
-            const test = {
-              id: id,
-              info: info_,
               project_name: pid,
               script_name: sid,
+              data: JSON.stringify([]),
             };
-            console.log(test);
-            this.tests.push(test);
+            this.tests[id] = test;
+            this.socket.emit("test_start", {
+              openfaasurl: this.openfaasUrl,
+              project_name: pid,
+              script_name: sid,
+              test: test,
+            });
           }
         })
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
     },
-    deleteTest(test) {
-      this.tests = this.tests.filter((t) => t !== test);
+    deleteTest(id, pid, sid) {
+      delete this.tests[id];
+      this.socket.emit("test_delete", {
+        openfaasurl: this.openfaasUrl,
+        project_name: pid,
+        script_name: sid,
+        ids: [id],
+      });
     },
     deleteProject(project) {
       this.projects = this.projects.filter((p) => p !== project);
     },
   },
-  beforeUnmount(){
-    this.socket.emit("disconnect_control")
-    this.socket.off(this.openfaasUrl + "_control")
-    console.log("control disconnected")
+  computed: {
+    reversedTests() {
+      return Object.entries(this.tests).reverse();
+    },
+  },
+  beforeUnmount() {
+    this.socket.emit("disconnect_control");
+    this.socket.off(this.openfaasUrl + "_control");
+    this.socket.off(this.openfaasUrl + "_control_test_delete");
+    this.socket.off(this.openfaasUrl + "_control_test_stop");
+    // console.log("control disconnected")
   },
   mounted() {
     this.init();

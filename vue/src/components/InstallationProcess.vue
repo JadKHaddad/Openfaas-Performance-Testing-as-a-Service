@@ -7,7 +7,7 @@
           data-mdb-toggle="tooltip"
           title="Project name"
         >
-          {{ id }}
+          Installing project: {{ id }}
         </div>
         <div class="col-1">
           <div

@@ -21,18 +21,22 @@
       </button>
     </div>
     <Test
-      v-for="test in tests"
-      :key="test"
-      :test="test"
+      v-for="test in reversedTests"
+      :key="test[0]"
+      :id="test[0]"
+      :info="JSON.parse(test[1].info)"
+      :data="JSON.parse(test[1].data)"
+      :status="test[1].status"
+      :valid="test[1].valid"
       :showPath="false"
       :url="url"
       :openfaasUrl="openfaasUrl"
-      :socket="socket"
       :pid="pid"
       :sid="id"
       :startMinimized="minimizeTests"
       @restart="restart"
-      @delete="deleteTest(test)"
+      @delete="deleteTest"
+      @stop="stop(test[0])"
     ></Test>
     <!-- Modal -->
     <div
@@ -146,7 +150,7 @@ export default {
     return {
       id: this.$route.params.id,
       pid: this.$route.params.pid,
-      tests: [],
+      tests: {},
       users: "",
       spawnRate: "",
       workers: "",
@@ -155,20 +159,60 @@ export default {
     };
   },
   methods: {
-    register(test_ids){
-      this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id)
-      this.socket.emit("register_script", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_ids: test_ids})
-      this.socket.on(this.openfaasUrl + "_" + this.pid + "_" + this.id, (msg) => {
-        console.log(msg)
-      })
-      console.log("script registered")
+    register(test_ids) {
+      this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id);
+      this.socket.emit("register_script", {
+        openfaasurl: this.openfaasUrl,
+        project_name: this.pid,
+        script_name: this.id,
+        test_ids: test_ids,
+      });
+      this.socket.on(
+        this.openfaasUrl + "_" + this.pid + "_" + this.id,
+        (msg) => {
+          if (IsJsonString(msg)) {
+            msg = JSON.parse(msg);
+            //console.log(msg);
+            if (msg.success) {
+              for (var i = 0; i < msg.tests.length; i++) {
+                const id = msg.tests[i].id;
+                if (id in this.tests) {
+                  const status = msg.tests[i].status;
+                  if (status === 0) {
+                    // not running
+                    this.disconnectTest(id);
+                    this.tests[id].status = 0;
+                  } else if (status === 1) {
+                    this.tests[id].data = msg.tests[i].data;
+                  } else if (status === 3) {
+                    // console.log("not valid");
+                    this.tests[id].valid = false;
+                    this.disconnectTest(id);
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+      // console.log("script registered");
     },
-    registerTest(test_id){
-      this.socket.emit("register_test", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_id: test_id})
+    registerTest(test_id) {
+      this.socket.emit("register_test", {
+        openfaasurl: this.openfaasUrl,
+        project_name: this.pid,
+        script_name: this.id,
+        test_id: test_id,
+      });
     },
-    disconnectTest(test_id){
-      console.log("disconnecting")
-      this.socket.emit("disconnect_test", { openfaasurl: this.openfaasUrl , project_name: this.pid, script_name: this.id, test_id: test_id})
+    disconnectTest(test_id) {
+      // console.log("disconnecting");
+      this.socket.emit("disconnect_test", {
+        openfaasurl: this.openfaasUrl,
+        project_name: this.pid,
+        script_name: this.id,
+        test_id: test_id,
+      });
     },
     init() {
       //get host
@@ -188,23 +232,43 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
-            this.tests = data.tests.reverse();
-
-            var test_ids = []
-            for(var i = 0; i< this.tests.length; i++){
-              if (this.tests[i].status === 1){
-                test_ids.push(this.tests[0].id)
+            //console.log(data)
+            var test_ids = [];
+            for (var test_id in data.tests) {
+              if (data.tests[test_id].status === 1) {
+                test_ids.push(data.tests[test_id].id);
               }
             }
-            this.register(test_ids)
-            //console.log(this.tests);
+            this.register(test_ids);
+            // console.log("registering: ", test_ids);
+            this.tests = data.tests;
           }
         })
         .catch((e) => {
-          console.log(e)
+          // console.log(e);
           this.$emit("info", "Could not connect to server", "red");
         });
-      //this.register();
+      this.socket.on(
+        this.openfaasUrl + "_" + this.pid + "_" + this.id + "_test_start",
+        (msg) => {
+          // console.log(msg.id in this.tests);
+          if (msg.id in this.tests) return;
+          this.tests[msg.id] = msg;
+          this.registerTest(msg.id);
+        }
+      );
+      this.socket.on(
+        this.openfaasUrl + "_" + this.pid + "_" + this.id + "_test_delete",
+        (msg) => {
+          // console.log(msg);
+          for (var i = 0; i < msg.length; i++) {
+            if (msg[i] in this.tests) {
+              delete this.tests[msg[i]];
+              this.disconnectTest(msg[i]);
+            }
+          }
+        }
+      );
     },
     deleteAll() {
       this.$root.setUpConfirmation(
@@ -222,8 +286,18 @@ export default {
             .then((data) => data.json())
             .then((data) => {
               if (data.success) {
-                this.tests = [];
                 this.$emit("info", "Success", "green");
+                this.socket.emit("disconnect_script", {
+                  project_name: this.pid,
+                  script_name: this.id,
+                });
+                this.socket.emit("test_delete", {
+                  openfaasurl: this.openfaasUrl,
+                  project_name: this.pid,
+                  script_name: this.id,
+                  ids: Object.keys(this.tests),
+                });
+                this.tests = {};
               } else {
                 this.$emit("info", "There was an error deleting tests", "red");
               }
@@ -270,10 +344,16 @@ export default {
               valid: valid,
               data: JSON.stringify([]),
             };
-            console.log(test);
-            this.tests = prependArray(test, this.tests)
-            //this.tests.push(test);
-          this.registerTest(id)
+            // console.log(test);
+            this.tests[id] = test;
+            // console.log("started: ", test);
+            this.registerTest(id);
+            this.socket.emit("test_start", {
+              openfaasurl: this.openfaasUrl,
+              project_name: this.pid,
+              script_name: this.id,
+              test: test,
+            });
           } else {
             this.$emit("info", data.message, "red");
           }
@@ -318,7 +398,7 @@ export default {
         }
       }
       this.$refs.dismiss.click();
-      if (this.host != "") {
+      if (this.host != "" && this.host != null) {
         localStorage.setItem("last_host", this.host);
       }
       this.start(
@@ -338,14 +418,42 @@ export default {
         info.time
       );
     },
-    deleteTest(test) {
-      this.tests = this.tests.filter((t) => t !== test);
+    deleteTest(id) {
+      delete this.tests[id];
+      this.socket.emit("test_delete", {
+        openfaasurl: this.openfaasUrl,
+        project_name: this.pid,
+        script_name: this.id,
+        ids: [id],
+      });
+      this.disconnectTest(id);
+    },
+    stop(id) {
+      this.socket.emit("test_stop", {
+        openfaasurl: this.openfaasUrl,
+        id: id,
+      });
     },
   },
-  beforeUnmount(){
-    this.socket.emit("disconnect_script", {project_name: this.pid, script_name: this.id})
-    this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id)
-    console.log("script disconnected")
+  computed: {
+    reversedTests() {
+      return Object.entries(this.tests).reverse();
+    },
+  },
+  beforeUnmount() {
+    this.socket.emit("disconnect_script", {
+      project_name: this.pid,
+      script_name: this.id,
+    });
+    this.socket.off(this.openfaasUrl + "_" + this.pid + "_" + this.id);
+    this.socket.off(
+      this.openfaasUrl + "_" + this.pid + "_" + this.id + "_test_start"
+    );
+    this.socket.off(
+      this.openfaasUrl + "_" + this.pid + "_" + this.id + "_test_delete"
+    );
+
+    // console.log("script disconnected");
   },
   mounted() {
     this.init();

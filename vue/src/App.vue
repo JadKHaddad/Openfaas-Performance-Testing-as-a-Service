@@ -151,28 +151,26 @@ export default {
     };
   },
   methods: {
-    disconnect(){
-      this.socket.off(this.openfaasUrl)
-      console.log("disconnected from: " + this.openfaasUrl)
+    disconnect() {
+      this.socket.off(this.openfaasUrl);
+      console.log("disconnected from: " + this.openfaasUrl);
     },
-    register(){
-      this.socket.emit("register", { openfaasurl: this.openfaasUrl })
+    register() {
+      this.socket.emit("register", { openfaasurl: this.openfaasUrl });
       this.socket.on(this.openfaasUrl, (msg) => {
-        console.log(msg)
-        if (IsJsonString(msg)){
-          msg = JSON.parse(msg)
-          if(msg.success) this.runningTests = msg.count;
+        //console.log(msg)
+        if (IsJsonString(msg)) {
+          msg = JSON.parse(msg);
+          if (msg.success) this.runningTests = msg.count;
         }
-
-      })
-      console.log("connected to: " + this.openfaasUrl)
+      });
+      console.log("connected to: " + this.openfaasUrl);
     },
     configureConnections() {
       this.socket = io(process.env.VUE_APP_ROOT_API);
-      this.socket.on("connect", () => this.register())
+      this.socket.on("connect", () => this.register());
       console.log("current openfaasUrl: " + this.openfaasUrl);
       console.log("current baseUrl: " + this.url);
-    
     },
     showInfo(message, color, error) {
       this.infoMessage = message;
@@ -193,7 +191,7 @@ export default {
       $(this.$refs.confirmationModalButton).click();
     },
     updateSettings(settings) {
-      this.disconnect()
+      this.disconnect();
       this.url = settings.baseUrl;
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
@@ -211,17 +209,17 @@ export default {
       localStorage.setItem("noRedges", this.noRedges);
       localStorage.setItem("minimizeTests", this.minimizeTests);
       this.update = true;
-      this.register()
+      this.register();
       console.log("new openfaasUrl: " + this.openfaasUrl);
       console.log("new baseUrl: " + this.url);
     },
     updated() {
-      console.log("updated");
+      //console.log("updated");
       this.update = false;
     },
     setDefaults(settings) {
-      this.disconnect()
-      console.log(settings);
+      this.disconnect();
+      //console.log(settings);
       this.url = settings.baseUrl;
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
@@ -231,7 +229,7 @@ export default {
       localStorage.setItem("direct", this.direct);
       localStorage.setItem("noOpenfaas", this.noOpenfaas);
       this.update = true;
-      this.register()
+      this.register();
       console.log("default openfaasUrl: " + this.openfaasUrl);
       console.log("default baseUrl: " + this.url);
     },

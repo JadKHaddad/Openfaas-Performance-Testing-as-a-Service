@@ -31,7 +31,7 @@ export default {
           this.loading = true;
           this.socket.emit("openfaas");
           this.socket.on("openfaas", (msg) => {
-            console.log(msg)
+            console.log(msg);
             var message = JSON.parse(msg.data);
             if (message == true) {
               this.message = "function installed";
@@ -42,9 +42,9 @@ export default {
       })
       .catch(() => {});
   },
-  beforeUnmount(){
-    this.socket.off("openfaas")
-  }
+  beforeUnmount() {
+    this.socket.off("openfaas");
+  },
 };
 </script>
 
