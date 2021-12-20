@@ -4,7 +4,7 @@ module.exports = {
       clientLogLevel: 'info',
       proxy: {
         '/': {
-          target: 'http://192.168.178.64',
+          target: 'http://localhost',
           changeOrigin: true,
           pathRewrite: {
             '^/': ''
