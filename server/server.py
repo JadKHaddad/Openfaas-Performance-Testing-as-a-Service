@@ -350,7 +350,7 @@ def register(message):
     #print('T Current connected clients: ', CONNECTED_CLIENTS)
     global T
     if T is None:
-        T = Thread(target=T_TASK)
+        T = socketio.start_background_task(target=T_TASK)#Thread(target=T_TASK)
         T.daemon = True
         T.start()
         print('T started')
@@ -474,6 +474,7 @@ def check_openfaas_thread():
     while(True):
         installed, check, message = check_openfaas()
         socketio.emit('openfaas', {'data': installed})
+        #print("sent")
         if installed:
             break
         socketio.sleep(3)
@@ -485,7 +486,7 @@ def openfass_socket():
     installed, check, message = check_openfaas()
     socketio.emit('openfaas', {'data': installed}, broadcast=False)
     if OPENFAAS_T is None:
-        OPENFAAS_T = Thread(target=check_openfaas_thread)
+        OPENFAAS_T = socketio.start_background_task(target=check_openfaas_thread)#Thread(target=check_openfaas_thread)
         OPENFAAS_T.daemon = True
         OPENFAAS_T.start()
 
@@ -582,6 +583,7 @@ if __name__ == '__main__':
     print(f'server running on {host}:{port}')
     if WEBSOCKET == 'true':
         print(f'running with websockets')
+        #socketio.run(app, host=host, port=int(port))
         from gevent import pywsgi
         from geventwebsocket.handler import WebSocketHandler
         server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
