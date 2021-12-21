@@ -270,11 +270,11 @@ def T_TASK():
             for event, params in events.items():
                 #control
                 if event == 'control':
-                    if url + '_control' not in sent:
+                    if f'{url}_control' not in sent:
                         if url == 'None':
                             data = {'command':13, 'local':True}
                             response = handler.handle(json.dumps(data), True)
-                            socketio.emit(url + '_control', response)
+                            socketio.emit(f'{url}_control', response)
                         else:
                             data = {'command':13}
                             post_url = unquote(url)
@@ -282,11 +282,11 @@ def T_TASK():
                             post_url = urljoin(post_url, FUNCTION)
                             try:
                                 response = requests.post(post_url, data=json.dumps(data), timeout=2)
-                                socketio.emit(url + '_control', response.text)
+                                socketio.emit(f'{url}_control', response.text)
                             except:
-                                socketio.emit(url + '_control', {'success': False})
-                        #print('sent to: ', url + '_control')
-                        sent[url + '_control'] = None
+                                socketio.emit(f'{url}_control', {'success': False})
+                        #print('sent to: ', f'{url}_control')
+                        sent[f'{url}_control'] = None
                     continue
                 #script
                 if event == 'script':
@@ -295,11 +295,11 @@ def T_TASK():
                         script_name = value['script_name']
                         ids = value['test_ids']
                         if len(ids) > 0:
-                            if url + '_' + project_name + '_' + script_name not in sent:
+                            if f'{url}_{project_name}_{script_name}' not in sent:
                                 if url == 'None':
                                     data = {'command':6, 'project_name':project_name, 'script_name':script_name, 'ids': ids,'local':True}
                                     response = handler.handle(json.dumps(data), True)
-                                    socketio.emit(url + '_' + project_name + '_' + script_name, response)
+                                    socketio.emit(f'{url}_{project_name}_{script_name}', response)
                                 else:
                                     data = {'command':6, 'project_name':project_name, 'script_name':script_name, 'ids': ids}
                                     post_url = unquote(url)
@@ -307,12 +307,11 @@ def T_TASK():
                                     post_url = urljoin(post_url, FUNCTION)
                                     try:
                                         response = requests.post(post_url, data=json.dumps(data), timeout=2)
-                                        socketio.emit(url + '_' + project_name + '_' + script_name, response.text)
+                                        socketio.emit(f'{url}_{project_name}_{script_name}', response.text)
                                     except:
-                                        socketio.emit(url + '_' + project_name + '_' + script_name, {'success': False})
-                                #print('sent to: ', url + '_' + project_name + '_' + script_name)
-                                sent[url + '_' + project_name + '_' + script_name] = None
-                    continue
+                                        socketio.emit(f'{url}_{project_name}_{script_name}', {'success': False})
+                                #print('sent to: ', f'{url}_{project_name}_{script_name}')
+                                sent[f'{url}_{project_name}_{script_name}'] = None
             if url not in sent:
                 if url == 'None':
                     data = {'command':14, 'local':True}
@@ -390,7 +389,7 @@ def register_script(message):
     if url is None:
         url = 'None',
     with T_LOCK:
-        CONNECTED_CLIENTS[client]['events']['script'] = {project_name + '_' + script_name: {'project_name':project_name, 'script_name':script_name,'test_ids':test_ids}}
+        CONNECTED_CLIENTS[client]['events']['script'] = {f'{project_name}_{script_name}': {'project_name':project_name, 'script_name':script_name,'test_ids':test_ids}}
     #print('\nClient registered script: ', client)
     #print('OpenFaas Url: ', url)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
@@ -415,9 +414,9 @@ def register_test(message):
         url = 'None',
     with T_LOCK:
         if 'script' in CONNECTED_CLIENTS[client]['events']:
-            CONNECTED_CLIENTS[client]['events']['script'][project_name + '_' + script_name]['test_ids'].append(test_id)
+            CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids'].append(test_id)
         else:
-            CONNECTED_CLIENTS[client]['events']['script'] = {project_name + '_' + script_name: {'project_name':project_name, 'script_name':script_name,'test_ids':[test_id]}}
+            CONNECTED_CLIENTS[client]['events']['script'] = {f'{project_name}_{script_name}': {'project_name':project_name, 'script_name':script_name,'test_ids':[test_id]}}
     #print('\nClient registered test: ', client)
     #print('OpenFaas Url: ', url)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
@@ -430,8 +429,8 @@ def disconnect_test(message):
     test_id = message.get('test_id')
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-            if test_id in CONNECTED_CLIENTS[client]['events']['script'][project_name + '_' + script_name]['test_ids']:
-                CONNECTED_CLIENTS[client]['events']['script'][project_name + '_' + script_name]['test_ids'].remove(test_id)
+            if test_id in CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids']:
+                CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids'].remove(test_id)
     #print('\nClient unsunscribed test', client)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
 
@@ -441,7 +440,7 @@ def test_start(message):
     project_name = message.get('project_name')
     script_name = message.get('script_name')
     test = message.get('test')
-    socketio.emit(url + '_' +project_name+'_'+script_name+'_test_start', test)
+    socketio.emit(f'{url}_{project_name}_{script_name}_test_start', test)
 
 @socketio.on('test_delete')
 def test_delete(message):
@@ -449,26 +448,26 @@ def test_delete(message):
     project_name = message.get('project_name')
     script_name = message.get('script_name')
     ids = message.get('ids')
-    socketio.emit(url + '_' + project_name + '_' + script_name + '_test_delete', ids)
-    socketio.emit(url + '_control_test_delete', ids)
+    socketio.emit(f'{url}_{project_name}_{script_name}_test_delete', ids)
+    socketio.emit(f'{url}_control_test_delete', ids)
 
 @socketio.on('test_stop')
 def test_stop(message):
     url = message.get('openfaasurl')
     id = message.get('id')
-    socketio.emit(url + '_control_test_stop', id)
+    socketio.emit(f'{url}_control_test_stop', id)
 
 @socketio.on('project_upload')
 def peoject_upload(message):
     url = message.get('openfaasurl')
     project_name = message.get('project_name')
-    socketio.emit(url + '_project_upload', project_name)
+    socketio.emit(f'{url}_project_upload', project_name)
 
 @socketio.on('project_delete')
 def peoject_delete(message):
     url = message.get('openfaasurl')
     project_names = message.get('project_names')
-    socketio.emit(url + '_project_delete', project_names)
+    socketio.emit(f'{url}_project_delete', project_names)
 
 OPENFAAS_T = None
 def check_openfaas_thread():
@@ -554,7 +553,7 @@ if __name__ == '__main__':
     if extern == True:
         if platform.system() == 'Linux':
             host = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1].replace('\n','')
-            OPENFAASULR = ('http://'+host+':8080/')
+            OPENFAASULR = (f'http://{host}:8080/')
         else:
             if url is None:
                 print('if you are not using Linux please provide your external ip address manually')
