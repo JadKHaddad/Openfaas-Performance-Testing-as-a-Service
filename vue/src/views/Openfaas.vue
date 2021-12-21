@@ -40,7 +40,9 @@ export default {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        this.$emit("info", "Could not connect to server", "red");
+      });
   },
   beforeUnmount() {
     this.socket.off("openfaas");

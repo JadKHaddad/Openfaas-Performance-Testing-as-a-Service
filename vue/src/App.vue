@@ -253,7 +253,7 @@ export default {
       !localStorage.getItem("openfaasUrl") ||
       !localStorage.getItem("direct")
     ) {
-      console.log("no saved data found. restoring defaults..")
+      console.log("no saved data found. restoring defaults..");
       fetch("/defaults", { method: "POST" })
         .then((data) => data.json())
         .then((data) => {
@@ -282,8 +282,8 @@ export default {
           };
           this.setDefaults(settings);
         })
-        .catch((e) => {
-          console.log(e)
+        .catch(() => {
+          this.showInfo("Could not connect to server", "red");
         });
     }
   },

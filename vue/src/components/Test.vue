@@ -396,7 +396,8 @@ export default {
             }
             this.loadingImages = false;
           })
-          .catch((e) => {
+          .catch(() => {
+            this.$root.showInfo("Could not connect to server", "red");
             this.loadingImages = false;
           });
       }

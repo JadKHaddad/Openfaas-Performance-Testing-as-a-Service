@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, Response, jsonify, send_from_
 from flask_socketio import SocketIO, emit
 from waitress import serve
 from urllib.parse import urljoin, unquote
-from threading import Thread, Lock
+from threading import Lock
 
 # handler is needed if openfaas is not being used
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -297,11 +297,11 @@ def T_TASK():
                         if len(ids) > 0:
                             if url + '_' + project_name + '_' + script_name not in sent:
                                 if url == 'None':
-                                    data = {'command':17, 'project_name':project_name, 'script_name':script_name, 'ids': ids,'local':True}
+                                    data = {'command':6, 'project_name':project_name, 'script_name':script_name, 'ids': ids,'local':True}
                                     response = handler.handle(json.dumps(data), True)
                                     socketio.emit(url + '_' + project_name + '_' + script_name, response)
                                 else:
-                                    data = {'command':17, 'project_name':project_name, 'script_name':script_name, 'ids': ids}
+                                    data = {'command':6, 'project_name':project_name, 'script_name':script_name, 'ids': ids}
                                     post_url = unquote(url)
                                     post_url = urljoin(post_url, 'function/')
                                     post_url = urljoin(post_url, FUNCTION)
@@ -480,17 +480,19 @@ def check_openfaas_thread():
         if installed:
             break
         socketio.sleep(3)
-    OPENFAAS_T = None
+    with T_LOCK: 
+        OPENFAAS_T = None
     
 @socketio.on('openfaas')
 def openfass_socket():
     global OPENFAAS_T
     installed, check, message = check_openfaas()
     socketio.emit('openfaas', {'data': installed}, broadcast=False)
-    if OPENFAAS_T is None:
-        OPENFAAS_T = socketio.start_background_task(target=check_openfaas_thread)#Thread(target=check_openfaas_thread)
-        OPENFAAS_T.daemon = True
-        OPENFAAS_T.start()
+    with T_LOCK: 
+        if OPENFAAS_T is None:
+            OPENFAAS_T = socketio.start_background_task(target=check_openfaas_thread)#Thread(target=check_openfaas_thread)
+            OPENFAAS_T.daemon = True
+            OPENFAAS_T.start()
 
 @socketio.on('disconnect')
 def disconnect():
