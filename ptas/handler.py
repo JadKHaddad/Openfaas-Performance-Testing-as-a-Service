@@ -36,7 +36,8 @@ def collect_garbage():
                 del tasks[to_delete_task]
         sleep(3)         
     # print("GARBAGE_COLLECTOR: terminating")
-    GARBAGE_COLLECTOR = None
+    with GARBAGE_COLLECTOR_LOCK:
+        GARBAGE_COLLECTOR = None
 
 # create projects dir
 projects_dir = 'projects'
