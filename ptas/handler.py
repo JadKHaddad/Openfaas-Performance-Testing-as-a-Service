@@ -17,6 +17,26 @@ tasks = {}
 installation_tasks = {}
 LOCK = Lock() # for installation
 LOCK2 = Lock() # for tests
+GARBAGE_COLLECTOR = None
+GARBAGE_COLLECTOR_LOCK = Lock()
+
+def collect_garbage():
+    global GARBAGE_COLLECTOR
+    # print("GARBAGE_COLLECTOR: started")
+    while True:
+        # print("GARBAGE_COLLECTOR: running")
+        with LOCK2:
+            if len(tasks) < 1:
+                break
+            to_delete = []
+            for task_id in tasks:
+                if tasks[task_id].poll() is not None:
+                    to_delete.append(task_id)
+            for to_delete_task in to_delete:
+                del tasks[to_delete_task]
+        sleep(3)         
+    # print("GARBAGE_COLLECTOR: terminating")
+    GARBAGE_COLLECTOR = None
 
 # create projects dir
 projects_dir = 'projects'
@@ -378,6 +398,13 @@ def handle(req, no_request=False):
                 info_file = f'{test_dir}/info.txt'
                 with open(info_file, "w", encoding="UTF-8") as file:
                     file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
+
+                global GARBAGE_COLLECTOR
+                with GARBAGE_COLLECTOR_LOCK:
+                    if GARBAGE_COLLECTOR is None:
+                        GARBAGE_COLLECTOR = Thread(target=collect_garbage)
+                        GARBAGE_COLLECTOR.daemon = True
+                        GARBAGE_COLLECTOR.start()
 
                 return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 

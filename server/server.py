@@ -470,6 +470,7 @@ def peoject_delete(message):
     socketio.emit(f'{url}_project_delete', project_names)
 
 OPENFAAS_T = None
+OPENFAAS_T_LOCK = Lock()
 def check_openfaas_thread():
     global OPENFAAS_T
     while(True):
@@ -479,7 +480,7 @@ def check_openfaas_thread():
         if installed:
             break
         socketio.sleep(3)
-    with T_LOCK: 
+    with OPENFAAS_T_LOCK: 
         OPENFAAS_T = None
     
 @socketio.on('openfaas')
@@ -487,7 +488,7 @@ def openfass_socket():
     global OPENFAAS_T
     installed, check, message = check_openfaas()
     socketio.emit('openfaas', {'data': installed}, broadcast=False)
-    with T_LOCK: 
+    with OPENFAAS_T_LOCK: 
         if OPENFAAS_T is None:
             OPENFAAS_T = socketio.start_background_task(target=check_openfaas_thread)#Thread(target=check_openfaas_thread)
             OPENFAAS_T.daemon = True
