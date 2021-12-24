@@ -110,8 +110,8 @@
                   data-mdb-toggle="tooltip"
                   title="Running"
                 ></div>
-                <i v-if="showCheck" class="fas fa-check check"></i>
-                <i v-if="showX" class="fas fa-times not-valid"></i>
+                <i v-if="showCheck" class="fas fa-check check" data-mdb-toggle="tooltip" title="Done"></i>
+                <i v-if="showX" class="fas fa-times not-valid" data-mdb-toggle="tooltip" title="Not valid"></i>
               </div>
             </div>
           </div>

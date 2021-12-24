@@ -209,6 +209,10 @@ h3 {
   color:#4CAF50 !important;
 }
 
+.dark .red *{
+  color:#F44336 !important;
+}
+
 .dark .modal-header{
   border-bottom: 0px !important;
 }

@@ -14,6 +14,14 @@
       <button
         type="button"
         class="btn btn-danger"
+        id="stop-script-tests"
+        @click="stopAll"
+      >
+        Stop all
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger"
         id="delete-script-tests"
         @click="deleteAll"
       >
@@ -187,6 +195,7 @@ export default {
                   } else if (status === 3) {
                     // console.log("not valid");
                     this.tests[id].valid = false;
+                    this.$emit("info", id + ": There was an error running this test", "red");
                     this.disconnectTest(id);
                   }
                 }
@@ -267,6 +276,40 @@ export default {
               this.disconnectTest(msg[i]);
             }
           }
+        }
+      );
+    },
+    stopAll() {
+      this.$root.setUpConfirmation(
+        this.id + ": Are you sure you want to stop all tests?",
+        "Stop",
+        () => {
+          fetch(this.url, {
+            method: "POST",
+            body: JSON.stringify({
+              command: 17,
+              project_name: this.pid,
+              script_name: this.id,
+            }),
+          })
+            .then((data) => data.json())
+            .then((data) => {
+              if (data.success) {
+                this.$emit("info", "Success", "green");
+                this.socket.emit("disconnect_script", {
+                  project_name: this.pid,
+                  script_name: this.id,
+                });
+                for (var key in this.tests) {
+                  this.tests[key].status = 0;
+                }
+              } else {
+                this.$emit("info", "There was an error stopping tests", "red");
+              }
+            })
+            .catch(function () {
+              this.$emit("info", "Could not connect to server", "red");
+            });
         }
       );
     },

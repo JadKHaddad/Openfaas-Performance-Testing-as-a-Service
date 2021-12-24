@@ -399,7 +399,8 @@ def disconnect_script(message):
     client = request.sid
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-           del CONNECTED_CLIENTS[client]['events']['script']
+            if 'script' in CONNECTED_CLIENTS[client]['events']:
+                del CONNECTED_CLIENTS[client]['events']['script']
     #print('\nClient unsunscribed script', client)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
 

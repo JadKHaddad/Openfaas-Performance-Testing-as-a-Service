@@ -654,7 +654,7 @@ def handle(req, no_request=False):
                     # thread will clear the installation task
                 return jsonify(success=True,exit_code=0,message="task killed"), headers
         
-        if command == 16: # delete all tests of script
+        if command == 16: # delete all tests of script -> sync
             project_name = data.get("project_name") or None
             script_name = data.get("script_name") or None
             if project_name is None or script_name is None:
@@ -665,7 +665,6 @@ def handle(req, no_request=False):
                 stopped = []
                 for task_id in tasks:
                     if task_id.startswith(f'TASK${project_name}${script_name}$'):
-                        print(task_id)
                         stopped.append(task_id)
                         if platform.system() == 'Windows': # windows
                             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -679,10 +678,26 @@ def handle(req, no_request=False):
                     del tasks[stopped_task]
                 # delete tes dir
                 script_path = get_script_dir(project_name,script_name)
-                print(script_path)
                 if Path(script_path).exists():
                     shutil.rmtree(script_path)
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
+        
+        if command == 17: # stop all tests of script -> sync
+            project_name = data.get("project_name") or None
+            script_name = data.get("script_name") or None
+            if project_name is None or script_name is None:
+                return jsonify(success=False,exit_code=1,message="bad request"), headers
+            #stop all running tests for this script
+            with LOCK2:
+                for task_id in tasks:
+                    if task_id.startswith(f'TASK${project_name}${script_name}$'):
+                        if platform.system() == 'Windows': # windows
+                            tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
+                            tasks[task_id].kill()
+                        else: # Linux
+                            os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+            return jsonify(success=True,exit_code=0,message="stopped"), headers
+
 
         if command == 911: # kill all running tasks -> sync
             with LOCK:
