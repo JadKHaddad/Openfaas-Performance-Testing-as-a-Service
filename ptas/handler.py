@@ -168,7 +168,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 plt.xlabel("Time")
                 plt.xticks(rotation=45)
                 plt.legend(loc="upper right")
-                plt.savefig(lin_path,dpi=500,bbox_inches='tight')
+                plt.savefig(lin_path,dpi=100,bbox_inches='tight')
                 plt.close()
             if not Path(reg_path).exists():
                 X = pd.to_datetime(df.iloc[:,0], unit='s').values
@@ -185,7 +185,7 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
                 plt.xlabel("Time")
                 plt.xticks(rotation=45)
                 plt.legend(loc="upper right")
-                plt.savefig(reg_path,dpi=500,bbox_inches='tight')
+                plt.savefig(reg_path,dpi=100,bbox_inches='tight')
                 plt.close()
         else:
             return 2 # not enough data
