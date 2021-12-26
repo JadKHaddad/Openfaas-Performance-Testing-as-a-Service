@@ -6,6 +6,8 @@ from flask_socketio import SocketIO, emit
 from waitress import serve
 from urllib.parse import urljoin, unquote
 from threading import Lock
+from gevent import pywsgi
+from geventwebsocket.handler import WebSocketHandler
 
 # handler is needed if openfaas is not being used
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +16,6 @@ sys.path.append(parentdir)
 from ptas import handler
 
 LOCAL = False
-WEBSOCKET = None
 
 PROXYOPENFAASULR = None
 PROXYFUNCTION = None
@@ -510,16 +511,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,help='help')
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
-    parser.add_argument('-e', '--extern', action='store_true', help='use if openfass is running on the external ip address of your machine')
-    parser.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an openfaas server')
-    parser.add_argument('-w', '--websocket', action='store_true', help='use websockets instead of server sent events. Warning: app will run with WSGIServer instead of waitress')
-    parser.add_argument('-t','--threads', help='waitress threads default 24',metavar='')
+    parser.add_argument('-e', '--extern', action='store_true', help='use if OpenFaaS is running on the external ip address of your machine')
+    parser.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server')
     requiredNamed = parser.add_argument_group('required arguments')
     requiredNamed.add_argument('-s', '--host', help='server host',metavar='')
     requiredNamed.add_argument('-p', '--port', help='server port',metavar='')
-    requiredNamed.add_argument('-u', '--url', help='openfaas url',metavar='')
+    requiredNamed.add_argument('-u', '--url', help='OpenFaaS url',metavar='')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
-    requiredNamed.add_argument('-d','--direct', help='can the browser connect to openfaas directly? <true || false>',metavar='')
+    requiredNamed.add_argument('-d','--direct', help='can the browser connect to OpenFaaS directly? <true || false>',metavar='')
     
     args = parser.parse_args()
 
@@ -530,9 +529,6 @@ if __name__ == '__main__':
     extern = args.extern
     function = args.function or 'ptas'
     direct = args.direct or 'true'
-    threads = args.threads or '24'
-    threads = '24' if not threads.isdigit() else threads
-    WEBSOCKET = 'true' if args.websocket == True else 'false'
     LOCAL = args.local
 
     if direct != 'true' and direct != 'false':
@@ -586,13 +582,7 @@ if __name__ == '__main__':
             print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
         print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
-    if WEBSOCKET == 'true':
-        print(f'running with websockets')
-        #socketio.run(app, host=host, port=int(port))
-        from gevent import pywsgi
-        from geventwebsocket.handler import WebSocketHandler
-        server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
-        server.serve_forever()
-    else:
-        print(f'waitress threads: {threads}')
-        serve(app, host=host, port=int(port), threads=int(threads))
+    print(f'running with websockets')
+    server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
+    server.serve_forever()
+
