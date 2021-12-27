@@ -48,4 +48,5 @@ runcmd:
 
 - sudo touch /home/ubuntu/log.txt
 - sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh
+- sudo chmod +x /etc/Openfaas-Performance-Testing-as-a-Service/port-forward-k8s-script.sh
 - sudo /etc/Openfaas-Performance-Testing-as-a-Service/script-deploy-k8s.sh & printf "$!\n" | sudo tee -a /home/ubuntu/log.txt
