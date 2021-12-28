@@ -63,6 +63,26 @@ docker run --rm -it -p 5000:8080  performance:1.0
 ```
 Visit **localhost:5000**
 
+## Or install locally
+Install requirements:
+```sh
+pip3 install -r requirements.txt
+pip3 install -r ptas/requirements.txt
+```
+Run: ```recommended:``` navigate to /server/ directory:
+```sh
+cd server/
+```
+
+```sh
+python3 server.py -l -p 5000
+```
+Visit **localhost:5000** <br /> <br />
+For more help use:
+```sh
+python3 server.py -h
+```
+
 ## TODO
 * Windows comp.
 
