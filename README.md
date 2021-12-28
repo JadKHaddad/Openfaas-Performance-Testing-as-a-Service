@@ -82,6 +82,22 @@ For more help use:
 ```sh
 python3 server.py -h
 ```
+```sh
+usage: server.py [-h] [-v] [-e] [-l] [-s] [-p] [-u] [-f] [-d]
+
+optional arguments:
+  -h, --help        help
+  -v, --version     version
+  -e, --extern      use if OpenFaaS is running on the external ip address of your machine
+  -l, --local       use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server
+
+required arguments:
+  -s , --host       server host
+  -p , --port       server port
+  -u , --url        OpenFaaS url
+  -f , --function   function name
+  -d , --direct     can the browser connect to OpenFaaS directly? <true || false>
+```
 
 ## TODO
 * Windows comp.
