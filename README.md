@@ -47,6 +47,18 @@ The VM's **IP** may change with time. View the VM's **IP** if needed:
  multipass info performance
 ```
 
+## Or use Docker instead
+Build the image:
+```sh
+docker build -t  performance:1.0 .
+```
+
+Run the container:
+```sh
+docker run -p 5000:8080 performance:1.0
+```
+Visit **localhost:5000**
+
 ## TODO
 * Windows comp.
 
