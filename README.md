@@ -53,9 +53,13 @@ Build the image:
 docker build -t  performance:1.0 .
 ```
 
-Run the container:
+Run the image in a container:
 ```sh
 docker run -p 5000:8080 performance:1.0
+```
+Or run it in an **interactive** container:
+```sh
+docker run --rm -it -p 5000:8080  performance:1.0
 ```
 Visit **localhost:5000**
 
