@@ -64,7 +64,6 @@ def create_task_id(project_name, script_name, id):
     return f'TASK${project_name}${script_name}${id}' 
 
 def kill_running_tasks():
-    print("killing all tasks")
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -81,6 +80,7 @@ def kill_running_tasks():
         for task_id in installation_tasks:
             os.killpg(os.getpgid(installation_tasks[task_id].pid), signal.SIGTERM)
         # thread will clear the installation tasks
+    print("Handler: all tasks killed")
 
 def clean_up(): # deletes everything
     kill_running_tasks()

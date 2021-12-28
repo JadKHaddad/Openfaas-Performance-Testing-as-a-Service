@@ -69,7 +69,8 @@ def check_openfaas():
         check = "true"
     return installed, check, message
 
-#definining all this junk because we want to build our frontend and use it out of the box. just build it and paste it in dist folder    
+#defining all this junk because we want to build our frontend and use it out of the box. just build it and paste it in dist folder 
+   
 #for vue    
 @app.route('/js/<path:path>')
 def send_js(path):
@@ -251,7 +252,7 @@ def task_stats(message):
 @socketio.on('connect')
 def connect():
     session_id = request.sid
-    print('Client connected', session_id)
+    print(f'Client connected: {session_id}')
 
 CONNECTED_CLIENTS = {}
 T = None
@@ -331,7 +332,7 @@ def T_TASK():
                 #print('sent to: ', url)
                 sent[url] = None
         socketio.sleep(2)
-    print('T has stopped')
+    print('Background thread has stopped')
     with T_LOCK: 
         T = None   
 
@@ -346,6 +347,7 @@ def register(message):
             CONNECTED_CLIENTS[client]['url'] = url
         else:    
             CONNECTED_CLIENTS[client] = {'url':url, 'events':{}}
+    print(f'Registered clients: {len(CONNECTED_CLIENTS)}')
     #print('\nT Client registered: ', client)
     #print('T OpenFaas Url: ', url)
     #print('T Current connected clients: ', CONNECTED_CLIENTS)
@@ -355,7 +357,7 @@ def register(message):
             T = socketio.start_background_task(target=T_TASK)#Thread(target=T_TASK)
             T.daemon = True
             T.start()
-            print('T started')
+            print('Background thread started')
 
 @socketio.on('register_control')
 def register_control(message):
@@ -502,10 +504,9 @@ def disconnect():
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
             del CONNECTED_CLIENTS[client]
-    print('Client disconnected', client)
-    #print('Current connected clients: ', CONNECTED_CLIENTS)
-
-
+    print(f'Client disconnected: {client}')
+    print(f'Registered clients: {len(CONNECTED_CLIENTS)}')
+    
 if __name__ == '__main__':
     extern = False
     parser = argparse.ArgumentParser(add_help=False)
