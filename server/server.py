@@ -433,8 +433,9 @@ def disconnect_test(message):
     test_id = message.get('test_id')
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-            if test_id in CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids']:
-                CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids'].remove(test_id)
+            if 'script' in CONNECTED_CLIENTS[client]['events']:
+                if test_id in CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids']:
+                    CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids'].remove(test_id)
     #print('\nClient unsunscribed test', client)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
 
@@ -604,7 +605,7 @@ if __name__ == '__main__':
         decode_responses=True)
         handler.REDIS = redis
         handler.EXPIRE = redis_expire
-        print(f'using redis on {redis_host}:{redis_port} | cache lifetime: {redis_expire}')
+        print(f'using redis on {redis_host}:{redis_port} | cache lifetime: {redis_expire} seconds')
     server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
     server.serve_forever()
 

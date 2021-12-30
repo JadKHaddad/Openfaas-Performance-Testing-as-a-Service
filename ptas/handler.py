@@ -42,7 +42,7 @@ def collect_garbage():
                     script_name = task_id_splitted[2]
                     id = task_id_splitted[3]
                     data = get_test_info(project_name, script_name, id, terminated=True)
-                    print('caching from thread')
+                    print('Handler: caching from thread')
                     REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
                     REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
 
@@ -76,11 +76,21 @@ def get_test_dir(project_name, script_name, id):
 def create_task_id(project_name, script_name, id):
     return f'TASK${project_name}${script_name}${id}' 
 
+def update_cache(task_id):
+    if REDIS is not None:
+        task_id_splitted = task_id.split('$')
+        project_name = task_id_splitted[1]
+        script_name = task_id_splitted[2]
+        id = task_id_splitted[3]
+        data = get_test_info(project_name, script_name, id, terminated=True)
+        REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+
 def kill_running_tasks():
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
             tasks[task_id].kill()
+            update_cache(task_id)
         tasks.clear()
         for task_id in installation_tasks:
             installation_tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
@@ -89,11 +99,12 @@ def kill_running_tasks():
     else:
         for task_id in tasks:
             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+            update_cache(task_id)
         tasks.clear()
         for task_id in installation_tasks:
             os.killpg(os.getpgid(installation_tasks[task_id].pid), signal.SIGTERM)
         # thread will clear the installation tasks
-    print("Handler: all tasks killed")
+    print('Handler: all tasks killed')
 
 def clean_up(): # deletes everything
     kill_running_tasks()
@@ -107,6 +118,9 @@ def clean_up(): # deletes everything
                 os.remove(f.path)
     if Path('env/').exists():
         shutil.rmtree('env/')
+    if REDIS is not None:
+        REDIS.flushall()
+        print('Handler: cache deleted')
 
 def get_test_info(project_name, script_name, id, terminated=False):
     test_dir = get_test_dir(project_name, script_name, id)
@@ -205,22 +219,22 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
     return 0 # success
 
 def clean_up_project_on_failed_installation(project_name): # runs in a thread!
-    print(project_name +': clean up thread started')
+    print(f'Handler: {project_name}: clean up thread started')
     error_file = f'{errors_dir}/{project_name}.txt'
     while project_name in installation_tasks:
         print(project_name + ': sleeping')
         sleep(1)
         with LOCK:
             if installation_tasks[project_name].poll() is not None: # process finished
-                print(project_name + ': task finished')
+                print(f'Handler: {project_name}: task finished')
                 if installation_tasks[project_name].returncode != 0:
                     if platform.system() != 'Windows':
                         out, err = installation_tasks[project_name].communicate()
-                        print('Error caught in Thread: ' +  str(err))
+                        print('Handler: Error caught in Thread: ' +  str(err))
                         # save installation error
                         with open(error_file, 'w', encoding='UTF-8') as file:
                             file.write(err.decode('UTF-8'))
-                    print(project_name + ': cleaning up')
+                    print(f'Handler: {project_name}: cleaning up')
                     # delete project
                     project_path = f'{projects_dir}/{project_name}'
                     if Path(project_path).exists():
@@ -234,7 +248,7 @@ def clean_up_project_on_failed_installation(project_name): # runs in a thread!
                     os.remove(error_file)
                 del installation_tasks[project_name]
 
-    print(project_name +': terminating')
+    print(f'Handler: {project_name}: terminating')
 
 def handle(req, no_request=False):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
@@ -422,7 +436,7 @@ def handle(req, no_request=False):
                         GARBAGE_COLLECTOR.start()
                 if REDIS is not None:
                     data = {"id":id, "status":1, "data":"[]", "info":json.dumps(info),  "valid":True, "project_name":project_name, "script_name":script_name} # status 1 -> test is running 
-                    print('caching')
+                    print('Handler: caching')
                     REDIS.hset(f'{project_name}:{script_name}', id , json.dumps(data))
                     REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
 
@@ -530,9 +544,10 @@ def handle(req, no_request=False):
                             id = os.path.basename(f.path)
                             tests_folders[id]= get_test_info(project_name, script_name, id)
                 if REDIS is not None:
-                    print('caching')
-                    for id, value in tests_folders.items():
-                        REDIS.hset(f'{project_name}:{script_name}', id , json.dumps(value))
+                    if(len(tests_folders) > 0):
+                        print('Handler: caching')
+                        for id, value in tests_folders.items():
+                            REDIS.hset(f'{project_name}:{script_name}', id , json.dumps(value))
                         REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
                 return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
@@ -555,7 +570,7 @@ def handle(req, no_request=False):
                 del tasks[task_id]
                 if REDIS is not None:
                     data = get_test_info(project_name, script_name, id, terminated=True)
-                    print('chaching')
+                    print('Handler: caching')
                     REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
                     REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
 
@@ -584,6 +599,10 @@ def handle(req, no_request=False):
                     return jsonify(success=False,exit_code=6,message="test does not exist"), headers
                 shutil.rmtree(test_dir) # remove test_dir
                 delete_zip_file(project_name, script_name,id)
+                if REDIS is not None:
+                    print('Handler: caching')
+                    REDIS.hdel(f'{project_name}:{script_name}', id)
+                    
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
@@ -614,6 +633,11 @@ def handle(req, no_request=False):
                     if Path(project_env_path).exists():
                         shutil.rmtree(project_env_path)
                     deleted.append(name)
+                    if REDIS is not None:
+                        print('Handler: caching')
+                        for name in deleted:
+                            for key in REDIS.scan_iter(f'{name}:*'):
+                                REDIS.delete(key)
                 return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
         if command == 11: # download a test -> sync
@@ -718,6 +742,9 @@ def handle(req, no_request=False):
                 script_path = get_script_dir(project_name,script_name)
                 if Path(script_path).exists():
                     shutil.rmtree(script_path)
+                if REDIS is not None:
+                    print('Handler: caching')
+                    REDIS.delete(f'{project_name}:{script_name}')
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
         
         if command == 17: # stop all tests of script -> sync
@@ -729,11 +756,19 @@ def handle(req, no_request=False):
             with LOCK2:
                 for task_id in tasks:
                     if task_id.startswith(f'TASK${project_name}${script_name}$'):
+                        task_id_splitted = task_id.split('$')
+                        id = task_id_splitted[3]
                         if platform.system() == 'Windows': # windows
                             tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
                             tasks[task_id].kill()
                         else: # Linux
                             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
+                    if REDIS is not None:
+                        data = get_test_info(project_name, script_name, id, terminated=True)
+                        print('Handler: chaching')
+                        REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                if REDIS is not None:
+                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
             return jsonify(success=True,exit_code=0,message="stopped"), headers
 
 
@@ -767,4 +802,9 @@ def handle(req, no_request=False):
         print(traceback.format_exc())
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
 
-atexit.register(kill_running_tasks)
+def on_exit():
+    kill_running_tasks()
+    if REDIS is not None:
+        REDIS.flushall()
+        print('Handler: cache deleted')
+atexit.register(on_exit)
