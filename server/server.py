@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import platform, subprocess, datetime, requests, json, argparse, os, sys, random, string, pathlib, shutil
+import platform, subprocess, datetime, requests, json, argparse, os, sys, random, string, pathlib, shutil, redis
 from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from waitress import serve
@@ -514,9 +514,13 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
     parser.add_argument('-e', '--extern', action='store_true', help='use if OpenFaaS is running on the external ip address of your machine')
     parser.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server')
+    parser.add_argument('-r', '--redis', action='store_true', help='use redis (chaching)')
+    parser.add_argument('-rh', '--redishost', help='redis host, default: localhost',metavar='')
+    parser.add_argument('-rp', '--redisport', help='redis port, default: 6379',metavar='')
+    parser.add_argument('-re', '--redisexpire', help='redis (cache) expiration timer, default: 600 seconds',metavar='')
     requiredNamed = parser.add_argument_group('required arguments')
-    requiredNamed.add_argument('-s', '--host', help='server host',metavar='')
-    requiredNamed.add_argument('-p', '--port', help='server port',metavar='')
+    requiredNamed.add_argument('-s', '--host', help='server host, default: 0.0.0.0',metavar='')
+    requiredNamed.add_argument('-p', '--port', help='server port, default: 80',metavar='')
     requiredNamed.add_argument('-u', '--url', help='OpenFaaS url',metavar='')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
     requiredNamed.add_argument('-d','--direct', help='can the browser connect to OpenFaaS directly? <true || false>',metavar='')
@@ -526,6 +530,14 @@ if __name__ == '__main__':
     host = args.host or '0.0.0.0'
     port = args.port or '80'
     port = '80' if not port.isdigit() else port
+
+    redis_host = args.redishost or 'localhost'
+    redis_port = args.redisport or '6379'
+    redis_port = '6379' if not redis_port.isdigit() else redis_port
+    redis_expire = args.redisexpire or '600'
+    redis_expire = 600 if not redis_expire.isdigit() else int(redis_expire)
+    use_redis = args.redis
+
     url = args.url
     extern = args.extern
     function = args.function or 'ptas'
@@ -584,6 +596,15 @@ if __name__ == '__main__':
         print(f'\ndirect: {direct}')
     print(f'server running on {host}:{port}')
     print(f'running with websockets')
+    if use_redis is True:
+        redis = redis.Redis(
+        host= redis_host,
+        port= redis_port,
+        charset="utf-8", 
+        decode_responses=True)
+        handler.REDIS = redis
+        handler.EXPIRE = redis_expire
+        print(f'using redis on {redis_host}:{redis_port} | cache lifetime: {redis_expire}')
     server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
     server.serve_forever()
 

@@ -10,7 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from threading import Thread, Lock
 from time import sleep
+from redis import Redis
 
+REDIS:Redis = None
+EXPIRE:int = 600
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
 tasks = {}
@@ -33,6 +36,16 @@ def collect_garbage():
                 if tasks[task_id].poll() is not None:
                     to_delete.append(task_id)
             for to_delete_task in to_delete:
+                if REDIS is not None:
+                    task_id_splitted = to_delete_task.split('$')
+                    project_name = task_id_splitted[1]
+                    script_name = task_id_splitted[2]
+                    id = task_id_splitted[3]
+                    data = get_test_info(project_name, script_name, id, terminated=True)
+                    print('caching from thread')
+                    REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
+
                 del tasks[to_delete_task]
         sleep(3)         
     # print("GARBAGE_COLLECTOR: terminating")
@@ -95,7 +108,7 @@ def clean_up(): # deletes everything
     if Path('env/').exists():
         shutil.rmtree('env/')
 
-def get_test_info(project_name, script_name, id):
+def get_test_info(project_name, script_name, id, terminated=False):
     test_dir = get_test_dir(project_name, script_name, id)
     csv_file_path = f'{test_dir}/results_stats.csv'
     info_file_path = f'{test_dir}/info.txt'
@@ -119,7 +132,7 @@ def get_test_info(project_name, script_name, id):
             if tasks[task_id].poll() == None:
                 valid = True
         
-    if task_id in tasks:
+    if task_id in tasks and not terminated:
         data = {"id":id, "status":1, "data":j, "info":info,  "valid":valid, "project_name":project_name, "script_name":script_name} # status 1 -> test is running 
     else:
         data = {"id":id, "status":0, "data":j, "info":info, "valid":valid, "project_name":project_name, "script_name":script_name} # status 0 -> test is not running
@@ -397,8 +410,9 @@ def handle(req, no_request=False):
                 started_at = t.time()
                 # save test info
                 info_file = f'{test_dir}/info.txt'
+                info = {"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}
                 with open(info_file, "w", encoding="UTF-8") as file:
-                    file.write(json.dumps({"users": users, "spawn_rate": spawn_rate, "host": host,"workers":workers_count, "time": time, "started_at":started_at}))
+                    file.write(json.dumps(info))
 
                 global GARBAGE_COLLECTOR
                 with GARBAGE_COLLECTOR_LOCK:
@@ -406,6 +420,11 @@ def handle(req, no_request=False):
                         GARBAGE_COLLECTOR = Thread(target=collect_garbage)
                         GARBAGE_COLLECTOR.daemon = True
                         GARBAGE_COLLECTOR.start()
+                if REDIS is not None:
+                    data = {"id":id, "status":1, "data":"[]", "info":json.dumps(info),  "valid":True, "project_name":project_name, "script_name":script_name} # status 1 -> test is running 
+                    print('caching')
+                    REDIS.hset(f'{project_name}:{script_name}', id , json.dumps(data))
+                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
 
                 return jsonify(success=True,exit_code=0,id=id,started_at=started_at,message="test started"), headers
 
@@ -495,13 +514,26 @@ def handle(req, no_request=False):
             tests_folders = {}
             scrpit_folder_path = f'{projects_dir}/{project_name}/locust/{script_name}'
 
+            if REDIS is not None:
+                cache = REDIS.hgetall(f'{project_name}:{script_name}')
+                if len(cache) > 0: # exists
+                    print("from cache")
+                    tests = {}
+                    for key, value in cache.items():
+                        tests[key] = json.loads(value)        
+                    return jsonify(success=True,exit_code=0,tests=tests,message="folders"), headers
+
             with LOCK2:
                 if Path(scrpit_folder_path).exists():
                     for f in os.scandir(scrpit_folder_path):
                         if f.is_dir():
                             id = os.path.basename(f.path)
                             tests_folders[id]= get_test_info(project_name, script_name, id)
-
+                if REDIS is not None:
+                    print('caching')
+                    for id, value in tests_folders.items():
+                        REDIS.hset(f'{project_name}:{script_name}', id , json.dumps(value))
+                        REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
                 return jsonify(success=True,exit_code=0,tests=tests_folders,message="folders"), headers
 
         if command == 8: # stop test -> sync
@@ -521,6 +553,12 @@ def handle(req, no_request=False):
                 else:
                     os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
                 del tasks[task_id]
+                if REDIS is not None:
+                    data = get_test_info(project_name, script_name, id, terminated=True)
+                    print('chaching')
+                    REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
+
                 return jsonify(success=True,exit_code=0,message="test is stopped"), headers
 
         if command == 9: # delete test -> sync

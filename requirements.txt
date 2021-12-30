@@ -5,3 +5,4 @@ waitress
 requests
 gevent
 virtualenv
+redis
