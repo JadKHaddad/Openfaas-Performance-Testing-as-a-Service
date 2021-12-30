@@ -185,6 +185,9 @@ export default {
           .then((data) => {
             if (data.success) {
               this.$emit("info", "Success", "green");
+              this.socket.emit("clean_up", {
+                openfaasurl: this.openfaasUrl,
+              });
               this.tests = {};
             } else {
               this.$emit("info", "There was an error deleting projects", "red");

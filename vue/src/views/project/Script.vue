@@ -195,7 +195,11 @@ export default {
                   } else if (status === 3) {
                     // console.log("not valid");
                     this.tests[id].valid = false;
-                    this.$emit("info", id + ": There was an error running this test", "red");
+                    this.$emit(
+                      "info",
+                      id + ": There was an error running this test",
+                      "red"
+                    );
                     this.disconnectTest(id);
                   }
                 }
@@ -276,6 +280,13 @@ export default {
               this.disconnectTest(msg[i]);
             }
           }
+        }
+      );
+      this.socket.on(
+        this.openfaasUrl + "_project_delete_" + this.pid,
+        (msg) => {
+          this.$emit("info", this.pid + " is deleted", "green");
+          this.$router.push({ name: "Home" });
         }
       );
     },
@@ -495,7 +506,7 @@ export default {
     this.socket.off(
       this.openfaasUrl + "_" + this.pid + "_" + this.id + "_test_delete"
     );
-
+    this.socket.off(this.openfaasUrl + "_project_delete_" + this.pid);
     // console.log("script disconnected");
   },
   mounted() {

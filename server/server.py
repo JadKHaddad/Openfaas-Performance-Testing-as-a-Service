@@ -312,7 +312,7 @@ def T_TASK():
                                         socketio.emit(f'{url}_{project_name}_{script_name}', response.text)
                                     except:
                                         socketio.emit(f'{url}_{project_name}_{script_name}', {'success': False})
-                                #print('sent to: ', f'{url}_{project_name}_{script_name}')
+                                print('sent to: ', f'{url}_{project_name}_{script_name}')
                                 sent[f'{url}_{project_name}_{script_name}'] = None
             if url not in sent:
                 if url == 'None':
@@ -473,6 +473,13 @@ def peoject_delete(message):
     url = message.get('openfaasurl')
     project_names = message.get('project_names')
     socketio.emit(f'{url}_project_delete', project_names)
+    for project_name in project_names:
+        socketio.emit(f'{url}_project_delete_{project_name}')
+
+@socketio.on('clean_up')
+def clean_up(message):
+    url = message.get('openfaasurl')
+    socketio.emit(f'{url}_clean_up')
 
 OPENFAAS_T = None
 OPENFAAS_T_LOCK = Lock()

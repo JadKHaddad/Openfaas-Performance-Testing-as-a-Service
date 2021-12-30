@@ -164,6 +164,12 @@ export default {
           if (msg.success) this.runningTests = msg.count;
         }
       });
+      this.socket.on(this.openfaasUrl + "_clean_up", (msg) => {
+        if (this.$route.name === "Project" || this.$route.name === "Script") {
+          this.$router.push({ name: "Home" });
+          this.showInfo("All projects deleted", "green");
+        }
+      });
       console.log("connected to: " + this.openfaasUrl);
     },
     configureConnections() {

@@ -42,6 +42,10 @@ export default {
         .catch(() => {
           this.$emit("info", "Could not connect to server", "red");
         });
+      this.socket.on(this.openfaasUrl + "_project_delete_" + this.id, (msg) => {
+        this.$emit("info", this.id + " is deleted", "green");
+        this.$router.push({ name: "Home" });
+      });
     },
     navigateToScript(script) {
       this.$router.push({
@@ -49,6 +53,9 @@ export default {
         params: { pid: this.id, id: script },
       });
     },
+  },
+  beforeUnmount() {
+    this.socket.off(this.openfaasUrl + "_project_delete_" + this.id);
   },
   mounted() {
     this.init();
