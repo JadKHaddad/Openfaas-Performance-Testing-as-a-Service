@@ -10,9 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from threading import Thread, Lock
 from time import sleep
-from redis import Redis
 
-REDIS:Redis = None
+REDIS = None
 EXPIRE:int = 600
 
 headers = {'Access-Control-Allow-Origin': '*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}
@@ -85,7 +84,7 @@ def update_cache(task_id):
         data = get_test_info(project_name, script_name, id, terminated=True)
         REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
         REDIS.expire(f'{project_name}:{script_name}', EXPIRE)
-        
+
 def kill_running_tasks():
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
@@ -459,12 +458,17 @@ def handle(req, no_request=False):
             with LOCK2:
                 for id in ids:    
                     task_id = create_task_id(project_name, script_name, id)
+                    test_dir = get_test_dir(project_name, script_name, id)
+                    csv_file_path = f'{test_dir}/results_stats.csv'
                     if task_id in tasks:
-                        test_dir = get_test_dir(project_name, script_name, id)
-                        csv_file_path = f'{test_dir}/results_stats.csv'
                         if tasks[task_id].poll() is not None: # process finished
                             if not Path(csv_file_path).exists(): # test is not valid
                                 del tasks[task_id]
+                                if REDIS is not None:
+                                    data = get_test_info(project_name, script_name, id)
+                                    REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
+
                                 tests.append({'id':id, 'status':3, 'message':'test is not valid'})
                                 continue
                             del tasks[task_id]
@@ -477,6 +481,15 @@ def handle(req, no_request=False):
                             j = pd_data.to_json(orient='records')
                         tests.append({'id':id, 'status':1, 'data':j,'message':'test running'}) # status 1 -> test is running
                         continue
+                    
+                    valid = Path(csv_file_path).exists()
+                    if REDIS is not None:
+                        data = get_test_info(project_name, script_name, id)
+                        REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                        REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
+
+                    if not valid:
+                        tests.append({'id':id, 'status':3, 'data':None,'message':'test is not runnig'}) # status 3 -> test not valid
                     tests.append({'id':id, 'status':0, 'data':None,'message':'test is not runnig'}) # status 0 -> test not running
 
             if local is not None:
@@ -765,10 +778,10 @@ def handle(req, no_request=False):
                             tasks[task_id].kill()
                         else: # Linux
                             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
-                    if REDIS is not None:
-                        data = get_test_info(project_name, script_name, id, terminated=True)
-                        print('Handler: chaching')
-                        REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
+                        if REDIS is not None:
+                            data = get_test_info(project_name, script_name, id, terminated=True)
+                            print('Handler: chaching')
+                            REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
                 if REDIS is not None:
                     REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
             return jsonify(success=True,exit_code=0,message="stopped"), headers

@@ -4,4 +4,3 @@ pandas
 matplotlib
 sklearn
 numpy
-redis

@@ -522,7 +522,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--version', action='version',version='%(prog)s 1.0', help='version')
     parser.add_argument('-e', '--extern', action='store_true', help='use if OpenFaaS is running on the external ip address of your machine')
     parser.add_argument('-l', '--local', action='store_true', help='use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server')
-    parser.add_argument('-r', '--redis', action='store_true', help='use redis (cache)')
+    parser.add_argument('-r', '--redis', action='store_true', help='use redis (cache). recommended if you dont have SSD')
     parser.add_argument('-rh', '--redishost', help='redis host, default: localhost',metavar='')
     parser.add_argument('-rp', '--redisport', help='redis port, default: 6379',metavar='')
     parser.add_argument('-re', '--redisexpire', help='redis (cache) expiration timer, default: 600 seconds',metavar='')

@@ -70,6 +70,9 @@
               <div v-if="uploading" class="btn-container">
                 <div class="spinner-border text-primary spinner"></div>
               </div>
+              <div class="upload-message">
+                Please make sure all names don't include blank spaces
+              </div>
               <!-- Submit button -->
               <button
                 type="button"
