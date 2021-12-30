@@ -84,7 +84,8 @@ def update_cache(task_id):
         id = task_id_splitted[3]
         data = get_test_info(project_name, script_name, id, terminated=True)
         REDIS.hset(f'{project_name}:{script_name}', id, json.dumps(data))
-
+        REDIS.expire(f'{project_name}:{script_name}', EXPIRE)
+        
 def kill_running_tasks():
     if platform.system() == 'Windows': # windows
         for task_id in tasks:
@@ -602,7 +603,7 @@ def handle(req, no_request=False):
                 if REDIS is not None:
                     print('Handler: caching')
                     REDIS.hdel(f'{project_name}:{script_name}', id)
-                    
+                    REDIS.expire(f'{project_name}:{script_name}',EXPIRE)
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
@@ -633,11 +634,12 @@ def handle(req, no_request=False):
                     if Path(project_env_path).exists():
                         shutil.rmtree(project_env_path)
                     deleted.append(name)
-                    if REDIS is not None:
-                        print('Handler: caching')
-                        for name in deleted:
-                            for key in REDIS.scan_iter(f'{name}:*'):
-                                REDIS.delete(key)
+                if REDIS is not None:
+                    print('Handler: caching')
+                    for name in deleted:
+                        for key in REDIS.scan_iter(f'{name}:*'):
+                            REDIS.delete(key)
+                            REDIS.expire(key, EXPIRE)
                 return jsonify(success=True,exit_code=0,deleted=deleted), headers
 
         if command == 11: # download a test -> sync
