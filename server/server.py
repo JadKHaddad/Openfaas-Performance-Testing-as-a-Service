@@ -312,7 +312,7 @@ def T_TASK():
                                         socketio.emit(f'{url}_{project_name}_{script_name}', response.text)
                                     except:
                                         socketio.emit(f'{url}_{project_name}_{script_name}', {'success': False})
-                                print('sent to: ', f'{url}_{project_name}_{script_name}')
+                                #print('sent to: ', f'{url}_{project_name}_{script_name}')
                                 sent[f'{url}_{project_name}_{script_name}'] = None
             if url not in sent:
                 if url == 'None':
