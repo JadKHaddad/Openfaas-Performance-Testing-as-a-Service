@@ -545,7 +545,7 @@ def handle(req, no_request=False):
             if REDIS is not None:
                 cache = REDIS.hgetall(f'{project_name}:{script_name}')
                 if len(cache) > 0: # exists
-                    print("from cache")
+                    print('Handler: from cache')
                     tests = {}
                     for key, value in cache.items():
                         tests[key] = json.loads(value)        
