@@ -13,4 +13,4 @@ RUN pip install -r ./ptas/requirements.txt
 
 WORKDIR /home/server
 
-CMD ["python", "/home/server/server.py", "-l", "-p", "8080"]
+ENTRYPOINT ["python", "/home/server/server.py"]

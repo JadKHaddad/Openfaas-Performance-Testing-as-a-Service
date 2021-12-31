@@ -52,14 +52,32 @@ Build the image:
 ```sh
 docker build -t  performance:1.0 .
 ```
-
 Run the image in a container:
 ```sh
-docker run -p 5000:8080 performance:1.0
+docker run -p 5000:8080 performance:1.0 -l -p 8080
 ```
 Or run it in an **interactive** container:
 ```sh
-docker run --rm -it -p 5000:8080  performance:1.0
+docker run --rm -it -p 5000:8080  performance:1.0 -l -p 8080
+```
+Visit **localhost:5000**
+
+## You can also use a Redis container
+Pull the official Redis image:
+```sh
+docker pull redis
+```
+Create a new network:
+```sh
+docker network create network
+```
+Run Redis:
+```sh
+docker run --rm -it --network network --name redis redis:latest
+```
+Run Performance:
+```sh
+docker run --rm -it -p 5000:8080 --network network performance:1.0 -l -p 8080 -r -rh redis
 ```
 Visit **localhost:5000**
 
@@ -83,20 +101,24 @@ For more help use:
 python3 server.py -h
 ```
 ```sh
-usage: server.py [-h] [-v] [-e] [-l] [-s] [-p] [-u] [-f] [-d]
+usage: server.py [-h] [-v] [-e] [-l] [-r] [-rh] [-rp] [-re] [-s] [-p] [-u] [-f] [-d]
 
 optional arguments:
-  -h, --help        help
-  -v, --version     version
-  -e, --extern      use if OpenFaaS is running on the external ip address of your machine
-  -l, --local       use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server
+  -h, --help            help
+  -v, --version         version
+  -e, --extern          use if OpenFaaS is running on the external ip address of your machine
+  -l, --local           use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server
+  -r, --redis           use redis (cache). recommended if you dont have SSD
+  -rh , --redishost     redis host, default: localhost
+  -rp , --redisport     redis port, default: 6379
+  -re , --redisexpire   redis (cache) expiration timer, default: 600 seconds
 
 required arguments:
-  -s , --host       server host
-  -p , --port       server port
-  -u , --url        OpenFaaS url
-  -f , --function   function name
-  -d , --direct     can the browser connect to OpenFaaS directly? <true || false>
+  -s , --host           server host, default: 0.0.0.0
+  -p , --port           server port, default: 80
+  -u , --url            OpenFaaS url
+  -f , --function       function name
+  -d , --direct         can the browser connect to OpenFaaS directly?
 ```
 
 ## TODO

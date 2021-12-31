@@ -126,6 +126,7 @@ def egg():
     
 @app.route('/proxy', methods=['POST'])
 def proxy():
+    error = False
     url = request.cookies.get('openfaasurl')
     if url is not None:
         url = unquote(url)
@@ -153,15 +154,24 @@ def proxy():
             o = open(f'{path}/{uploaded_file_name}', "rb")
             openfiles.append(o)
             files[key] = (uploaded_file_name, o, uploaded_file_content_type)
-        res = requests.post(url, data=request.data, files=files)
+        try:
+            res = requests.post(url, data=request.data, files=files)
+        except:
+            error = True
         # close the files
         for o in openfiles:
             o.close()
         # delete the files
         shutil.rmtree(path)
     else:
-        res = requests.post(url, data=request.data)   
-
+        try:
+            res = requests.post(url, data=request.data)   
+        except:
+            error = True
+    if error:
+        return Response(
+        status=503
+        )
     return Response(
         response=res.content,
         status=res.status_code,
@@ -531,7 +541,7 @@ if __name__ == '__main__':
     requiredNamed.add_argument('-p', '--port', help='server port, default: 80',metavar='')
     requiredNamed.add_argument('-u', '--url', help='OpenFaaS url',metavar='')
     requiredNamed.add_argument('-f','--function', help='function name',metavar='')
-    requiredNamed.add_argument('-d','--direct', help='can the browser connect to OpenFaaS directly? <true || false>',metavar='')
+    requiredNamed.add_argument('-d','--direct', action='store_true', help='can the browser connect to OpenFaaS directly?')
     
     args = parser.parse_args()
 
@@ -549,12 +559,8 @@ if __name__ == '__main__':
     url = args.url
     extern = args.extern
     function = args.function or 'ptas'
-    direct = args.direct or 'true'
+    DIRECT = args.direct
     LOCAL = args.local
-
-    if direct != 'true' and direct != 'false':
-        print('-d , --direct can only be true or false')
-        exit()
 
     if url is None:
         ALLOWPROXY = False
@@ -567,7 +573,6 @@ if __name__ == '__main__':
         
     OPENFAASULR = url
     PROXYOPENFAASULR = url
-    DIRECT = direct
 
     if extern == True:
         if platform.system() == 'Linux':
@@ -577,7 +582,7 @@ if __name__ == '__main__':
             if url is None:
                 print('if you are not using Linux please provide your external ip address manually')
                 exit()
-        if DIRECT == 'false':
+        if not DIRECT:
             PROXYOPENFAASULR = "http://127.0.0.1:8080/"
         else:
             PROXYOPENFAASULR = OPENFAASULR
@@ -597,11 +602,11 @@ if __name__ == '__main__':
         print(f'\nopenfaas url: {OPENFAASULR}')
         print(f'sync function call: {FUNCTIONURL}')
         print(f'async function call: {ASYNCFUNCTIONURL}')
-        if direct == 'false':
+        if not DIRECT:
             print(f'\nproxy openfaas url: {PROXYOPENFAASULR}')
             print(f'proxy sync function call: {PROXYFUNCTIONURL}')
             print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
-        print(f'\ndirect: {direct}')
+        print(f'\ndirect: {DIRECT}')
     print(f'server running on {host}:{port}')
     print(f'running with websockets')
     if use_redis is True:
