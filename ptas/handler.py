@@ -119,7 +119,7 @@ def clean_up(): # deletes everything
     if Path('env/').exists():
         shutil.rmtree('env/')
     if REDIS is not None:
-        REDIS.flushall()
+        REDIS.flushdb()
         print('Handler: cache deleted')
 
 def get_test_info(project_name, script_name, id, terminated=False):
@@ -820,6 +820,6 @@ def handle(req, no_request=False):
 def on_exit():
     kill_running_tasks()
     if REDIS is not None:
-        REDIS.flushall()
+        REDIS.flushdb()
         print('Handler: cache deleted')
 atexit.register(on_exit)
