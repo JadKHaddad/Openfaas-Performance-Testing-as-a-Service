@@ -79,7 +79,7 @@ Run Performance:
 ```sh
 docker run --rm -it -p 5000:8080 --network network performance:1.0 -l -p 8080 -r -rh redis
 ```
-Or use docker-compose after building the image and pulling redis:
+Or use docker-compose after building the image, creating the network and pulling redis:
 ```sh
 docker-compose up
 ```
