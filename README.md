@@ -105,7 +105,7 @@ For more help use:
 python3 server.py -h
 ```
 ```sh
-usage: server.py [-h] [-v] [-e] [-l] [-r] [-rh] [-rp] [-re] [-s] [-p] [-u] [-f] [-d]
+usage: server.py [-h] [-v] [-e] [-l] [-r] [-rh] [-rp] [-re] [-rd] [-s] [-p] [-u] [-f] [-d]
 
 optional arguments:
   -h, --help            help
