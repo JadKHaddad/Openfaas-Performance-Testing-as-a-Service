@@ -79,6 +79,10 @@ Run Performance:
 ```sh
 docker run --rm -it -p 5000:8080 --network network performance:1.0 -l -p 8080 -r -rh redis
 ```
+Or use docker-compose after building the image and pulling redis:
+```sh
+docker-compose up
+```
 Visit **localhost:5000**
 
 ## Or install locally
