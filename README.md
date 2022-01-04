@@ -109,16 +109,17 @@ optional arguments:
   -e, --extern          use if OpenFaaS is running on the external ip address of your machine
   -l, --local           use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server
   -r, --redis           use redis (cache). recommended if you dont have SSD
-  -rh , --redishost     redis host, default: localhost
-  -rp , --redisport     redis port, default: 6379
-  -re , --redisexpire   redis (cache) expiration timer, default: 600 seconds
+  -rh, --redishost      redis host, default: localhost
+  -rp, --redisport      redis port, default: 6379
+  -re, --redisexpire    redis (cache) expiration timer, default: 600 seconds
+  -rd, --redisdatabase  redis database: 0 - 15, default: 0
 
 required arguments:
-  -s , --host           server host, default: 0.0.0.0
-  -p , --port           server port, default: 80
-  -u , --url            OpenFaaS url
-  -f , --function       function name
-  -d , --direct         can the browser connect to OpenFaaS directly?
+  -s, --host            server host, default: 0.0.0.0
+  -p, --port            server port, default: 80
+  -u, --url             OpenFaaS url
+  -f, --function        function name
+  -d, --direct          can the browser connect to OpenFaaS directly?
 ```
 
 ## TODO
