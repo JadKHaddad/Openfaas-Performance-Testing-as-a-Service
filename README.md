@@ -79,6 +79,10 @@ Run Performance:
 ```sh
 docker run --rm -it -p 5000:8080 --network network performance:1.0 -l -p 8080 -r -rh redis
 ```
+Or use docker-compose after building the image, creating the network and pulling redis:
+```sh
+docker-compose up
+```
 Visit **localhost:5000**
 
 ## Or install locally
@@ -101,7 +105,7 @@ For more help use:
 python3 server.py -h
 ```
 ```sh
-usage: server.py [-h] [-v] [-e] [-l] [-r] [-rh] [-rp] [-re] [-s] [-p] [-u] [-f] [-d]
+usage: server.py [-h] [-v] [-e] [-l] [-r] [-rh] [-rp] [-re] [-rd] [-s] [-p] [-u] [-f] [-d]
 
 optional arguments:
   -h, --help            help
@@ -109,16 +113,17 @@ optional arguments:
   -e, --extern          use if OpenFaaS is running on the external ip address of your machine
   -l, --local           use if you dont want to use an OpenFaaS server. server will run on 0.0.0.0:80 with no OpenFaaS server
   -r, --redis           use redis (cache). recommended if you dont have SSD
-  -rh , --redishost     redis host, default: localhost
-  -rp , --redisport     redis port, default: 6379
-  -re , --redisexpire   redis (cache) expiration timer, default: 600 seconds
+  -rh, --redishost      redis host, default: localhost
+  -rp, --redisport      redis port, default: 6379
+  -re, --redisexpire    redis (cache) expiration timer, default: 600 seconds
+  -rd, --redisdatabase  redis database: 0 - 15, default: 0
 
 required arguments:
-  -s , --host           server host, default: 0.0.0.0
-  -p , --port           server port, default: 80
-  -u , --url            OpenFaaS url
-  -f , --function       function name
-  -d , --direct         can the browser connect to OpenFaaS directly?
+  -s, --host            server host, default: 0.0.0.0
+  -p, --port            server port, default: 80
+  -u, --url             OpenFaaS url
+  -f, --function        function name
+  -d, --direct          can the browser connect to OpenFaaS directly?
 ```
 
 ## TODO

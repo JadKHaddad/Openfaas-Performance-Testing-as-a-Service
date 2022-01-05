@@ -536,6 +536,7 @@ if __name__ == '__main__':
     parser.add_argument('-rh', '--redishost', help='redis host, default: localhost',metavar='')
     parser.add_argument('-rp', '--redisport', help='redis port, default: 6379',metavar='')
     parser.add_argument('-re', '--redisexpire', help='redis (cache) expiration timer, default: 600 seconds',metavar='')
+    parser.add_argument('-rd', '--redisdatabase', help='redis database: 0 - 15, default: 0',metavar='')
     requiredNamed = parser.add_argument_group('required arguments')
     requiredNamed.add_argument('-s', '--host', help='server host, default: 0.0.0.0',metavar='')
     requiredNamed.add_argument('-p', '--port', help='server port, default: 80',metavar='')
@@ -554,6 +555,10 @@ if __name__ == '__main__':
     redis_port = '6379' if not redis_port.isdigit() else redis_port
     redis_expire = args.redisexpire or '600'
     redis_expire = 600 if not redis_expire.isdigit() else int(redis_expire)
+    redis_database = args.redisdatabase or '0'
+    redis_database = 0 if not redis_database.isdigit() else int(redis_database)
+    if redis_database > 15 or redis_database < 0:
+        redis_database = 0
     use_redis = args.redis
 
     url = args.url
@@ -611,13 +616,14 @@ if __name__ == '__main__':
     print(f'running with websockets')
     if use_redis is True:
         redis = redis.Redis(
-        host= redis_host,
-        port= redis_port,
+        host=redis_host,
+        port=redis_port,
+        db=redis_database,
         charset="utf-8", 
         decode_responses=True)
         handler.REDIS = redis
         handler.EXPIRE = redis_expire
-        print(f'using redis on {redis_host}:{redis_port} | cache lifetime: {redis_expire} seconds')
+        print(f'using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {redis_expire} seconds')
     server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
     server.serve_forever()
 
