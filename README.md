@@ -144,6 +144,4 @@ Licensed under the [MIT License](LICENSE).
 [Multipass Ubuntu-Host Port-Forwarding](Multipass-Ubuntu-Host-Port-Forwarding.md)<br />
 [Raising the Maximum Number of File Descriptors (Open Files) on Ubuntu](Raising-the-Maximum-Number-of-File-Descriptors-(Open-Files)-on-Ubuntu.md)<br />
 [Faasd with Multipass](https://github.com/openfaas/faasd/blob/master/docs/MULTIPASS.md)<br />
-[OpenFaaS Function without OpenFaaS](https://github.com/openfaas/faasd/blob/master/docs/OpenFaaS-Function-as-a-Docker-Container.md)
-
-
+[OpenFaaS Function without OpenFaaS](OpenFaaS-Function-as-a-Docker-Container.md)
