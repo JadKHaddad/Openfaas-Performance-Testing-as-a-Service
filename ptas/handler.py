@@ -109,7 +109,7 @@ def kill_running_tasks():
 def clean_up(): # deletes everything
     kill_running_tasks()
     if platform.system() == 'Windows': # windows
-        sleep(2)
+        sleep(2) # just for dev
     if Path(projects_dir).exists():
         for f in os.scandir(projects_dir):
             if f.is_dir():
@@ -749,11 +749,11 @@ def handle(req, no_request=False):
                         else: # Linux
                             os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
                 if platform.system() == 'Windows': # windows
-                    sleep(2)
-                # delete stoped tasks
+                    sleep(2)  # just for dev
+                # delete stopped tasks
                 for stopped_task in stopped:
                     del tasks[stopped_task]
-                # delete tes dir
+                # delete tests dir
                 script_path = get_script_dir(project_name,script_name)
                 if Path(script_path).exists():
                     shutil.rmtree(script_path)
