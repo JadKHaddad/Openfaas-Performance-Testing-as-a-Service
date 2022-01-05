@@ -14,8 +14,10 @@
       :minimizeTests="minimizeTests"
       :darkTheme="darkTheme"
       :noRedges="noRedges"
+      :rollBack="navBarRollBack"
       @default="setDefaults"
       @settings="updateSettings"
+      @rolledBack="setNavBarRollBack"
     />
     <router-view
       :url="url"
@@ -105,8 +107,8 @@
         </div>
       </div>
     </div>
-    <teleport v-if="darkTheme" to="#teleported">
-      <div class="background-dark"></div>
+    <teleport  to="#teleported">
+      <div class="background-dark" :class="{dark: darkTheme}"></div>
     </teleport>
     <teleport to="#teleported-footer">
       <Footer
@@ -148,6 +150,7 @@ export default {
       infoErrorText: "",
       confirmMessage: "",
       confirmButtonText: "confirm",
+      navBarRollBack: false,
     };
   },
   methods: {
@@ -216,6 +219,7 @@ export default {
       localStorage.setItem("minimizeTests", this.minimizeTests);
       this.update = true;
       this.register();
+      this.navBarRollBack = true;
       console.log("new openfaasUrl: " + this.openfaasUrl);
       console.log("new baseUrl: " + this.url);
     },
@@ -236,9 +240,13 @@ export default {
       localStorage.setItem("noOpenfaas", this.noOpenfaas);
       this.update = true;
       this.register();
+      this.navBarRollBack = true;
       console.log("default openfaasUrl: " + this.openfaasUrl);
       console.log("default baseUrl: " + this.url);
     },
+    setNavBarRollBack(){
+      this.navBarRollBack = false;
+    }
   },
   created() {
     if (localStorage.getItem("url")) this.url = localStorage.getItem("url");

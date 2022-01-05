@@ -243,6 +243,7 @@ export default {
     "minimizeTests",
     "darkTheme",
     "noRedges",
+    "rollBack",
   ],
   data() {
     return {
@@ -345,7 +346,6 @@ export default {
               if (newOpenfaasurl.slice(-1) == "/") {
                 newOpenfaasurl = newOpenfaasurl.slice(0, -1);
               }
-
               var newBaseUrl = `${newOpenfaasurl}/function/ptas`;
               if (!this.tempDirect) newBaseUrl = "/proxy";
               onSuccess(newOpenfaasurl, newBaseUrl);
@@ -363,7 +363,13 @@ export default {
       }
     },
   },
-
+  updated() {
+    if (this.rollBack) {
+      $("#gear").animateRotate(-180);
+      $("*").off(".myEvents");
+      this.$emit("rolledBack");
+    }
+  },
   created() {
     this.setUp();
   },
@@ -390,6 +396,7 @@ export default {
           $("#gear").animateRotate(-180);
           $("*").off(".myEvents");
         }
+
         event.stopPropagation();
       });
       return false;
