@@ -5,7 +5,7 @@ WORKDIR /home/
 COPY ptas.docker/index.py           .
 
 USER root
-RUN pip install flask waitress
+RUN pip install flask waitress requests
 
 RUN mkdir -p /home/function
 
@@ -18,4 +18,4 @@ RUN pip install -r requirements.txt
 
 WORKDIR /home/
 
-CMD ["python", "/home/index.py"]
+CMD ["python", "-u", "/home/index.py"]

@@ -812,6 +812,9 @@ def handle(req, no_request=False):
 
         if command == 914: # test connection -> sync
             return jsonify(success=True), headers
+        
+        else:
+            return jsonify(success=False,exit_code=1,message="bad request"), headers
 
     except Exception as e:
         print(traceback.format_exc())

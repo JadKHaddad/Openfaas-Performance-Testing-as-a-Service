@@ -13,4 +13,4 @@ RUN pip install -r ./ptas/requirements.txt
 
 WORKDIR /home/server
 
-ENTRYPOINT ["python", "/home/server/server.py"]
+ENTRYPOINT ["python", "-u", "/home/server/server.py"]

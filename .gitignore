@@ -12,6 +12,7 @@
 /server/env
 *.junk
 /visio
+/ptas.docker/function/__pycache__
 
 .DS_Store
 node_modules
