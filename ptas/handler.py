@@ -1,4 +1,4 @@
-import json, os, shutil, subprocess, signal, platform, traceback, pathlib, socket, atexit
+import json, os, shutil, subprocess, signal, platform, traceback, pathlib, socket, sys
 from flask import jsonify, send_from_directory, request
 from os.path import join
 import time as t
@@ -820,9 +820,19 @@ def handle(req, no_request=False):
         print(traceback.format_exc())
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
 
-def on_exit():
+def on_exit(signum, frame):
     kill_running_tasks()
     if REDIS is not None:
         REDIS.flushdb()
         print('Handler: cache deleted')
-atexit.register(on_exit)
+    print('Handler: shutting down')
+    try:
+        sys.exit(0)
+    except SystemExit:
+        os._exit(0)
+
+#import atexit
+#atexit.register(on_exit)
+
+signal.signal(signal.SIGINT, on_exit)
+signal.signal(signal.SIGTERM, on_exit)

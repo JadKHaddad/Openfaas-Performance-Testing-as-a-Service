@@ -386,7 +386,8 @@ def disconnect_control():
     client = request.sid
     with T_LOCK:
         if client in CONNECTED_CLIENTS:
-           del CONNECTED_CLIENTS[client]['events']['control']
+            if 'control' in CONNECTED_CLIENTS[client]['events']:
+                del CONNECTED_CLIENTS[client]['events']['control']
     #print('\nClient unsunscribed control', client)
     #print('Current connected clients: ', CONNECTED_CLIENTS)
 
@@ -626,4 +627,3 @@ if __name__ == '__main__':
         print(f'using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {redis_expire} seconds')
     server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
     server.serve_forever()
-
