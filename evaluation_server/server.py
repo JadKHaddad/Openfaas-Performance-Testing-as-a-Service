@@ -5,7 +5,19 @@ from geventwebsocket.handler import WebSocketHandler
 from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit
 from threading import Lock
-import json
+import json, os
+from pathlib import Path
+import subprocess
+from random import randrange
+
+if not Path('results').exists():
+    os.mkdir('results')
+
+if not Path('results/first_questions').exists():
+    os.mkdir('results/first_questions')
+
+if not Path('results/last_questions').exists():
+    os.mkdir('results/last_questions')
 
 CLIENTS = {}
 L = Lock()
@@ -26,7 +38,7 @@ def start():
 
     # get j_data
     j_data = json.loads(request.data)
-    print(j_data)
+
     # save json_data
     with open(f'results/first_questions/{id}_json.txt','w',encoding='utf-8') as file:
         file.write(json.dumps(j_data))
@@ -38,8 +50,17 @@ def start():
             a = item.get('a')
             file.write(f'{q}:{a}\n')
 
-    # create user..
-    return jsonify(success=True, username="user1", password="password1", port="8909")
+    # create user and copy the projects to his dir
+    username = 'user_' + str(randrange(10000))
+    password = '123456'
+    cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username}  && sudo cp -a ../modified_server/. /home/{username}/modified_server/'
+    subprocess.Popen(cmd, shell=True).wait()
+
+    # run the service
+    cmd = f'cd /home/{username}/modified_server/server/ && sudo python3 ./server.py -l -s 0.0.0.0 -p 5001'
+    subprocess.Popen(cmd, shell=True)
+
+    return jsonify(success=True, username=username, password=password, port="8909")
 
 @socketio.on('connect')
 def connect():

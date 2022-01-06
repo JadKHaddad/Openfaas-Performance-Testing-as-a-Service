@@ -1,2 +1,7 @@
 evaluation_server/results/final_questions/*
 evaluation_server/results/first_questions/*
+modified_server/server/projects/locust_scripts/locust/__pycache__
+modified_server/server/projects/locust_scripts/locust/gen_gs_alarm_device_workload
+modified_server/server/projects/locust_scripts/locust/gen_gs_prod_workload
+modified_server/server/projects/locust_scripts/locust/locust_teastore
+__pycache__/
