@@ -47,6 +47,7 @@ Content-Length: 17
 
 {"success":true}
 ```
+Use your own IP address instead of **192.168.178.72**<br><br>
 Use **localhost:8081** as your OpenFaaS url and you are good to go!
 
 ## Note
