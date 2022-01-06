@@ -1,0 +1,77 @@
+{% include "header.html" %}
+
+<div id="app">
+   <div class="content">
+      <h1> Evaluation </h1>
+      <div class="sections">
+         <section class="first">
+            <div class="card">
+               <div class="card-body">
+                  <h5 class="card-title">Before we begin</h5>
+                  <p class="card-text">
+                  <div v-for="item in firstQuestions" :key="item" class="row g-3 align-items-center">
+                     <div class="col">
+                        <span class="form-text"> [[ item.q ]]</span>
+                     </div>
+                     <div class="form-outline col order-5">
+                        <input type="text" :id="item.q" class="form-control" v-model="item.a" :disabled="started || !ready"/>
+                        <label class="form-label" :for="item.q">Answer</label>
+                     </div>
+                  </div>
+
+                  </p>
+                  <button type="button" class="btn btn-primary" :disabled="started || !ready" @click=start>start</button>
+               </div>
+            </div>
+
+
+
+
+         </section>
+
+         <section class="second">
+            <div class="card">
+               <div class="card-body">
+                  <h5 class="card-title">Test</h5>
+                  <p class="card-text">
+                     <div v-if="started && loading">
+                        <div  class="spinner-border text-primary" role="status">
+                           <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Please wait a moment..</p>
+                     </div>
+                     <div v-if="started && !loading">
+                        <p>Username: [[ username ]]</p>
+                        <p>Password: [[ password ]]</p>
+                        <p>Url: [[ url ]]</p>
+                     </div>
+                  </p>
+               </div>
+            </div>
+         </section>
+
+         <section class="last">
+            <div class="card">
+               <div class="card-body">
+                  <h5 class="card-title">After Test</h5>
+                  <p class="card-text">
+                     <div v-for="item in lastQuestions" :key="item" class="row g-3 align-items-center">
+                        <div class="col">
+                           <span class="form-text"> [[ item.q ]]</span>
+                        </div>
+                        <div class="form-outline col order-5">
+                           <input type="text" :id="item.q" class="form-control" v-model="item.a" :disabled="!ready"/>
+                           <label class="form-label" :for="item.q">Answer</label>
+                        </div>
+                     </div>
+                  </p>
+                  <button type="button" class="btn btn-primary" :disabled="!ready" @click="submit">submit</button>
+               </div>
+            </div>
+         </section>
+      </div>
+   </div>
+</div>
+
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/index.js') }}"></script>
+{% include "footer.html" %}

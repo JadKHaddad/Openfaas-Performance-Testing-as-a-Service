@@ -1,7 +1,0 @@
-version: "3.9"
-
-services:
-  ptas:
-    image: ptas:1.0
-    ports:
-      - "8081:5000"

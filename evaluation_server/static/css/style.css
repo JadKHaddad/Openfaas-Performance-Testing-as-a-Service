@@ -1,0 +1,22 @@
+html {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.content {
+    margin-top: 20px;
+}
+
+section {
+    margin-top: 20px;
+}
+
+.row {
+    margin-top: 10px;
+}
