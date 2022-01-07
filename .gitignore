@@ -1,6 +1,5 @@
 node_modules/
 server/
-
 evaluation_server/results/last_questions/*
 evaluation_server/results/first_questions/*
 modified_server/ptas/
