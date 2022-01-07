@@ -368,6 +368,13 @@ def handle(req, no_request=False):
             workers = data.get("workers") or None
             host = data.get("host") or None
             time = data.get("time") or None
+            workers_count = workers if workers is not None else 0
+
+
+            if len(tasks) > 2:
+                return jsonify(success=False,exit_code=1,message="this is an evaluation system. only 3 tests are allowed at a time"), headers 
+            if workers_count > 2:
+                return jsonify(success=False,exit_code=1,message="this is an evaluation system. maximum 2 workers are allowed pro test"), headers 
 
             if project_name is None or script_name is None or users is None or spawn_rate is None:
                 return jsonify(success=False,exit_code=1,message="bad request"), headers 
@@ -386,7 +393,7 @@ def handle(req, no_request=False):
             log_path = f'locust/{script_name}/{id}/log.log'
             time_command = f'-t {str(time)}s' if time is not None else '-t 320s'
             host_command = f'--host {host}' if host is not None else ''
-            workers_count = workers if workers is not None else 0
+
 
             task_id = create_task_id(project_name, script_name, id)
             with LOCK2:
@@ -821,18 +828,19 @@ def handle(req, no_request=False):
         return jsonify(success=False,exit_code=-1,message=str(e),trace_back=traceback.format_exc()), headers
 
 def on_exit(signum, frame):
-    kill_running_tasks()
-    if REDIS is not None:
-        REDIS.flushdb()
-        print('Handler: cache deleted')
-    print('Handler: shutting down')
+    try:
+        kill_running_tasks()
+    except Exception:
+        pass
     try:
         sys.exit(0)
     except SystemExit:
-        os._exit(0)
+        try:
+            os._exit(0)
+        except Exception:
+            pass
 
 #import atexit
 #atexit.register(on_exit)
-
-#signal.signal(signal.SIGINT, on_exit)
-#signal.signal(signal.SIGTERM, on_exit)
+signal.signal(signal.SIGINT, on_exit)
+signal.signal(signal.SIGTERM, on_exit)
