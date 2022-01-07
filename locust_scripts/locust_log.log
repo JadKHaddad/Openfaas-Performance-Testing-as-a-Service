@@ -1,0 +1,10 @@
+[2021-10-25 17:39:29,606] Ubuntu-Desktop/WARNING/locust.main: System open file limit '1024' is below minimum setting '10000'. It's not high enough for load testing, and the OS didn't allow locust to increase it by itself. See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info.
+[2021-10-25 17:39:29,608] Ubuntu-Desktop/INFO/locust.main: No run time limit set, use CTRL+C to interrupt.
+[2021-10-25 17:39:29,609] Ubuntu-Desktop/INFO/locust.main: Starting Locust 1.4.1
+[2021-10-25 17:39:29,609] Ubuntu-Desktop/INFO/locust.runners: Spawning 1 users at the rate 1 users/s (0 users already running)...
+[2021-10-25 17:39:29,610] Ubuntu-Desktop/INFO/locust.runners: All users spawned: AlarmDevice: 1 (1 total running)
+[2021-10-25 17:39:32,949] Ubuntu-Desktop/INFO/locust.main: Running teardowns...
+[2021-10-25 17:39:32,949] Ubuntu-Desktop/INFO/locust.main: Shutting down (exit code 0), bye.
+[2021-10-25 17:39:32,950] Ubuntu-Desktop/INFO/locust.main: Cleaning up runner...
+[2021-10-25 17:39:32,950] Ubuntu-Desktop/INFO/locust.runners: Stopping 1 users
+[2021-10-25 17:39:32,951] Ubuntu-Desktop/INFO/locust.runners: 1 Users have been stopped, 0 still running

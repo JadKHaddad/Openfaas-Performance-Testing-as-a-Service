@@ -834,5 +834,5 @@ def on_exit(signum, frame):
 #import atexit
 #atexit.register(on_exit)
 
-signal.signal(signal.SIGINT, on_exit)
-signal.signal(signal.SIGTERM, on_exit)
+#signal.signal(signal.SIGINT, on_exit)
+#signal.signal(signal.SIGTERM, on_exit)

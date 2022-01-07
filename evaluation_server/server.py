@@ -9,6 +9,7 @@ import json, os
 from pathlib import Path
 import subprocess
 from random import randrange
+import signal
 
 if not Path('results').exists():
     os.mkdir('results')
@@ -53,13 +54,13 @@ def start():
     # create user and copy the projects to his dir
     username = 'user_' + str(randrange(10000))
     password = '123456'
-    cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username}  && sudo cp -a ../modified_server/. /home/{username}/modified_server/'
+    cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username} && sudo cp -a ../modified_server/. /home/{username}/modified_server/ && sudo cp -a ../locust_scripts/. /home/{username}/locust_scripts/ && sudo chown -R {username}:{username} /home/{username}/locust_scripts'
     subprocess.Popen(cmd, shell=True).wait()
 
     # run the service
     cmd = f'cd /home/{username}/modified_server/server/ && sudo python3 ./server.py -l -s 0.0.0.0 -p 5001'
-    subprocess.Popen(cmd, shell=True)
-
+    CLIENTS[id]['process'] = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid)
+    CLIENTS[id]['username'] = username
     return jsonify(success=True, username=username, password=password, port="8909")
 
 @socketio.on('connect')
@@ -73,9 +74,21 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     id = request.sid
+    username = "user"
+    delete_username = False
     if id in CLIENTS:
+        # delete user
+        if 'username' in CLIENTS[id]:
+            username = CLIENTS[id]['username']
+            delete_username = True
+
+        if 'process' in CLIENTS[id]:
+            os.killpg(os.getpgid(CLIENTS[id]['process'].pid), signal.SIGTERM)
         with L:
             del CLIENTS[id]
+    if delete_username:
+        cmd = f'sudo userdel -f -r {username}'
+        subprocess.Popen(cmd, shell=True)
     print('Client disconnected', id)
 
 if __name__ == '__main__':

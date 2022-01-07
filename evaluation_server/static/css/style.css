@@ -20,3 +20,8 @@ section {
 .row {
     margin-top: 10px;
 }
+
+.message{
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
