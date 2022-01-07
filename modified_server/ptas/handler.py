@@ -183,6 +183,9 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
     reg_path = join(test_dir, 'reg.png')
 
     if not Path(lin_path).exists() or not Path(reg_path).exists():
+        filesize = os.path.getsize(stats_history_file)
+        if filesize == 0:
+            return 2 # not enough data
         df = pd.read_csv(stats_history_file) 
         if len(df) > 4:
             if not Path(lin_path).exists():
@@ -324,7 +327,8 @@ def handle(req, no_request=False):
             workers = data.get("workers") or None
             host = data.get("host") or None
             time = data.get("time") or None
-            if time > 320:
+
+            if time is not None and time > 320:
                 time = 320
             workers_count = workers if workers is not None else 0
 
@@ -349,7 +353,7 @@ def handle(req, no_request=False):
             
             results_path = f'locust/{script_name}/{id}/results'
             log_path = f'locust/{script_name}/{id}/log.log'
-            time_command = f'-t {str(time)}s' if time is not None else '-t 320s'
+            time_command = f'-t {str(time)}s' if time is not None else ''
             host_command = f'--host {host}' if host is not None else ''
 
 
