@@ -254,52 +254,8 @@ def handle(req, no_request=False):
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
         if not no_request and 'file0' in request.files: # upload a new project
-            # create an id for the project
-            project_name = request.files['file0'].filename.split('/')[:-1][0]
-            project_path = f'{projects_dir}/{project_name}'
-            # check if project folder exists
-            with LOCK:
-                if Path(project_path).exists():
-                    return jsonify(success=False,exit_code=2,message="project exists"), headers
-
-                # save project files 
-                for f in request.files.values():
-                    uploaded_file_name = f.filename
-                    uploaded_file_dir = '/'.join(uploaded_file_name.split('/')[:-1])
-                    pathlib.Path(f'{projects_dir}/{uploaded_file_dir}').mkdir(parents=True, exist_ok=True) 
-                    f.save(f'{projects_dir}/{uploaded_file_name}')
-
-                # check locust scripts in locust folder
-                if not Path(f'{project_path}/locust').exists():
-                    shutil.rmtree(project_path)
-                    return jsonify(success=False,exit_code=3,message="no locust dir found"), headers
-
-                # check if locust tests exist
-                locust_tests_exist = False
-                for file in os.listdir(f'{project_path}/locust'):
-                    if file.endswith('.py'):
-                        locust_tests_exist = True
-                        break
-                if not locust_tests_exist:
-                    shutil.rmtree(project_path)
-                    return jsonify(success=False,exit_code=4,message="no locust tests found"), headers
-
-                if not Path(f'{project_path}/requirements.txt').exists():
-                    shutil.rmtree(project_path)
-                    return jsonify(success=False,exit_code=5,message="no requirements found"), headers
-                # create a virtual env and install req
-                # check if req exists
-                if platform.system() == 'Windows': # windows
-                    req_cmd = f'&& .\env\{project_name}\Scripts\pip.exe install -r .\projects\{project_name}/requirements.txt'
-                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env\{project_name} {req_cmd}', shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) # stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                else:   
-                    req_cmd = f'&& env/{project_name}/bin/pip3 install -r projects/{project_name}/requirements.txt'
-                    installation_tasks[project_name] = subprocess.Popen(f'virtualenv env/{project_name} {req_cmd}', shell=True, stderr=subprocess.PIPE, preexec_fn=os.setsid) #stdout=subprocess.DEVNULL ,     
-                thread = Thread(target=clean_up_project_on_failed_installation, args = (project_name, ))
-                thread.start()
-                
-                return jsonify(success=True,exit_code=0,task_id=project_name,message="project added"), headers
-
+            return jsonify(success=False,exit_code=1,message='not allowed'), headers
+            
         data = json.loads(req)
         command = data.get("command") or None
 
@@ -368,6 +324,8 @@ def handle(req, no_request=False):
             workers = data.get("workers") or None
             host = data.get("host") or None
             time = data.get("time") or None
+            if time > 320:
+                time = 320
             workers_count = workers if workers is not None else 0
 
 
@@ -503,44 +461,6 @@ def handle(req, no_request=False):
                 return json.dumps({'success':True,'tests':tests})
             return jsonify(success=True,tests=tests), headers 
 
-        # if command == 6: # get test stats -> sync
-        #     project_name = data.get("project_name") or None
-        #     script_name = data.get("script_name") or None
-        #     id = data.get("id") or None
-        #     local = data.get('local') or None
-        #     if project_name is None or script_name is None or id is None:
-        #         if local is not None:
-        #             return json.dumps({'success':False,'exit_code':1,'message':'bad request'})
-        #         return jsonify(success=False,exit_code=1,message="bad request"), headers
-
-        #     # check if test is runnig
-        #     task_id = create_task_id(project_name, script_name, id)
-        #     with LOCK2:
-        #         if task_id in tasks:
-        #             test_dir = get_test_dir(project_name, script_name, id)
-        #             csv_file_path = f'{test_dir}/results_stats.csv'
-        #             if tasks[task_id].poll() is not None: # process finished
-        #                 if not Path(csv_file_path).exists(): # test is not valid
-        #                     del tasks[task_id]
-        #                     if local is not None:
-        #                         return json.dumps({'success':False,'exit_code':4,'message':'test is not valid'})
-        #                     return jsonify(success=False,exit_code=4,message="test is not valid"), headers 
-        #                 del tasks[task_id]
-        #             if not Path(csv_file_path).exists():
-        #                 if local is not None:
-        #                     return json.dumps({'success':False,'exit_code':3,'message':'csv file does not exist'})
-        #                 return jsonify(success=False,exit_code=3,message="csv file does not exist"), headers
-        #             j = None
-        #             if not os.stat(csv_file_path).st_size == 0:
-        #                 pd_data = pd.read_csv(csv_file_path) 
-        #                 j = pd_data.to_json(orient='records')
-        #             if local is not None:
-        #                 return json.dumps({'success':True,'exit_code':0,'status':1,'data':j,'message':'test running'})
-        #             return jsonify(success=True,exit_code=0,status=1,data=j,message="test running"), headers # status 1 -> test is running
-        #         if local is not None:
-        #             return json.dumps({'success':True,'exit_code':0,'status':0,'data':None,'message':'test is not runnig'})
-        #         return jsonify(success=True,exit_code=0,status=0,data=None,message="test is not runnig"), headers # status 0 -> test not running
-
         if command == 7: # get all tests of a script-> sync
             project_name = data.get("project_name") or None
             script_name = data.get("script_name") or None
@@ -627,40 +547,7 @@ def handle(req, no_request=False):
                 return jsonify(success=True,exit_code=0,message="deleted"), headers
 
         if command == 10: # delete projects -> sync
-            names = data.get("names") or None
-            if names is None:
-                return jsonify(success=False,exit_code=1,message="bad request"), headers
-            deleted = []
-            with LOCK2:
-                for name in names:
-                    # stop running tests
-                    deleted = []
-                    for task_id in tasks:
-                        if task_id.startswith(f'TASK${name}$'):
-                            deleted.append(task_id)
-                            if platform.system() == 'Windows': # windows
-                                tasks[task_id].send_signal(signal.CTRL_BREAK_EVENT)
-                                tasks[task_id].kill()
-                            else: # Linux
-                                os.killpg(os.getpgid(tasks[task_id].pid), signal.SIGTERM)
-                    for deleted_task in deleted:
-                        del tasks[deleted_task]
-                    # delete project dir
-                    project_path = f'{projects_dir}/{name}'
-                    if Path(project_path).exists():
-                        shutil.rmtree(project_path)
-                    # delete project env
-                    project_env_path = f'env/{name}'
-                    if Path(project_env_path).exists():
-                        shutil.rmtree(project_env_path)
-                    deleted.append(name)
-                if REDIS is not None:
-                    print('Handler: caching')
-                    for name in deleted:
-                        for key in REDIS.scan_iter(f'{name}:*'):
-                            REDIS.delete(key)
-                            REDIS.expire(key, EXPIRE)
-                return jsonify(success=True,exit_code=0,deleted=deleted), headers
+            return jsonify(success=False,exit_code=1,message='not allowed'), headers
 
         if command == 11: # download a test -> sync
             project_name = data.get("project_name") or None
@@ -801,10 +688,7 @@ def handle(req, no_request=False):
                     return jsonify(success=True,exit_code=0,message="tasks killed"), headers
 
         if command == 912: # clean up -> sync
-            with LOCK:
-                with LOCK2:
-                    clean_up()
-                    return jsonify(success=True,exit_code=0,message="clean up"), headers
+            return jsonify(success=False,exit_code=1,message='not allowed'), headers
 
         if command == 913: # show saved tasks -> sync
             saved_tasks = []
