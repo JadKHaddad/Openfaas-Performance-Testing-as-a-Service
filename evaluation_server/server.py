@@ -5,11 +5,9 @@ from geventwebsocket.handler import WebSocketHandler
 from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit
 from threading import Lock
-import json, os
+import json, os, subprocess, signal, socket
 from pathlib import Path
-import subprocess
 from random import randrange
-import signal
 
 if not Path('results').exists():
     os.mkdir('results')
@@ -19,6 +17,16 @@ if not Path('results/first_questions').exists():
 
 if not Path('results/last_questions').exists():
     os.mkdir('results/last_questions')
+
+def username_exists(username):
+    out, err = subprocess.Popen(f'id -u {username}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    if out != b'':
+        return True
+    return False
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
 
 CLIENTS = {}
 L = Lock()
@@ -51,17 +59,27 @@ def start():
             a = item.get('a')
             file.write(f'{q}:{a}\n')
 
-    # create user and copy the projects to his dir
-    username = 'user_' + str(randrange(10000))
+    # create user and copy the projects to his dir and create port
+    while True:
+        username = 'user_' + str(randrange(10000))
+        if not username_exists(username):
+            break
+
+    port = 5000
+    while True:
+        if not is_port_in_use(port):
+            break
+        port = port + 1
+        
     password = '123456'
     cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username} && sudo cp -a ../modified_server/. /home/{username}/modified_server/ && sudo cp -a ../locust_scripts/. /home/{username}/locust_scripts/ && sudo chown -R {username}:{username} /home/{username}/locust_scripts'
     subprocess.Popen(cmd, shell=True).wait()
 
     # run the service
-    cmd = f'cd /home/{username}/modified_server/server/ && sudo python3 ./server.py -l -s 0.0.0.0 -p 5001'
+    cmd = f'cd /home/{username}/modified_server/server/ && sudo python3 ./server.py -l -s 0.0.0.0 -p {port}'
     CLIENTS[id]['process'] = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid)
     CLIENTS[id]['username'] = username
-    return jsonify(success=True, username=username, password=password, port="8909")
+    return jsonify(success=True, username=username, password=password, port=port)
 
 @socketio.on('connect')
 def connect():

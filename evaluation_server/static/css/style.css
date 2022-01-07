@@ -25,3 +25,11 @@ section {
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
+.danger {
+    color:crimson;
+}
+
+.url {
+    color:#1266f1;
+}

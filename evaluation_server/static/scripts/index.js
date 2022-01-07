@@ -2,6 +2,7 @@ const app = Vue.createApp({
     delimiters: ['[[', ']]'],
     data() {
         return {
+            hostname: location.hostname,
             socket: io(),
             id: null,
             ready: false,
@@ -41,7 +42,7 @@ const app = Vue.createApp({
                     if (data.success){
                         this.username = data.username;
                         this.password = data.password;
-                        this.url = data.port;
+                        this.url = `${this.hostname}:${data.port}`;
                     }
                 })
                 .catch((e) => {
@@ -65,7 +66,6 @@ const app = Vue.createApp({
         });
     },
     mounted() {
-
 
     }
 })

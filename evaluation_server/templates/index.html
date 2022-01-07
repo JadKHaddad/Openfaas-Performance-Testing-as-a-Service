@@ -41,10 +41,12 @@
                         <p>Bitte warten..</p>
                      </div>
                      <div v-if="started && !loading">
-                        <div class="message">Bitte lassen Sie dieses Tab offen. Wenn Sie das Tab schließen, verlieren Sie Zugriff auf beide Testsysteme.</div>
+                        <div class="message danger">Bitte lassen Sie dieses Tab offen. Wenn Sie das Tab schließen oder aktualisieren, verlieren Sie Zugriff auf beide Testsysteme.</div>
                         <p>Username: [[ username ]]</p>
                         <p>Password: [[ password ]]</p>
                         <p>Url: [[ url ]]</p>
+                        <div class="message">Um das alte System zu testen, nutzen Sie eine SSH Verbindung: <label class="url">ssh [[ username ]]@[[ hostname ]]</label></div>
+                        <div class="message">Um das neue System zu testen, navigieren Sie auf <label class="url">[[ url ]]</label></div>
                         </div>
                   </p>
                </div>

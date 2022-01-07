@@ -384,7 +384,7 @@ def handle(req, no_request=False):
             
             results_path = f'locust/{script_name}/{id}/results'
             log_path = f'locust/{script_name}/{id}/log.log'
-            time_command = f'-t {str(time)}s' if time is not None else ''
+            time_command = f'-t {str(time)}s' if time is not None else '-t 320s'
             host_command = f'--host {host}' if host is not None else ''
             workers_count = workers if workers is not None else 0
 
