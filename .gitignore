@@ -13,7 +13,7 @@
 *.junk
 /visio
 /ptas.docker/function/__pycache__
-
+/evaluation_server
 .DS_Store
 node_modules
 /dist
