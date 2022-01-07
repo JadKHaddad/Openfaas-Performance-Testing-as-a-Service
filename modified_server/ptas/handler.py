@@ -383,10 +383,10 @@ def handle(req, no_request=False):
                         for i in range(0, int(workers_count)):
                             worker_log_path = f'locust/{script_name}/{id}/worker_{i+1}_log.log'
                             worker_command = worker_command + f'cd projects/{project_name} && locust -f locust/{script_name}.py --logfile {worker_log_path} --worker --master-port={port} &'
-                        master_command = f'cd {projects_dir}/{project_name} && locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
+                        master_command = f'cd {projects_dir}/{project_name} && sudo locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path} --master --master-bind-port={port} --expect-workers={workers_count}'    
                         command = worker_command + master_command
                     else:
-                        command = f'cd {projects_dir}/{project_name} && locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
+                        command = f'cd {projects_dir}/{project_name} && sudo locust -f locust/{script_name}.py  {host_command} --users {users} --spawn-rate {spawn_rate} --headless {time_command} --csv {results_path} --logfile {log_path}'
 
                     tasks[task_id] = subprocess.Popen(f'ulimit -n 64000; {command}', shell=True, preexec_fn=os.setsid)#stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
                 
