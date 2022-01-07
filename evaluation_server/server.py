@@ -63,20 +63,6 @@ def start():
     if id is None or id not in CLIENTS:
         return jsonify(success=False)
 
-    # get j_data
-    j_data = json.loads(request.data)
-
-    # save json_data
-    with open(f'results/first_questions/{id}_json.txt','w',encoding='utf-8') as file:
-        file.write(json.dumps(j_data))
-    
-    #save as text
-    with open(f'results/first_questions/{id}_text.txt','w',encoding='utf-8') as file:
-        for item in j_data:
-            q = item.get('q')
-            a = item.get('a')
-            file.write(f'{q}:{a}\n')
-
     # create user and copy the projects to his dir and create port
     while True:
         username = 'user_' + str(randrange(10000))
@@ -109,13 +95,27 @@ def finish():
     # get j_data
     j_data = json.loads(request.data)
 
-    # save json_data
-    with open(f'results/last_questions/{id}_json.txt','w',encoding='utf-8') as file:
-        file.write(json.dumps(j_data))
+    first = j_data.get('f')
+    last = j_data.get('l')
+
+    # save json_data, first
+    with open(f'results/first_questions/{id}_json.txt','w',encoding='utf-8') as file:
+        file.write(json.dumps(first))
     
-    #save as text
+    #save as text, first
+    with open(f'results/first_questions/{id}_text.txt','w',encoding='utf-8') as file:
+        for item in first:
+            q = item.get('q')
+            a = item.get('a')
+            file.write(f'{q}:{a}\n')
+
+    #save json_data, last
+    with open(f'results/last_questions/{id}_json.txt','w',encoding='utf-8') as file:
+        file.write(json.dumps(last))
+    
+    #save as text, last
     with open(f'results/last_questions/{id}_text.txt','w',encoding='utf-8') as file:
-        for item in j_data:
+        for item in last:
             q = item.get('q')
             a = item.get('a')
             file.write(f'{q}:{a}\n')

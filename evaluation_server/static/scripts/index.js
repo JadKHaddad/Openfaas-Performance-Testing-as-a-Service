@@ -39,7 +39,7 @@ const app = Vue.createApp({
         start() {
             this.started = true;
             this.loading = true;
-            fetch('/start', { method: "POST", body: JSON.stringify(this.firstQuestions), headers: new Headers({'id': this.id}),})
+            fetch('/start', { method: "POST", headers: new Headers({'id': this.id}),})
                 .then((data) => data.json())
                 .then((data) => {
                     if (data.success){
@@ -57,7 +57,7 @@ const app = Vue.createApp({
                 });
         },
         submit() {
-            fetch('/finish', { method: "POST", body: JSON.stringify(this.lastQuestions), headers: new Headers({'id': this.id}),})
+            fetch('/finish', { method: "POST", body: JSON.stringify({f:this.firstQuestions,l:this.lastQuestions}), headers: new Headers({'id': this.id}),})
                 .then((data) => data.json())
                 .then((data) => {
                     if (data.success){
