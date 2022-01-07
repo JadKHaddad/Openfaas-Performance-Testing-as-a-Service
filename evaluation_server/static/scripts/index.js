@@ -29,23 +29,25 @@ const app = Vue.createApp({
             loading: false,
             username: "",
             password: "",
+            port: "",
+            ip: "",
             url: "",
             finished: false,
         }
     },
     methods: {
         start() {
-            console.log(this.firstQuestions)
             this.started = true;
             this.loading = true;
             fetch('/start', { method: "POST", body: JSON.stringify(this.firstQuestions), headers: new Headers({'id': this.id}),})
                 .then((data) => data.json())
                 .then((data) => {
-                    console.log(data)
                     if (data.success){
                         this.username = data.username;
                         this.password = data.password;
-                        this.url = `${this.hostname}:${data.port}`;
+                        this.port = data.port;
+                        this.ip = data.ip;
+                        this.url = `http://${this.ip}:${this.port}`
                     }
                 })
                 .catch((e) => {
@@ -53,14 +55,11 @@ const app = Vue.createApp({
                 }).finally(() => {
                     this.loading = false;
                 });
-
-
         },
         submit() {
             fetch('/finish', { method: "POST", body: JSON.stringify(this.lastQuestions), headers: new Headers({'id': this.id}),})
                 .then((data) => data.json())
                 .then((data) => {
-                    console.log(data)
                     if (data.success){
                         this.finished = true;
                     }

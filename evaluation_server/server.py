@@ -45,6 +45,7 @@ def on_finish(id):
         cmd = f'sudo userdel -f -r {username}'
         subprocess.Popen(cmd, shell=True)
 
+IP = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1].replace('\n','')
 CLIENTS = {}
 L = Lock()
 
@@ -96,7 +97,7 @@ def start():
     cmd = f'cd /home/{username}/modified_server/server/ && sudo python3 ./server.py -l -s 0.0.0.0 -p {port}'
     CLIENTS[id]['process'] = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid)
     CLIENTS[id]['username'] = username
-    return jsonify(success=True, username=username, password=password, port=port)
+    return jsonify(success=True, username=username, password=password, port=port, ip=IP)
 
 @app.route('/finish', methods=['POST'])
 def finish():
