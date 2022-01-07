@@ -2,7 +2,7 @@
 
 <div id="app">
    <div class="content">
-      <h1> Evaluation </h1>
+      <h1> Performance Testing as a Service - Evaluation </h1>
       <div class="sections">
          <section class="first">
             <div class="card">
@@ -14,19 +14,17 @@
                         <span class="form-text"> [[ item.q ]]</span>
                      </div>
                      <div class="form-outline col order-5">
-                        <input type="text" :id="item.q" class="form-control" v-model="item.a" :disabled="started || !ready"/>
+                        <input type="text" :id="item.q" class="form-control" v-model="item.a"
+                           :disabled="started || !ready" />
                         <label class="form-label" :for="item.q">Antwort</label>
                      </div>
                   </div>
 
                   </p>
-                  <button type="button" class="btn btn-primary" :disabled="started || !ready" @click=start>starten</button>
+                  <button type="button" class="btn btn-primary" :disabled="started || !ready"
+                     @click=start>starten</button>
                </div>
             </div>
-
-
-            
-
          </section>
 
          <section class="second">
@@ -34,20 +32,24 @@
                <div class="card-body">
                   <h5 class="card-title">Test</h5>
                   <p class="card-text">
-                     <div v-if="started && loading">
-                        <div  class="spinner-border text-primary" role="status">
-                           <span class="visually-hidden">Laden...</span>
-                        </div>
-                        <p>Bitte warten..</p>
+                     <div v-if="!started" class="message">Informationen erscheinen nach dem starten.</div>
+                     <div v-if="finished" class="message"><label class="url">Test beendet.</label></div>
+                  <div v-if="started && loading">
+                     <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Laden...</span>
                      </div>
-                     <div v-if="started && !loading">
-                        <div class="message danger">Bitte lassen Sie dieses Tab offen. Wenn Sie das Tab schließen oder aktualisieren, verlieren Sie Zugriff auf beide Testsysteme.</div>
-                        <p>Username: [[ username ]]</p>
-                        <p>Password: [[ password ]]</p>
-                        <p>Url: [[ url ]]</p>
-                        <div class="message">Um das alte System zu testen, nutzen Sie eine SSH Verbindung: <label class="url">ssh [[ username ]]@[[ hostname ]]</label></div>
-                        <div class="message">Um das neue System zu testen, navigieren Sie auf <label class="url">[[ url ]]</label></div>
-                        </div>
+                     <p>Bitte warten..</p>
+                  </div>
+                  <div v-if="started && !loading && !finished">
+                     <div  class="message danger">Bitte lassen Sie dieses Tab offen. Wenn Sie das Tab schließen oder
+                        aktualisieren, verlieren Sie Zugriff auf beide Testsysteme.</div>
+                     <p>Username: [[ username ]]</p>
+                     <p>Password: [[ password ]]</p>
+                     <p>Url: [[ url ]]</p>
+                     <div class="message">Um das alte System zu testen, nutzen Sie eine SSH Verbindung: <label
+                           class="url">ssh [[ username ]]@[[ hostname ]]</label></div>
+                     <div class="message">Um das neue System zu testen, navigieren Sie auf <label class="url">[[ url ]]</label></div>
+                  </div>
                   </p>
                </div>
             </div>
@@ -58,17 +60,21 @@
                <div class="card-body">
                   <h5 class="card-title">Nach dem Test</h5>
                   <p class="card-text">
-                     <div v-for="item in lastQuestions" :key="item" class="row g-3 align-items-center">
-                        <div class="col">
-                           <span class="form-text"> [[ item.q ]]</span>
-                        </div>
-                        <div class="form-outline col order-5">
-                           <input type="text" :id="item.q" class="form-control" v-model="item.a" :disabled="!ready"/>
-                           <label class="form-label" :for="item.q">Antwort</label>
-                        </div>
+                  <div v-for="item in lastQuestions" :key="item" class="row g-3 align-items-center">
+                     <div class="col">
+                        <span class="form-text"> [[ item.q ]]</span>
                      </div>
+                     <div class="form-outline col order-5">
+                        <input type="text" :id="item.q" class="form-control" v-model="item.a"
+                           :disabled="!ready || !started || finished" />
+                        <label class="form-label" :for="item.q">Antwort</label>
+                     </div>
+                  </div>
                   </p>
-                  <button type="button" class="btn btn-primary" :disabled="!ready" @click="submit">Submit</button>
+                  <div v-if="finished" class="message"><label class="url">Vielen Dank für Ihre Zeit. Sie mögen jetzt die Webseite verlassen.</label>
+                  </div>
+                  <button type="button" class="btn btn-primary" :disabled="!ready || !started || finished"
+                     @click="submit">Submit</button>
                </div>
             </div>
          </section>

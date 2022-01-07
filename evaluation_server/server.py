@@ -28,6 +28,23 @@ def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('localhost', port)) == 0
 
+def on_finish(id):
+    username = "user"
+    delete_username = False
+    if id in CLIENTS:
+        # delete user
+        if 'username' in CLIENTS[id]:
+            username = CLIENTS[id]['username']
+            delete_username = True
+
+        if 'process' in CLIENTS[id]:
+            os.killpg(os.getpgid(CLIENTS[id]['process'].pid), signal.SIGTERM)
+        with L:
+            del CLIENTS[id]
+    if delete_username:
+        cmd = f'sudo userdel -f -r {username}'
+        subprocess.Popen(cmd, shell=True)
+
 CLIENTS = {}
 L = Lock()
 
@@ -81,6 +98,31 @@ def start():
     CLIENTS[id]['username'] = username
     return jsonify(success=True, username=username, password=password, port=port)
 
+@app.route('/finish', methods=['POST'])
+def finish():
+    # get user id 
+    id = request.headers.get('id')
+    if id is None or id not in CLIENTS:
+        return jsonify(success=False)
+
+    # get j_data
+    j_data = json.loads(request.data)
+
+    # save json_data
+    with open(f'results/last_questions/{id}_json.txt','w',encoding='utf-8') as file:
+        file.write(json.dumps(j_data))
+    
+    #save as text
+    with open(f'results/last_questions/{id}_text.txt','w',encoding='utf-8') as file:
+        for item in j_data:
+            q = item.get('q')
+            a = item.get('a')
+            file.write(f'{q}:{a}\n')
+
+    on_finish(id)
+
+    return jsonify(success=True)
+
 @socketio.on('connect')
 def connect():
     id = request.sid
@@ -92,21 +134,7 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     id = request.sid
-    username = "user"
-    delete_username = False
-    if id in CLIENTS:
-        # delete user
-        if 'username' in CLIENTS[id]:
-            username = CLIENTS[id]['username']
-            delete_username = True
-
-        if 'process' in CLIENTS[id]:
-            os.killpg(os.getpgid(CLIENTS[id]['process'].pid), signal.SIGTERM)
-        with L:
-            del CLIENTS[id]
-    if delete_username:
-        cmd = f'sudo userdel -f -r {username}'
-        subprocess.Popen(cmd, shell=True)
+    on_finish(id)
     print('Client disconnected', id)
 
 if __name__ == '__main__':

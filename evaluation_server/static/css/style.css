@@ -10,7 +10,8 @@ body {
 }
 
 .content {
-    margin-top: 20px;
+    margin-top: 50px;
+    margin-bottom: 50px;
 }
 
 section {
@@ -32,4 +33,13 @@ section {
 
 .url {
     color:#1266f1;
+}
+
+.content h1 {
+    text-align:center;
+    margin-bottom: 50px;
+}
+
+button {
+    margin-top: 30px;
 }

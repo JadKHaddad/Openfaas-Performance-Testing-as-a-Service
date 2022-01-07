@@ -22,12 +22,15 @@ const app = Vue.createApp({
                 { q: "Können Sie die Aufgaben alleine wiederholen (nues System)", a: "" },
                 { q: "Mit welchem System w ̈urden Sie schneller arbeiten", a: "" },
                 { q: "Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?", a: "" },
+                { q: "Weitere Kommentare", a: "" },
+                
             ],
             started: false,
             loading: false,
             username: "",
             password: "",
-            url: ""
+            url: "",
+            finished: false,
         }
     },
     methods: {
@@ -54,7 +57,18 @@ const app = Vue.createApp({
 
         },
         submit() {
-            console.log(this.lastQuestions)
+            fetch('/finish', { method: "POST", body: JSON.stringify(this.lastQuestions), headers: new Headers({'id': this.id}),})
+                .then((data) => data.json())
+                .then((data) => {
+                    console.log(data)
+                    if (data.success){
+                        this.finished = true;
+                    }
+                })
+                .catch((e) => {
+                    console.log(e)
+                }).finally(() => {
+                });
         }
     },
     created() {
