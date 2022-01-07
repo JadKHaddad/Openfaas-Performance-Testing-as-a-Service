@@ -1,7 +1,6 @@
 flask
 flask_socketio
 gevent-websocket
-waitress
 requests
 gevent
 virtualenv

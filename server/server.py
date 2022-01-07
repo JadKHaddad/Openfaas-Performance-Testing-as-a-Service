@@ -3,7 +3,6 @@
 import platform, subprocess, datetime, requests, json, argparse, os, sys, random, string, pathlib, shutil, redis
 from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
-from waitress import serve
 from urllib.parse import urljoin, unquote
 from threading import Lock
 from gevent import pywsgi
