@@ -1,0 +1,11 @@
+[Unit]
+Description=Evaluation
+After=syslog.target
+[Service]
+WorkingDirectory= /root/Openfaas-Performance-Testing-as-a-Service/evaluation_server
+Type=simple
+LimitNOFILE=64000
+Restart=always
+ExecStart=python3 /root/Openfaas-Performance-Testing-as-a-Service/evaluation_server/server.py 
+[Install]
+WantedBy=multi-user.target

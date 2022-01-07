@@ -1,0 +1,11 @@
+[Unit]
+Description=Simulation
+After=syslog.target
+[Service]
+WorkingDirectory= /root/Openfaas-Performance-Testing-as-a-Service/locust_scripts
+Type=simple
+LimitNOFILE=64000
+Restart=always
+ExecStart=python3 /root/Openfaas-Performance-Testing-as-a-Service/locust_scripts/ARS_simulation.py
+[Install]
+WantedBy=multi-user.target

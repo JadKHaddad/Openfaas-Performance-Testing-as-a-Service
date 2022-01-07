@@ -13,3 +13,4 @@ flask_socketio
 gevent-websocket
 gevent
 redis
+pandas
