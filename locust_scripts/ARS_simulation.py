@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 import logging
 
-MASCOTS2020 = False
+MASCOTS2020 = True
 
 fh = logging.FileHandler('ARS_simulation_{:%Y-%m-%d}.log'.format(datetime.now()))
 fh.setLevel(logging.WARN)

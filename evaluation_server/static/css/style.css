@@ -25,6 +25,7 @@ section {
 .message{
     margin-top: 20px;
     margin-bottom: 20px;
+    font-size: larger;
 }
 
 .danger {
