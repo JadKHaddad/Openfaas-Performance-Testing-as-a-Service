@@ -183,6 +183,9 @@ def create_plots(project_name, script_name, id): # creates plots if plots do no 
     reg_path = join(test_dir, 'reg.png')
 
     if not Path(lin_path).exists() or not Path(reg_path).exists():
+        filesize = os.path.getsize(stats_history_file)
+        if filesize == 0:
+            return 2 # not enough data
         df = pd.read_csv(stats_history_file) 
         if len(df) > 4:
             if not Path(lin_path).exists():

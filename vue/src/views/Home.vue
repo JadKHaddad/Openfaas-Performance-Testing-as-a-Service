@@ -225,15 +225,19 @@ export default {
             body: JSON.stringify({ command: 10, names: this.markedProjects }),
           })
             .then((data) => data.json())
-            .then(() => {
-              this.socket.emit("project_delete", {
-                openfaasurl: this.openfaasUrl,
-                project_names: this.markedProjects,
-              });
-              this.projects = this.projects.filter(
-                (project) => !this.markedProjects.includes(project)
-              );
-              this.markedProjects = [];
+            .then((data) => {
+              if (data.success) {
+                this.socket.emit("project_delete", {
+                  openfaasurl: this.openfaasUrl,
+                  project_names: this.markedProjects,
+                });
+                this.projects = this.projects.filter(
+                  (project) => !this.markedProjects.includes(project)
+                );
+                this.markedProjects = [];
+              }else{
+                this.$emit("info", data.message, "red");
+              }
             })
             .catch(() => {
               this.$emit("info", "Could not connect to server", "red");
