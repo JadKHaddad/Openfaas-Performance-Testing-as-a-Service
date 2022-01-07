@@ -47,6 +47,7 @@ class RealWorkloadShape(LoadTestShape):
             print(file_path)
             with open(file_path) as logfile:
                 for line in logfile:
+                    # TODO Take RPS
                     requests_per_hour = re.search('(?<=RPH:\\s)\\d*', line)
                     if requests_per_hour is None:
                         continue

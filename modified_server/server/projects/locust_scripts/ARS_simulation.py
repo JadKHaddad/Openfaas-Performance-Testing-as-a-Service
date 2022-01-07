@@ -462,6 +462,6 @@ if __name__ == "__main__":
     seed(42)
 
     # use one worker for now, because the program is not using shared memory
-    uvicorn.run("ARS_simulation:app", host="127.0.0.1", port=1337, log_level="warning", workers=1)
+    uvicorn.run("ARS_simulation:app", host="0.0.0.0", port=1337, log_level="warning", workers=1)
 
     # main()
