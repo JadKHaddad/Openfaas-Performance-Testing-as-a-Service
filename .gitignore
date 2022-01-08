@@ -19,6 +19,7 @@ modified_server/
 .DS_Store
 node_modules
 /dist
+/results
 
 
 # local env files
