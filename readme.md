@@ -2,7 +2,7 @@
 
 ## Old system
 
-Log in to the test server with **SSH** using the given username and password:
+Log in to the test server with **SSH** using your given username and password:
 ```sh
 ssh user_56@167.172.184.208
 ```
@@ -35,7 +35,7 @@ To start a new test, for example **gen_gs_alarm_device_workload**, navigate to t
 cd locust_scripts
 python3 executor.py locust/gen_gs_alarm_device_workload.py
 ```
-To stop the test hit ```ctr + b``` . Exit the current tmux tab:
+To stop the test hit ```ctr + c``` . Exit the current tmux tab:
 ```sh
 exit
 ```

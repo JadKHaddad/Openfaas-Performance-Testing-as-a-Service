@@ -70,7 +70,7 @@ def start():
         port = port + 1
         
     password = '123456'
-    cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username} && sudo cp -a ../modified_server/. /home/{username}/modified_server/ && sudo cp -a ../locust_scripts/. /home/{username}/locust_scripts/ && sudo chown -R {username}:{username} /home/{username}/locust_scripts'
+    cmd = f'sudo useradd -p $(openssl passwd -1 {password}) -m {username} && sudo cp -a ../modified_server/. /home/{username}/modified_server/ && sudo cp -a ../locust_scripts/. /home/{username}/locust_scripts/ && sudo chown -R {username}:{username} /home/{username}/locust_scripts && sudo chmod 0750 /home/{username}'
     subprocess.Popen(cmd, shell=True).wait()
 
     # run the service
