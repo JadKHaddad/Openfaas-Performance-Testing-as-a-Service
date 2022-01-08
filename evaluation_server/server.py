@@ -12,12 +12,6 @@ from random import randrange
 if not Path('results').exists():
     os.mkdir('results')
 
-if not Path('results/first_questions').exists():
-    os.mkdir('results/first_questions')
-
-if not Path('results/last_questions').exists():
-    os.mkdir('results/last_questions')
-
 def username_exists(username):
     out, err = subprocess.Popen(f'id -u {username}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     if out != b'':
@@ -95,26 +89,19 @@ def finish():
     # get j_data
     j_data = json.loads(request.data)
 
+    # save json_data
+    with open(f'results/{id}_json.txt','w',encoding='utf-8') as file:
+        file.write(json.dumps(j_data))
+    
     first = j_data.get('f')
     last = j_data.get('l')
 
-    # save json_data, first
-    with open(f'results/first_questions/{id}_json.txt','w',encoding='utf-8') as file:
-        file.write(json.dumps(first))
-    
-    #save as text, first
-    with open(f'results/first_questions/{id}_text.txt','w',encoding='utf-8') as file:
+    #save as text
+    with open(f'results/{id}_text.txt','w',encoding='utf-8') as file:
         for item in first:
             q = item.get('q')
             a = item.get('a')
             file.write(f'{q}:{a}\n')
-
-    #save json_data, last
-    with open(f'results/last_questions/{id}_json.txt','w',encoding='utf-8') as file:
-        file.write(json.dumps(last))
-    
-    #save as text, last
-    with open(f'results/last_questions/{id}_text.txt','w',encoding='utf-8') as file:
         for item in last:
             q = item.get('q')
             a = item.get('a')
