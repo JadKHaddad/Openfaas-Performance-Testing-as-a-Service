@@ -20,7 +20,7 @@ const app = Vue.createApp({
                 { q: "Welche Schwierigkeiten hatten Sie mit dem neuen System?", a: "" },
                 { q: "Können Sie die Aufgaben alleine wiederholen (altes System)", a: "" },
                 { q: "Können Sie die Aufgaben alleine wiederholen (nues System)", a: "" },
-                { q: "Mit welchem System w ̈urden Sie schneller arbeiten", a: "" },
+                { q: "Mit welchem System würden Sie schneller arbeiten", a: "" },
                 { q: "Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?", a: "" },
                 { q: "Weitere Kommentare", a: "" },
                 

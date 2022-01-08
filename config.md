@@ -1,5 +1,5 @@
 # Config - Not for you
-Hosted by DigitalOcen <br /><br />
+Hosted by Digitalocean <br /><br />
 Clone into root <br /><br />
 Add services:
 ```sh
