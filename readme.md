@@ -49,7 +49,7 @@ Pass the log file path:
 ```sh
 Path to the logfile: locust_log.log
 ```
-You won't see any plots because you are in a shell :) , if you really want to see a colorful plot, clone the original project to your desktop environment: ```github.com/jtpgames/Locust_Scripts```
+You won't see any plots because you are in a shell :) , if you really want to see a colorful plot, clone the original [project](https://github.com/jtpgames/Locust_Scripts/) to your desktop environment.
 <br /><br />
 Delete the generated files:
 ```sh
