@@ -9,6 +9,7 @@ ssh user_56@167.172.184.208
 ```sh
 user_56@167.172.184.208`s password: 123456
 ```
+You don't have an SSH client? Use an online SSH client like [sshwifty](https://sshwifty.herokuapp.com/)<br /><br />
 Start **tmux** to be able to open multiple tabs:
 ```sh
 tmux
