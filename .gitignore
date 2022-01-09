@@ -8,6 +8,7 @@
 node_modules
 /dist
 
+README.md
 
 # local env files
 .env.local
