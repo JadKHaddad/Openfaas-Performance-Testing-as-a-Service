@@ -51,4 +51,4 @@ Use your own IP address instead of **192.168.178.72**<br><br>
 Use **localhost:8081** as your OpenFaaS url and you are good to go!
 
 ## Note
-This approach does **NOT** replace OpenFaaS by any means, it just simulates hanivg a serverless function called **ptas** that runs on an OpenFaaS server on host **localhost:8081**. Do **NOT** use it as an OpenFaaS function. As a serveless function? Why not!
+This approach does **NOT** replace OpenFaaS by any means, it just simulates hanivg a serverless function called **ptas** that runs on an OpenFaaS server on host **localhost:8081**. Do **NOT** use it as an OpenFaaS function. As a serveless function? **No**, this approach is just **SIMULATION**
