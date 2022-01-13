@@ -613,8 +613,6 @@ if __name__ == '__main__':
             print(f'proxy sync function call: {PROXYFUNCTIONURL}')
             print(f'proxy async function call: {PROXYASYNCFUNCTIONURL}')
         print(f'\ndirect: {DIRECT}')
-    print(f'server running on {host}:{port}')
-    print(f'running with websockets')
     if use_redis is True:
         redis = redis.Redis(
         host=redis_host,
@@ -625,10 +623,12 @@ if __name__ == '__main__':
         try:
             redis.ping()
         except ConnectionError:
-            print("Could not connect to redis. Please check your redis server and try again")
+            print("could not connect to redis. please check your redis server and try again")
             exit()
         handler.REDIS = redis
         handler.EXPIRE = redis_expire
         print(f'using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {redis_expire} seconds')
+    print(f'server running on {host}:{port}')
+    print(f'running with websockets')
     server = pywsgi.WSGIServer((host, int(port)), app, handler_class=WebSocketHandler)
     server.serve_forever()
