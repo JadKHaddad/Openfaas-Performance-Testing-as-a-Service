@@ -672,8 +672,8 @@ def handle(req, no_request=False):
                 if zip_files(project_name,script_name,id):
                     script_dir = get_script_dir(project_name,script_name)
                     return send_from_directory(script_dir, f'{id}.zip'), headers
-                else:
-                    return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
+                
+                return jsonify(success=False,exit_code=2,message="test does not exist"), headers 
 
         if command == 12: # get plots -> sync
             project_name = data.get("project_name") or None
@@ -692,8 +692,8 @@ def handle(req, no_request=False):
                     return send_from_directory(test_dir, f'lin.png'), headers
                 if type == 3: # regression 
                     return send_from_directory(test_dir, f'reg.png'), headers
-                else:
-                    return jsonify(success=False,exit_code=1,message="bad request"), headers 
+                
+                return jsonify(success=False,exit_code=1,message="bad request"), headers 
 
         if command == 13: # get all running tests -> sync
             local = data.get('local') or None
@@ -816,8 +816,7 @@ def handle(req, no_request=False):
         if command == 914: # test connection -> sync
             return jsonify(success=True), headers
         
-        else:
-            return jsonify(success=False,exit_code=1,message="bad request"), headers
+        return jsonify(success=False,exit_code=1,message="bad request"), headers
 
     except Exception as e:
         print(traceback.format_exc())
