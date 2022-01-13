@@ -101,11 +101,11 @@ def index():
     return render_template('index.html')
     
 @app.route('/project/<name>')
-def project():
+def project(name):
     return render_template('index.html')
     
 @app.route('/project/<project_name>/<script_name>')
-def script():
+def script(project_name, name):
     return render_template('index.html')
     
 @app.route('/license')
