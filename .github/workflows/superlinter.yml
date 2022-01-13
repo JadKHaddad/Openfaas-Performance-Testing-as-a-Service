@@ -6,12 +6,18 @@ jobs:
   super-lint:
     name: Lint code base
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: server
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Run Super-Linter
         uses: github/super-linter@v3.17.0
+
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
