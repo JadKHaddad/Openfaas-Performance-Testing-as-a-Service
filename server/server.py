@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import platform, subprocess, datetime, requests, json, argparse, os, sys, random, string, pathlib, shutil, redis
+from redis.exceptions import ConnectionError
 from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from urllib.parse import urljoin, unquote
@@ -621,6 +622,11 @@ if __name__ == '__main__':
         db=redis_database,
         charset="utf-8", 
         decode_responses=True)
+        try:
+            redis.ping()
+        except ConnectionError:
+            print("Could not connect to redis. Please check your redis server and try again")
+            exit()
         handler.REDIS = redis
         handler.EXPIRE = redis_expire
         print(f'using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {redis_expire} seconds')
