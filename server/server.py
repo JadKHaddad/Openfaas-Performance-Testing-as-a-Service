@@ -92,7 +92,7 @@ def send_fav(path):
     return send_from_directory(f'{dist_dir}/fav', path)
 
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found():
     return render_template('index.html'), 404
 
 # app routes    
@@ -101,11 +101,11 @@ def index():
     return render_template('index.html')
     
 @app.route('/project/<name>')
-def project(name):
+def project():
     return render_template('index.html')
     
 @app.route('/project/<project_name>/<script_name>')
-def script(project_name, script_name):
+def script():
     return render_template('index.html')
     
 @app.route('/license')
@@ -351,7 +351,7 @@ def register(message):
     client = request.sid
     url = message.get('openfaasurl')
     if url is None:
-        url = 'None',
+        url = 'None'
     with T_LOCK:
         if client in CONNECTED_CLIENTS: #just update the url bro! o_O
             CONNECTED_CLIENTS[client]['url'] = url
@@ -374,7 +374,7 @@ def register_control(message):
     client = request.sid
     url = message.get('openfaasurl')
     if url is None:
-        url = 'None',
+        url = 'None'
     with T_LOCK:
         CONNECTED_CLIENTS[client]['events']['control'] = None
     #print('\nClient registered control: ', client)
@@ -401,7 +401,7 @@ def register_script(message):
     if test_ids is None:
         test_ids = []
     if url is None:
-        url = 'None',
+        url = 'None'
     with T_LOCK:
         CONNECTED_CLIENTS[client]['events']['script'] = {f'{project_name}_{script_name}': {'project_name':project_name, 'script_name':script_name,'test_ids':test_ids}}
     #print('\nClient registered script: ', client)
@@ -426,7 +426,7 @@ def register_test(message):
     script_name = message.get('script_name')
     test_id = message.get('test_id')
     if url is None:
-        url = 'None',
+        url = 'None'
     with T_LOCK:
         if 'script' in CONNECTED_CLIENTS[client]['events']:
             CONNECTED_CLIENTS[client]['events']['script'][f'{project_name}_{script_name}']['test_ids'].append(test_id)
@@ -573,14 +573,14 @@ if __name__ == '__main__':
     else:
         ALLOWPROXY = True
 
-    if url is None and extern == False and LOCAL == False:
+    if url is None and extern is False and LOCAL is False:
         print('please provide an openfaasurl using -u or -e or use -l if you dont want to use an openfaas server')
         exit()
         
     OPENFAASULR = url
     PROXYOPENFAASULR = url
 
-    if extern == True:
+    if extern is True:
         if platform.system() == 'Linux':
             host = subprocess.Popen("echo $(/sbin/ip -o -4 addr list  | awk '{print $4}' | cut -d/ -f1)", shell=True, stdout=subprocess.PIPE).stdout.read().decode('UTF-8').split(' ')[1].replace('\n','')
             OPENFAASULR = (f'http://{host}:8080/')
@@ -604,7 +604,7 @@ if __name__ == '__main__':
     PROXYFUNCTIONURL = urljoin(PROXYSYNC, FUNCTION)
     PROXYASYNCFUNCTIONURL = urljoin(PROXYASYNC, FUNCTION)
     
-    if LOCAL == False:
+    if LOCAL is False:
         print(f'\nopenfaas url: {OPENFAASULR}')
         print(f'sync function call: {FUNCTIONURL}')
         print(f'async function call: {ASYNCFUNCTIONURL}')
