@@ -3,6 +3,10 @@
 [![OpenFaaS](https://img.shields.io/static/v1?label=OpenFaaS&message=Serverless&color=blue)](https://www.openfaas.com/)
 [![Multipass](https://img.shields.io/static/v1?label=Multipass&message=VM&color=orange)](https://multipass.run/)
 [![Locust](https://img.shields.io/static/v1?label=Locust&message=Load-Testing&color=green)](https://locust.io/)
+[![Vue](https://img.shields.io/static/v1?label=Vue&message=Progressive-Js&color=brightgreen)](https://vuejs.org/)
+[![Redis](https://img.shields.io/static/v1?label=Redis&message=In-Memory-DB&color=red)](https://redis.io/)
+[![Docker](https://img.shields.io/static/v1?label=Dcoker&message=Containers&color=blue)](https://www.docker.com/)
+[![Kubernetes](https://img.shields.io/static/v1?label=Kubernetes&message=Container-Orchestration&color=blue)](https://kubernetes.io/)
 
 ## Installation
 
