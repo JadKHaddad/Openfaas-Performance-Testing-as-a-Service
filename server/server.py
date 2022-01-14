@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import platform, subprocess, datetime, requests, json, argparse, os, sys, random, string, pathlib, shutil, redis
-from redis.exceptions import ConnectionError
+from requests.exceptions import ConnectTimeout, InvalidSchema
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from redis.exceptions import ConnectionError as RedisConnectionError
 from flask import Flask, render_template, request, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from urllib.parse import urljoin, unquote
@@ -156,7 +158,7 @@ def proxy():
             files[key] = (uploaded_file_name, o, uploaded_file_content_type)
         try:
             res = requests.post(url, data=request.data, files=files)
-        except:
+        except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
             error = True
         # close the files
         for o in openfiles:
@@ -166,7 +168,7 @@ def proxy():
     else:
         try:
             res = requests.post(url, data=request.data)   
-        except:
+        except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
             error = True
     if error:
         return Response(
@@ -201,7 +203,7 @@ def check_connection():
         response.set_cookie('openfaasurl', url, expires=expire_date)
         return response 
         
-    except:
+    except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
         return jsonify(success=False)
 
 @app.route('/defaults', methods=['POST'])
@@ -295,7 +297,7 @@ def T_TASK():
                             try:
                                 response = requests.post(post_url, data=json.dumps(data), timeout=2)
                                 socketio.emit(f'{url}_control', response.text)
-                            except:
+                            except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
                                 socketio.emit(f'{url}_control', {'success': False})
                         #print('sent to: ', f'{url}_control')
                         sent[f'{url}_control'] = None
@@ -320,7 +322,7 @@ def T_TASK():
                                     try:
                                         response = requests.post(post_url, data=json.dumps(data), timeout=2)
                                         socketio.emit(f'{url}_{project_name}_{script_name}', response.text)
-                                    except:
+                                    except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
                                         socketio.emit(f'{url}_{project_name}_{script_name}', {'success': False})
                                 #print('sent to: ', f'{url}_{project_name}_{script_name}')
                                 sent[f'{url}_{project_name}_{script_name}'] = None
@@ -337,7 +339,7 @@ def T_TASK():
                     try:
                         response = requests.post(post_url, data=json.dumps(data), timeout=2)
                         socketio.emit(url, response.text)
-                    except:
+                    except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
                         socketio.emit(url, {'success': False})
                 #print('sent to: ', url)
                 sent[url] = None
@@ -622,7 +624,7 @@ if __name__ == '__main__':
         decode_responses=True)
         try:
             redis.ping()
-        except ConnectionError:
+        except RedisConnectionError:
             print("could not connect to redis. please check your redis server and try again")
             exit()
         handler.REDIS = redis
