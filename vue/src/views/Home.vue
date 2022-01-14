@@ -126,6 +126,7 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
+            this.loading = false;
             this.projects = data.projects;
             //console.log(data);
           } else {
@@ -143,6 +144,7 @@ export default {
           (project) => !msg.includes(project)
         );
       });
+      
     },
     upload() {
       const files = this.$refs.files.files;
