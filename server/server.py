@@ -131,7 +131,7 @@ def send_fav(path):
 
 
 @app.errorhandler(404)
-def page_not_found():
+def page_not_found(e):
     return render_template("index.html"), 404
 
 
