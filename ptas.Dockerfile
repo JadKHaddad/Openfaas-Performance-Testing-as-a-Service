@@ -10,11 +10,11 @@ RUN pip install flask waitress requests
 RUN mkdir -p /home/function
 
 WORKDIR /home/function/
-
 COPY ptas/requirements.txt	.
-COPY ptas/handler.py	    .
 
 RUN pip install -r requirements.txt
+
+COPY ptas/handler.py	    .
 
 WORKDIR /home/
 

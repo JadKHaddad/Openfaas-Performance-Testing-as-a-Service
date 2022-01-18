@@ -1198,11 +1198,14 @@ def handle(req, no_request=False):
                 if flush:
                     if REDIS is not None:
                         REDIS.flushdb()
-                        return jsonify(success=True, exit_code=0, message="redis database flushed"), headers
+                        message="redis database flushed"
+                        print(f"Handler: {message}")
+                        return jsonify(success=True, exit_code=0, message=message), headers
                     return jsonify(success=False, exit_code=1, message="not connected to a redis server"), headers
                 if remove:
-                    #remove
-                    REDIS.flushdb()
+                    # remove
+                    if REDIS is not None:
+                        REDIS.flushdb()
                     REDIS = None
                     message = "redis server removed"
                     print(f"Handler: {message}")
@@ -1211,7 +1214,8 @@ def handle(req, no_request=False):
                     redis_database = 0
                 if expire < 0:
                     expire = EXPIRE
-                REDIS.flushdb()
+                if REDIS is not None:
+                    REDIS.flushdb()
                 REDIS = redis.Redis(
                     host=redis_host,
                     port=redis_port,
@@ -1224,7 +1228,7 @@ def handle(req, no_request=False):
                     EXPIRE = expire
                 except RedisConnectionError:
                     REDIS = None
-                    return jsonify(success=False, exit_code=1, message="could not connect to redis. please check your redis server and try again"), headers
+                    return jsonify(success=False, exit_code=1, message=f"could not connect to redis on {redis_host}:{redis_port}. please check your redis server and try again"), headers
                 message =  f"using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {EXPIRE} seconds"
                 print(f"Handler: {message}")
                 return jsonify(success=True, exit_code=0, message=message), headers
