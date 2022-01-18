@@ -3,5 +3,3 @@ flask_socketio
 gevent-websocket
 requests
 gevent
-virtualenv
-redis

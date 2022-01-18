@@ -19,7 +19,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-
+import redis
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 REDIS = None
 EXPIRE: int = 600
@@ -319,6 +320,8 @@ def clean_up_project_on_failed_installation(project_name):  # runs in a thread!
 
 
 def handle(req, no_request=False):
+    global REDIS
+    global EXPIRE
     # we try the code block here to catch the error and get it displayed with the answer otherwise we get "server error 500" with no information about the error, could be removed after debugging phase
     try:
         if not no_request and "file0" in request.files:  # upload a new project
@@ -1181,6 +1184,50 @@ def handle(req, no_request=False):
 
         if command == 914:  # test connection -> sync
             return jsonify(success=True), headers
+        
+        if command == 915:  # modify redis -> sync
+            redis_host = data.get("host") or "localhost"
+            redis_port = data.get("port") or 6379
+            expire = data.get("expire") or EXPIRE
+            redis_database = data.get("db") or 0
+            remove = data.get("remove") or None
+            flush = data.get("flush") or None
+            with LOCK2:
+                if len(tasks) > 0:
+                    return jsonify(success=False, exit_code=1, message="can not modify redis server while tests are running. stop all tests and try again"), headers
+                if flush:
+                    if REDIS is not None:
+                        REDIS.flushdb()
+                        return jsonify(success=True, exit_code=0, message="redis database flushed"), headers
+                    return jsonify(success=False, exit_code=1, message="not connected to a redis server"), headers
+                if remove:
+                    #remove
+                    REDIS.flushdb()
+                    REDIS = None
+                    message = "redis server removed"
+                    print(f"Handler: {message}")
+                    return jsonify(success=True, exit_code=0, message=message), headers
+                if redis_database > 15 or redis_database < 0:
+                    redis_database = 0
+                if expire < 0:
+                    expire = EXPIRE
+                REDIS.flushdb()
+                REDIS = redis.Redis(
+                    host=redis_host,
+                    port=redis_port,
+                    db=redis_database,
+                    charset="utf-8",
+                    decode_responses=True,
+                )
+                try:
+                    REDIS.ping()
+                    EXPIRE = expire
+                except RedisConnectionError:
+                    REDIS = None
+                    return jsonify(success=False, exit_code=1, message="could not connect to redis. please check your redis server and try again"), headers
+                message =  f"using redis on {redis_host}:{redis_port} | database: [{redis_database}] | cache lifetime: {EXPIRE} seconds"
+                print(f"Handler: {message}")
+                return jsonify(success=True, exit_code=0, message=message), headers
 
         return jsonify(success=False, exit_code=1, message="bad request"), headers
 

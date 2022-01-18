@@ -1,6 +1,6 @@
-gevent
 virtualenv
 pandas
 matplotlib
 sklearn
 numpy
+redis
