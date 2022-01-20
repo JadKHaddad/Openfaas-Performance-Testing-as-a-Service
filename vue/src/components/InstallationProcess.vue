@@ -1,4 +1,5 @@
 <template>
+<div v-if="!mobileAgent">
   <div class="card project-card" :id="id">
     <div class="card-body">
       <div class="row">
@@ -22,12 +23,31 @@
       </div>
     </div>
   </div>
+</div>
+<div v-else>
+  <div class="card project-card no-width" :id="id">
+    <div class="card-body">
+
+        <div
+          class="vertical-entry project_name"
+          data-mdb-toggle="tooltip"
+          title="Project name"
+        >
+          Installing project: {{ id }}
+        </div>
+        <div class="vertical-entry" data-mdb-toggle="tooltip" title="Cancel">
+          <i class="fas fa-times stop-install-project" @click="stop"></i>
+        </div>
+
+    </div>
+  </div>
+  </div>
 </template>
 
 <script>
 export default {
   name: "InstallationProcess",
-  props: ["id", "url", "openfaasUrl", "socket"],
+  props: ["id", "url", "openfaasUrl", "socket", "mobileAgent"],
   data() {
     return {
       socketIntv: null,

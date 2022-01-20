@@ -29,8 +29,21 @@ body {
 .card{
   margin-top:10px;
   margin-bottom:40px;
-  min-width: 1500px;
+  width: 1500px;
   transition: .5s !important;
+}
+
+.card.no-width{
+  width:auto !important;
+}
+
+.description{
+  margin-bottom: 15px;
+  max-width: 1400px;
+}
+
+.description-holder {
+  max-width: 300px;
 }
 
 .license{
@@ -80,12 +93,45 @@ body {
   margin-right:5px;
 }
 
+.btn-container-vertical{
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn-vertical{
+  margin-top: 10px;
+}
+
+.btn-vertical button{
+  width: 150px;
+}
+
+.vertical-entry{
+  margin-top: 5px;
+}
+
 .img-container{
   margin-top: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
+.img-container-vertical{
+  margin-top: 20px;
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.img-container-vertical img{
+  max-width:100%;
+
+}
+
 
 .img-container img{
   width: 500px;
@@ -109,6 +155,12 @@ h3 {
   text-align: center;
 }
 
+h5 {
+  margin-top: 20px;
+  text-align: center;
+  color: #757575;
+}
+
 .control-btn-container{
   justify-content: center;
   margin-left: auto;
@@ -121,6 +173,12 @@ h3 {
 .path{
   margin-left: 20px;
   font-weight: bold;
+}
+
+.path.vertical{
+  margin-left: auto;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 .path i{

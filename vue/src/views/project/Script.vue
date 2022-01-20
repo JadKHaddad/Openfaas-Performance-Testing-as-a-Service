@@ -28,9 +28,7 @@
         Delete all
       </button>
     </div>
-    <div v-if="!mobileAgent">
     <Test 
-    
       v-for="test in reversedTests"
       :key="test[0]"
       :id="test[0]"
@@ -44,11 +42,11 @@
       :pid="pid"
       :sid="id"
       :startMinimized="minimizeTests"
+      :mobileAgent="mobileAgent"
       @restart="restart"
       @delete="deleteTest"
       @stop="stop(test[0])"
     ></Test>
-    </div>
     <!-- Modal -->
     <div
       class="modal fade"
@@ -171,7 +169,7 @@ export default {
   components: {
     Test,
   },
-  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update"],
+  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update", "mobileAgent"],
   data() {
     return {
       id: this.$route.params.id,
@@ -183,7 +181,6 @@ export default {
       host: "",
       time: "",
       description: "",
-      mobileAgent: false
     };
   },
   methods: {
@@ -537,9 +534,7 @@ export default {
     this.socket.off(this.openfaasUrl + "_project_delete_" + this.pid);
     // console.log("script disconnected");
   },
-  created(){
-    this.mobileAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-  },
+
   mounted() {
     this.init();
   },

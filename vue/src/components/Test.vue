@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div :id="id">
+    <div v-if="!mobileAgent" :id="id">
       <div class="test-container">
         <div class="buttons btn-container">
           <button
@@ -66,7 +66,14 @@
           @dblclick="minimize"
         >
           <div class="card-header">
-            <div v-if="info.description" class="description" data-mdb-toggle="tooltip" title="Description">{{ info.description }}</div>
+            <div
+              v-if="info.description"
+              class="description"
+              data-mdb-toggle="tooltip"
+              title="Description"
+            >
+              {{ info.description }}
+            </div>
             <div class="row">
               <div
                 class="col-3 test-id"
@@ -112,8 +119,18 @@
                   data-mdb-toggle="tooltip"
                   title="Running"
                 ></div>
-                <i v-if="showCheck" class="fas fa-check check" data-mdb-toggle="tooltip" title="Done"></i>
-                <i v-if="showX" class="fas fa-times not-valid" data-mdb-toggle="tooltip" title="Not valid"></i>
+                <i
+                  v-if="showCheck"
+                  class="fas fa-check check"
+                  data-mdb-toggle="tooltip"
+                  title="Done"
+                ></i>
+                <i
+                  v-if="showX"
+                  class="fas fa-times not-valid"
+                  data-mdb-toggle="tooltip"
+                  title="Not valid"
+                ></i>
               </div>
             </div>
           </div>
@@ -195,7 +212,181 @@
             </div>
           </div>
         </div>
-        
+      </div>
+    </div>
+    <div v-else :id="id">
+      <div class="test-container">
+        <div v-if="showPath" class="path vertical">
+          <router-link :to="{ name: 'Project', params: { id: pid } }">
+            {{ pid }}
+          </router-link>
+          &nbsp;&nbsp;
+          <i class="fas fa-angle-right"></i>
+          &nbsp;&nbsp;
+          <router-link :to="{ name: 'Script', params: { pid: pid, id: sid } }">
+            {{ sid }}
+          </router-link>
+        </div>
+        <div class="row">
+          <div class="col-6 btn-vertical">
+            <button
+              type="button"
+              class="btn btn-primary stop-test"
+              @click="stop"
+              :disabled="!running"
+            >
+              Stop
+            </button>
+          </div>
+          <div class="col-6 btn-vertical">
+            <button
+              type="button"
+              class="btn btn-primary restart-test"
+              @click="restart"
+              :disabled="running"
+            >
+              Restart
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6 btn-vertical">
+            <button
+              type="button"
+              class="btn btn-primary download-test"
+              @click="download"
+              :disabled="running"
+            >
+              Download
+            </button>
+          </div>
+          <!--
+          <div class="btn-vertical">
+            <button
+              type="button"
+              class="btn btn-primary show-test-results"
+              @click="showResults"
+              disabled="!showResultsComp || !valid"
+            >
+              {{ resultsText }}
+            </button>
+          </div>
+          -->
+          <div class="col-6 btn-vertical">
+            <button
+              type="button"
+              class="btn btn-danger delete-test"
+              @click="deleteMe"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+        <div v-if="showResultsBool" class="img-container-vertical">
+          <img class="lin" :src="linImageUrl" />
+          <img class="reg" :src="regImageUrl" />
+        </div>
+
+        <div
+          class="card no-width"
+          data-mdb-toggle="tooltip"
+          :title="tooltipText"
+          @dblclick="minimize"
+        >
+          <div class="card-header">
+            <div class="description-holder vertical-entry">
+            <label
+              v-if="info.description"
+              class="description"
+              data-mdb-toggle="tooltip"
+              title="Description"
+            >
+              {{ info.description }}
+            </label>
+            </div>
+            <div
+              class="vertical-entry test-id"
+              :class="{ green: running, red: !valid }"
+            >
+              <label data-mdb-toggle="tooltip" title="Test id">{{ id }}</label>
+            </div>
+            <div class="vertical-entry" data-mdb-toggle="tooltip" title="Users">
+              <i class="fas fa-user-alt"></i> {{ info.users }}
+            </div>
+            <div
+              class="vertical-entry"
+              data-mdb-toggle="tooltip"
+              title="Spawn rate"
+            >
+              <i class="fas fa-users"></i> {{ info.spawn_rate }}
+            </div>
+            <div
+              class="vertical-entry"
+              data-mdb-toggle="tooltip"
+              title="Workers"
+            >
+              <i class="fas fa-hard-hat"></i> {{ workers }}
+            </div>
+            <div class="vertical-entry" data-mdb-toggle="tooltip" title="Host">
+              <i class="fas fa-globe"></i> {{ info.host }}
+            </div>
+            <div
+              class="vertical-entry"
+              data-mdb-toggle="tooltip"
+              title="Time is seconds"
+            >
+              <i class="fas fa-clock"></i>
+              {{ info.time }}
+            </div>
+            <div
+              class="vertical-entry elapsed"
+              data-mdb-toggle="tooltip"
+              title="Elapsed time is seconds"
+              v-if="running"
+            >
+              <i class="fas fa-stopwatch"></i>
+              <label class="elapsed-text">&nbsp;{{ elapsed }}</label>
+            </div>
+            <div class="vertical-entry">
+              <i
+                v-if="showCheck"
+                class="fas fa-check check"
+                data-mdb-toggle="tooltip"
+                title="Done"
+              ></i>
+              <i
+                v-if="showX"
+                class="fas fa-times not-valid"
+                data-mdb-toggle="tooltip"
+                title="Not valid"
+              ></i>
+            </div>
+          </div>
+          <div
+            class="card-body"
+            ref="cardBody"
+            :style="startMinimized ? 'display: none;' : 'display: block;'"
+          >
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-7">Name</div>
+                <div class="col-5">Requests</div>
+              </div>
+            </div>
+            <div v-if="renderData" class="container-fluid results">
+              <div v-for="d in data.slice(0, -1)" :key="d" class="row">
+                <div class="col-7">{{ d["Name"] }}</div>
+                <div class="col-5">{{ d["Request Count"] }}</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="renderData" class="card-footer">
+            <div class="row">
+              <div class="col-7">{{ data.at(-1)["Name"] }}</div>
+              <div class="col-5">{{ data.at(-1)["Request Count"] }}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -217,6 +408,7 @@ export default {
     "status",
     "valid",
     "id",
+    "mobileAgent",
   ],
   data() {
     return {
@@ -408,7 +600,7 @@ export default {
     },
   },
   created() {
-    if(this.info.workers !== 0) this.workers = this.info.workers;
+    if (this.info.workers !== 0) this.workers = this.info.workers;
     this.minimized = this.startMinimized;
     if (this.minimized) this.tooltipText = "Double click to maximize";
   },

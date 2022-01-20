@@ -25,6 +25,7 @@
       :socket="socket"
       :minimizeTests="minimizeTests"
       :update="update"
+      :mobileAgent="mobileAgent"
       @info="showInfo"
     />
     <!-- Button trigger info modal -->
@@ -107,8 +108,8 @@
         </div>
       </div>
     </div>
-    <teleport  to="#teleported">
-      <div class="background-dark" :class="{dark: darkTheme}"></div>
+    <teleport to="#teleported">
+      <div class="background-dark" :class="{ dark: darkTheme }"></div>
     </teleport>
     <teleport to="#teleported-footer">
       <Footer
@@ -150,7 +151,8 @@ export default {
       infoErrorText: "",
       confirmMessage: "",
       confirmButtonText: "confirm",
-      navBarRollBack: false
+      navBarRollBack: false,
+      mobileAgent: false
     };
   },
   methods: {
@@ -244,9 +246,9 @@ export default {
       console.log("default openfaasUrl: " + this.openfaasUrl);
       console.log("default baseUrl: " + this.url);
     },
-    setNavBarRollBack(){
+    setNavBarRollBack() {
       this.navBarRollBack = false;
-    }
+    },
   },
   created() {
     if (localStorage.getItem("url")) this.url = localStorage.getItem("url");
@@ -300,6 +302,9 @@ export default {
           this.showInfo("Could not connect to server", "red");
         });
     }
+    this.mobileAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(
+        navigator.userAgent
+      );
   },
   // updated(){
   //   console.log(this.socket._callbacks)

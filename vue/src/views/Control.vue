@@ -25,6 +25,7 @@
       :url="url"
       :openfaasUrl="openfaasUrl"
       :socket="socket"
+      :mobileAgent="mobileAgent"
       @delete="deleteProject(project)"
     >
     </InstallationProcess>
@@ -43,6 +44,7 @@
       :pid="test[1].project_name"
       :sid="test[1].script_name"
       :startMinimized="minimizeTests"
+      :mobileAgent="mobileAgent"
       @restart="restart"
       @delete="deleteTest"
     ></Test>
@@ -59,7 +61,7 @@ export default {
     Test,
     InstallationProcess,
   },
-  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update"],
+  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update", "mobileAgent"],
   data() {
     return {
       tests: {},
