@@ -69,7 +69,7 @@
               </div>
               <div v-if="uploading">
                 <div class="upload-message">
-                  Uploading project - {{ percentCompleted }} %
+                  Uploading project
                 </div>
                 <!-- <progress :value="percentCompleted" max="100"></progress> -->
                 <div class="btn-container">

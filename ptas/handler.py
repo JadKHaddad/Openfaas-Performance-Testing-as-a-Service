@@ -50,17 +50,18 @@ def collect_garbage():
             to_delete = []
             for task_id in tasks:
                 if tasks[task_id].poll() is not None:
-                    # save error log
-                    task_id_splitted = task_id.split("$")
-                    project_name = task_id_splitted[1]
-                    script_name = task_id_splitted[2]
-                    id = task_id_splitted[3]
-                    test_dir = get_test_dir(project_name, script_name, id)
-                    out, err = tasks[task_id].communicate()
-                    out = out.decode("utf-8")
-                    err = err.decode("utf-8")
-                    with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
-                        file.write(f"error:\n\n{err}\noutput:\n\n{out}")
+                    if platform.system() != "Windows":
+                        # save error log
+                        task_id_splitted = task_id.split("$")
+                        project_name = task_id_splitted[1]
+                        script_name = task_id_splitted[2]
+                        id = task_id_splitted[3]
+                        test_dir = get_test_dir(project_name, script_name, id)
+                        out, err = tasks[task_id].communicate()
+                        out = out.decode("utf-8")
+                        err = err.decode("utf-8")
+                        with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                            file.write(f"error:\n\n{err}\noutput:\n\n{out}")
                     to_delete.append(task_id)
             for to_delete_task in to_delete:
                 if REDIS is not None:
@@ -740,12 +741,13 @@ def handle(req, no_request=False):
                     if task_id in tasks:
                         if tasks[task_id].poll() is not None:  # process finished
                             if not Path(csv_file_path).exists():  # test is not valid
-                                # save error log
-                                out, err = tasks[task_id].communicate()
-                                out = out.decode("utf-8")
-                                err = err.decode("utf-8")
-                                with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
-                                    file.write(f"error:\n\n{err}\noutput:\n\n{out}")
+                                if platform.system() != "Windows":
+                                    # save error log
+                                    out, err = tasks[task_id].communicate()
+                                    out = out.decode("utf-8")
+                                    err = err.decode("utf-8")
+                                    with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                                        file.write(f"error:\n\n{err}\noutput:\n\n{out}")
                                 del tasks[task_id]
                                 if REDIS is not None:
                                     data = get_test_info(project_name, script_name, id)
