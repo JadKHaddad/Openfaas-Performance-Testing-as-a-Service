@@ -67,8 +67,13 @@
                   ref="files"
                 />
               </div>
-              <div v-if="uploading" class="btn-container">
+              <div v-if="uploading"> 
+              <div class="upload-message">
+                Uploading project
+              </div>
+              <div  class="btn-container">
                 <div class="spinner-border text-primary spinner"></div>
+              </div>
               </div>
               <div class="upload-message" v-if="!uploading">
                 Please make sure all names don't include blank spaces
@@ -95,12 +100,11 @@
         </div>
       </div>
     </div>
-    <div class="btn-container">
-      <div
-        v-if="loading"
-        class="spinner-border text-primary spinner"
-        id="spinner"
-      ></div>
+    <div v-if="loading">
+      <h5>Installing project: {{ projectId }}</h5>
+      <div class="btn-container">
+        <div class="spinner-border text-primary spinner" id="spinner"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -144,7 +148,6 @@ export default {
           (project) => !msg.includes(project)
         );
       });
-      
     },
     upload() {
       const files = this.$refs.files.files;
@@ -237,7 +240,7 @@ export default {
                   (project) => !this.markedProjects.includes(project)
                 );
                 this.markedProjects = [];
-              }else{
+              } else {
                 this.$emit("info", data.message, "red");
               }
             })

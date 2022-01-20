@@ -29,8 +29,13 @@ body {
 .card{
   margin-top:10px;
   margin-bottom:40px;
-  min-width: 1500px;
+  width: 1500px;
   transition: .5s !important;
+}
+
+.description{
+  margin-bottom: 15px;
+  max-width: 1400px;
 }
 
 .license{
@@ -107,6 +112,12 @@ a :hover{
 h3 {
   margin-bottom: 20px;
   text-align: center;
+}
+
+h5 {
+  margin-top: 20px;
+  text-align: center;
+  color: #757575;
 }
 
 .control-btn-container{

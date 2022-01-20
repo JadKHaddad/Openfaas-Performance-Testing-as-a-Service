@@ -31,7 +31,7 @@
             type="button"
             class="btn btn-primary show-test-results"
             @click="showResults"
-            :disabled="!showResultsComp"
+            :disabled="!showResultsComp || !valid"
           >
             {{ resultsText }}
           </button>
@@ -58,6 +58,7 @@
             {{ sid }}
           </router-link>
         </div>
+
         <div
           class="card"
           data-mdb-toggle="tooltip"
@@ -65,6 +66,7 @@
           @dblclick="minimize"
         >
           <div class="card-header">
+            <div v-if="info.description" class="description" data-mdb-toggle="tooltip" title="Description">{{ info.description }}</div>
             <div class="row">
               <div
                 class="col-3 test-id"
@@ -81,7 +83,7 @@
                 <i class="fas fa-users"></i> {{ info.spawn_rate }}
               </div>
               <div class="col-1" data-mdb-toggle="tooltip" title="Workers">
-                <i class="fas fa-hard-hat"></i> {{ info.workers }}
+                <i class="fas fa-hard-hat"></i> {{ workers }}
               </div>
               <div class="col-3" data-mdb-toggle="tooltip" title="Host">
                 <i class="fas fa-globe"></i> {{ info.host }}
@@ -193,6 +195,7 @@
             </div>
           </div>
         </div>
+        
       </div>
     </div>
   </div>
@@ -229,6 +232,7 @@ export default {
       loadingImages: false,
       minimized: false,
       tooltipText: "Double click to minimize",
+      workers: "",
     };
   },
   computed: {
@@ -404,6 +408,7 @@ export default {
     },
   },
   created() {
+    if(this.info.workers !== 0) this.workers = this.info.workers;
     this.minimized = this.startMinimized;
     if (this.minimized) this.tooltipText = "Double click to maximize";
   },

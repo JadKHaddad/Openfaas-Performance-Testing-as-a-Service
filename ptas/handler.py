@@ -50,6 +50,17 @@ def collect_garbage():
             to_delete = []
             for task_id in tasks:
                 if tasks[task_id].poll() is not None:
+                    # save error log
+                    task_id_splitted = task_id.split("$")
+                    project_name = task_id_splitted[1]
+                    script_name = task_id_splitted[2]
+                    id = task_id_splitted[3]
+                    test_dir = get_test_dir(project_name, script_name, id)
+                    out, err = tasks[task_id].communicate()
+                    out = out.decode("utf-8")
+                    err = err.decode("utf-8")
+                    with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                        file.write(f"error:\n\n{err}\noutput:\n\n{out}")
                     to_delete.append(task_id)
             for to_delete_task in to_delete:
                 if REDIS is not None:
@@ -299,10 +310,11 @@ def clean_up_project_on_failed_installation(project_name):  # runs in a thread!
                 if installation_tasks[project_name].returncode != 0:
                     if platform.system() != "Windows":
                         out, err = installation_tasks[project_name].communicate()
-                        print("Handler: Error caught in Thread: " + str(err))
+                        err = err.decode("utf-8")
+                        print(f"Handler: Error caught in Thread:\n{err}")
                         # save installation error
                         with open(error_file, "w", encoding="UTF-8") as file:
-                            file.write(err.decode("UTF-8"))
+                            file.write(err)
                     print(f"Handler: {project_name}: cleaning up")
                     # delete project
                     project_path = f"{projects_dir}/{project_name}"
@@ -528,6 +540,7 @@ def handle(req, no_request=False):
             workers = data.get("workers") or None
             host = data.get("host") or None
             time = data.get("time") or None
+            description = data.get("description") or None
 
             if (
                 project_name is None
@@ -648,8 +661,12 @@ def handle(req, no_request=False):
                             --logfile {log_path}"
 
                     tasks[task_id] = subprocess.Popen(
-                        f"ulimit -n 64000; {command}", shell=True, preexec_fn=os.setsid
-                    )  # stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
+                        f"ulimit -n 64000; {command}",
+                        shell=True,
+                        preexec_fn=os.setsid,
+                        stderr=subprocess.PIPE,
+                        stdout=subprocess.PIPE
+                    )  
 
                 started_at = t.time()
                 # save test info
@@ -660,6 +677,7 @@ def handle(req, no_request=False):
                     "host": host,
                     "workers": workers_count,
                     "time": time,
+                    "description": description,
                     "started_at": started_at,
                 }
                 with open(info_file, "w", encoding="UTF-8") as file:
@@ -722,6 +740,12 @@ def handle(req, no_request=False):
                     if task_id in tasks:
                         if tasks[task_id].poll() is not None:  # process finished
                             if not Path(csv_file_path).exists():  # test is not valid
+                                # save error log
+                                out, err = tasks[task_id].communicate()
+                                out = out.decode("utf-8")
+                                err = err.decode("utf-8")
+                                with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                                    file.write(f"error:\n\n{err}\noutput:\n\n{out}")
                                 del tasks[task_id]
                                 if REDIS is not None:
                                     data = get_test_info(project_name, script_name, id)

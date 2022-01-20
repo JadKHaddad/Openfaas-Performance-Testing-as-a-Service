@@ -28,7 +28,9 @@
         Delete all
       </button>
     </div>
-    <Test
+    <div v-if="!mobileAgent">
+    <Test 
+    
       v-for="test in reversedTests"
       :key="test[0]"
       :id="test[0]"
@@ -46,6 +48,7 @@
       @delete="deleteTest"
       @stop="stop(test[0])"
     ></Test>
+    </div>
     <!-- Modal -->
     <div
       class="modal fade"
@@ -121,6 +124,21 @@
                   >Time in seconds</label
                 >
               </div>
+              <div class="form-text" style="padding-bottom: 10px">
+                Descripe your test
+              </div>
+              <!-- Label input -->
+              <div class="form-outline mb-4">
+                <input
+                  type="text"
+                  id="description-input"
+                  class="form-control"
+                  v-model="description"
+                />
+                <label class="form-label" for="description-input"
+                  >Description</label
+                >
+              </div>
               <!-- Submit button -->
               <button
                 type="button"
@@ -164,6 +182,8 @@ export default {
       workers: "",
       host: "",
       time: "",
+      description: "",
+      mobileAgent: false
     };
   },
   methods: {
@@ -362,7 +382,7 @@ export default {
         }
       );
     },
-    start(users, spawnRate, workers, host, time) {
+    start(users, spawnRate, workers, host, time, description) {
       fetch(this.url, {
         method: "POST",
         body: JSON.stringify({
@@ -374,6 +394,7 @@ export default {
           workers: parseInt(workers),
           host: host,
           time: parseInt(time),
+          description: description
         }),
       })
         .then((data) => data.json())
@@ -387,6 +408,7 @@ export default {
               host: host,
               workers: workers,
               time: time,
+              description: description,
               started_at: startedAt,
             });
             const status = 1;
@@ -418,9 +440,13 @@ export default {
     },
     startFromModal() {
       if (this.host != null) {
-        this.host = this.host.replace("http://", "").replace("https://", "");
-        if (this.host != "") {
-          this.host = "http://" + this.host;
+        if (
+          this.host.indexOf("http://") == -1 &&
+          this.host.indexOf("https://") == -1
+        ) {
+          if (this.host != "") {
+            this.host = "http://" + this.host;
+          }
         }
       }
       // handle false inputs
@@ -460,7 +486,8 @@ export default {
         this.spawnRate,
         this.workers,
         this.host,
-        this.time
+        this.time,
+        this.description
       );
     },
     restart(info) {
@@ -469,7 +496,8 @@ export default {
         info.spawn_rate,
         info.workers,
         info.host,
-        info.time
+        info.time,
+        info.description
       );
     },
     deleteTest(id) {
@@ -508,6 +536,9 @@ export default {
     );
     this.socket.off(this.openfaasUrl + "_project_delete_" + this.pid);
     // console.log("script disconnected");
+  },
+  created(){
+    this.mobileAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
   },
   mounted() {
     this.init();

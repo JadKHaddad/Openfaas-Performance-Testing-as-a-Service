@@ -150,7 +150,7 @@ export default {
       infoErrorText: "",
       confirmMessage: "",
       confirmButtonText: "confirm",
-      navBarRollBack: false,
+      navBarRollBack: false
     };
   },
   methods: {
