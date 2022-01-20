@@ -67,13 +67,14 @@
                   ref="files"
                 />
               </div>
-              <div v-if="uploading"> 
-              <div class="upload-message">
-                Uploading project
-              </div>
-              <div  class="btn-container">
-                <div class="spinner-border text-primary spinner"></div>
-              </div>
+              <div v-if="uploading">
+                <div class="upload-message">
+                  Uploading project - {{ percentCompleted }} %
+                </div>
+                <!-- <progress :value="percentCompleted" max="100"></progress> -->
+                <div class="btn-container">
+                  <div class="spinner-border text-primary spinner"></div>
+                </div>
               </div>
               <div class="upload-message" v-if="!uploading">
                 Please make sure all names don't include blank spaces
@@ -122,6 +123,7 @@ export default {
       markedProjects: [],
       projectId: "",
       uploading: false,
+      percentCompleted: 0,
     };
   },
   methods: {
@@ -160,11 +162,85 @@ export default {
         data.append("file" + i, files[i]);
       }
       this.uploading = true;
+
+      // axios
+      //   .request({
+      //     headers: {
+      //       "Origin": location.origin
+      //     },
+      //     method: "post",
+      //     url: this.url,
+      //     data: data,
+      //     onUploadProgress: (progressEvent) => {
+      //       this.percentCompleted = Math.round(
+      //         (progressEvent.loaded * 100) / progressEvent.total
+      //       );
+      //     },
+      //   })
+      //   .then((response) => {
+      //     const data = response.data;
+      //     this.uploading = false;
+      //     this.$refs.dismissBtn.click();
+      //     //console.log(data);
+      //     if (data.success) {
+      //       this.loading = true;
+      //       this.projectId = data.task_id;
+      //       this.socketIntv = setInterval(() => {
+      //         this.socket.emit("task_stats", {
+      //           project_name: this.projectId,
+      //           openfaasurl: this.openfaasUrl,
+      //         });
+      //       }, 1000);
+      //       this.socket.on(this.projectId, (message) => {
+      //         //console.log(message);
+      //         const data = JSON.parse(message.data);
+      //         if (!data.success) {
+      //           //console.log("Something went wrong");
+      //           this.loading = false;
+      //           this.$emit("info", "Something went wrong", "red");
+      //           clearInterval(this.socketIntv);
+      //         } else if (data.status_code === 3) {
+      //           //console.log("thread is locking");
+      //         } else if (data.status_code === 2) {
+      //           //console.log("installing project");
+      //         } else if (data.status_code === 1) {
+      //           //console.log("installing failed");
+      //           clearInterval(this.socketIntv);
+      //           this.loading = false;
+      //           this.$emit("info", "Installation failed", "red", data.error);
+      //         } else {
+      //           //console.log("Task is finished");
+      //           clearInterval(this.socketIntv);
+      //           this.$router.push({
+      //             name: "Project",
+      //             params: { id: this.projectId },
+      //           });
+      //           this.socket.emit("project_upload", {
+      //             openfaasurl: this.openfaasUrl,
+      //             project_name: this.projectId,
+      //           });
+      //         }
+      //       });
+      //     } else {
+      //       this.uploading = false;
+      //       this.loading = false;
+      //       this.percentCompleted = 0;
+      //       this.$emit("info", data.message, "red");
+      //     }
+      //   })
+      //   .catch(() => {
+      //     this.$refs.dismissBtn.click();
+      //     this.uploading = false;
+      //     this.loading = false;
+      //     this.percentCompleted = 0;
+      //     this.$emit("info", "Something went wrong", "red");
+      //   });
+      // return false;
+
       fetch(this.url, { method: "POST", body: data })
         .then((data) => data.json())
         .then((data) => {
           this.uploading = false;
-
           this.$refs.dismissBtn.click();
           //console.log(data);
           if (data.success) {

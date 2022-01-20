@@ -15,7 +15,7 @@ from urllib.parse import urljoin, unquote
 from threading import Lock
 import redis
 import requests
-from requests.exceptions import ConnectTimeout, InvalidSchema
+from requests.exceptions import ConnectTimeout, InvalidSchema, ReadTimeout, InvalidURL
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from redis.exceptions import ConnectionError as RedisConnectionError
 from flask import (
@@ -207,7 +207,7 @@ def proxy():
             files[key] = (uploaded_file_name, o, uploaded_file_content_type)
         try:
             res = requests.post(url, data=request.data, files=files)
-        except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
+        except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
             error = True
         # close the files
         for o in openfiles:
@@ -217,7 +217,7 @@ def proxy():
     else:
         try:
             res = requests.post(url, data=request.data)
-        except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
+        except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
             error = True
     if error:
         return Response(status=503)
@@ -234,6 +234,8 @@ def local():
 @app.route("/check_connection", methods=["POST"])
 def check_connection():
     url = json.loads(request.data)["url"]
+    if url == "":
+        return jsonify(success=False)
     url = url[:-1] if url[-1] == "/" else url
     try:
         res = requests.post(
@@ -252,7 +254,7 @@ def check_connection():
         response.set_cookie("openfaasurl", url, expires=expire_date)
         return response
 
-    except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
+    except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
         return jsonify(success=False)
 
 
@@ -442,7 +444,7 @@ def T_TASK():
                             post_url, data=json.dumps(data), timeout=2
                         )
                         socketio.emit(url, response.text)
-                    except (ConnectTimeout, RequestsConnectionError, InvalidSchema):
+                    except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
                         socketio.emit(url, {"success": False})
                 # print('sent to: ', url)
                 sent[url] = None

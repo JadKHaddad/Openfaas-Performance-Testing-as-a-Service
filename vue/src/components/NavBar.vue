@@ -329,10 +329,14 @@ export default {
       //calculate
       if (!this.tempNoOpenfaas) {
         var newOpenfaasurl = this.tempOpenfaasUrl;
-        newOpenfaasurl = newOpenfaasurl
-          .replace("http://", "")
-          .replace("https://", "");
-        newOpenfaasurl = "http://" + newOpenfaasurl;
+        if (
+          newOpenfaasurl.indexOf("http://") == -1 &&
+          newOpenfaasurl.indexOf("https://") == -1
+        ) {
+          if (newOpenfaasurl != "") {
+            newOpenfaasurl = "http://" + newOpenfaasurl;
+          }
+        }
         //check if this url works
         this.loading = true;
         this.error = false;

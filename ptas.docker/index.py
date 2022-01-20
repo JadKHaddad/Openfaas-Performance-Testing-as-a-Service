@@ -89,7 +89,7 @@ def main_route_async(path):
     if is_true(raw_body):
         as_text = False
 
-    return handler.handle(request.get_data(as_text=as_text))
+    return handler.handle(request.get_data(as_text=as_text)), headers
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=5000)

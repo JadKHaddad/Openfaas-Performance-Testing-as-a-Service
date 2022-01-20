@@ -367,3 +367,6 @@ h5 {
   margin-bottom: 20px;
 }
 
+progress{
+  width: 100%;
+}
