@@ -66,7 +66,7 @@ def fix_transfer_encoding():
     if transfer_encoding == u"chunked":
         request.environ["wsgi.input_terminated"] = True
 
-@app.route("/function/ptas", defaults={"path": ""}, methods=["POST", "GET"])
+@app.route("/function/ptas", defaults={"path": ""}, methods=["POST", "GET", "OPTIONS"])
 def main_route(path):
     raw_body = os.getenv("RAW_BODY", "false")
 
@@ -79,7 +79,7 @@ def main_route(path):
 
     return ret
 
-@app.route("/async-function/ptas", defaults={"path": ""}, methods=["POST", "GET"])
+@app.route("/async-function/ptas", defaults={"path": ""}, methods=["POST", "GET", "OPTIONS"])
 @flask_async
 def main_route_async(path):
     raw_body = os.getenv("RAW_BODY", "false")
@@ -89,7 +89,7 @@ def main_route_async(path):
     if is_true(raw_body):
         as_text = False
 
-    return handler.handle(request.get_data(as_text=as_text)), headers
+    return handler.handle(request.get_data(as_text=as_text))
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=5000)
