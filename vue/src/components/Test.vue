@@ -162,22 +162,34 @@
                 <div class="col-1">{{ d["Failure Count"] }}</div>
                 <div class="col-1">{{ d["Median Response Time"] }}</div>
                 <div class="col-1">
-                  {{ d["Average Response Time"].toString().slice(0, 8) }}
+                  <div v-if="d['Average Response Time']">
+                    {{ d["Average Response Time"].toString().slice(0, 8) }}
+                  </div>
                 </div>
                 <div class="col-1">
-                  {{ d["Min Response Time"].toString().slice(0, 8) }}
+                  <div v-if="d['Min Response Time']">
+                    {{ d["Min Response Time"].toString().slice(0, 8) }}
+                  </div>
                 </div>
                 <div class="col-1">
-                  {{ d["Max Response Time"].toString().slice(0, 8) }}
+                  <div v-if="d['Max Response Time']">
+                    {{ d["Max Response Time"].toString().slice(0, 8) }}
+                  </div>
                 </div>
                 <div class="col-1">
-                  {{ d["Average Content Size"].toString().slice(0, 8) }}
+                  <div v-if="d['Average Content Size']">
+                    {{ d["Average Content Size"].toString().slice(0, 8) }}
+                  </div>
                 </div>
                 <div class="col-1">
-                  {{ d["Requests/s"].toString().slice(0, 8) }}
+                  <div v-if="d['Requests/s']">
+                    {{ d["Requests/s"].toString().slice(0, 8) }}
+                  </div>
                 </div>
                 <div class="col-1">
-                  {{ d["Failures/s"].toString().slice(0, 8) }}
+                  <div v-if="d['Failures/s']">
+                    {{ d["Failures/s"].toString().slice(0, 8) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -190,24 +202,36 @@
               <div class="col-1">{{ data.at(-1)["Failure Count"] }}</div>
               <div class="col-1">{{ data.at(-1)["Median Response Time"] }}</div>
               <div class="col-1">
-                {{
-                  data.at(-1)["Average Response Time"].toString().slice(0, 8)
-                }}
+                <div v-if="data.at(-1)['Average Response Time']">
+                  {{ data.at(-1)["Average Response Time"].toString().slice(0, 8) }}
+                </div>
               </div>
               <div class="col-1">
-                {{ data.at(-1)["Min Response Time"].toString().slice(0, 8) }}
+                <div v-if="data.at(-1)['Min Response Time']">
+                  {{ data.at(-1)["Min Response Time"].toString().slice(0, 8) }}
+                </div>
               </div>
               <div class="col-1">
-                {{ data.at(-1)["Max Response Time"].toString().slice(0, 8) }}
+                <div v-if="data.at(-1)['Max Response Time']">
+                  {{ data.at(-1)["Max Response Time"].toString().slice(0, 8) }}
+                </div>
               </div>
               <div class="col-1">
-                {{ data.at(-1)["Average Content Size"].toString().slice(0, 8) }}
+                <div v-if="data.at(-1)['Average Content Size']">
+                  {{
+                    data.at(-1)["Average Content Size"].toString().slice(0, 8)
+                  }}
+                </div>
               </div>
               <div class="col-1">
-                {{ data.at(-1)["Requests/s"].toString().slice(0, 8) }}
+                <div v-if="data.at(-1)['Requests/s']">
+                  {{ data.at(-1)["Requests/s"].toString().slice(0, 8) }}
+                </div>
               </div>
               <div class="col-1">
-                {{ data.at(-1)["Failures/s"].toString().slice(0, 8) }}
+                <div v-if="data.at(-1)['Failures/s']">
+                  {{ data.at(-1)["Failures/s"].toString().slice(0, 8) }}
+                </div>
               </div>
             </div>
           </div>
@@ -295,14 +319,14 @@
         >
           <div class="card-header">
             <div class="description-holder vertical-entry">
-            <label
-              v-if="info.description"
-              class="description"
-              data-mdb-toggle="tooltip"
-              title="Description"
-            >
-              {{ info.description }}
-            </label>
+              <label
+                v-if="info.description"
+                class="description"
+                data-mdb-toggle="tooltip"
+                title="Description"
+              >
+                {{ info.description }}
+              </label>
             </div>
             <div
               class="vertical-entry test-id"
