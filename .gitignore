@@ -11,6 +11,7 @@
 /server/temp
 /server/env
 *.junk
+*.log
 /visio
 /ptas.docker/function/__pycache__
 evaluation_server/

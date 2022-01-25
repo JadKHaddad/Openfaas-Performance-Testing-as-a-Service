@@ -12,6 +12,7 @@ from pathlib import Path
 from threading import Thread, Lock
 from time import sleep
 import time as t
+from datetime import datetime
 from os.path import join
 from flask import jsonify, send_from_directory, request
 import pandas as pd
@@ -43,42 +44,55 @@ def collect_garbage():
     global GARBAGE_COLLECTOR
     # print("GARBAGE_COLLECTOR: started")
     while True:
-        # print("GARBAGE_COLLECTOR: running")
-        with LOCK2:
-            if len(tasks) < 1:
-                break
-            to_delete = []
-            for task_id in tasks:
-                if tasks[task_id].poll() is not None:
-                    if platform.system() != "Windows":
-                        # save error log
-                        task_id_splitted = task_id.split("$")
+        try:
+            # print("GARBAGE_COLLECTOR: running")
+            with LOCK2:
+                if len(tasks) < 1:
+                    break
+                to_delete = []
+                for task_id in tasks:
+                    if tasks[task_id].poll() is not None:
+                        # should be modified
+                        # if platform.system() != "Windows":
+                        #     # save error log
+                        #     task_id_splitted = task_id.split("$")
+                        #     project_name = task_id_splitted[1]
+                        #     script_name = task_id_splitted[2]
+                        #     id = task_id_splitted[3]
+                        #     test_dir = get_test_dir(project_name, script_name, id)
+                        #     out, err = tasks[task_id].communicate()
+                        #     out = out.decode("utf-8")
+                        #     err = err.decode("utf-8")
+                        #     with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                        #         file.write(f"error:\n\n{err}\noutput:\n\n{out}")
+                        to_delete.append(task_id)
+
+                for to_delete_task in to_delete:
+                    if REDIS is not None:
+                        task_id_splitted = to_delete_task.split("$")
                         project_name = task_id_splitted[1]
                         script_name = task_id_splitted[2]
                         id = task_id_splitted[3]
-                        test_dir = get_test_dir(project_name, script_name, id)
-                        out, err = tasks[task_id].communicate()
-                        out = out.decode("utf-8")
-                        err = err.decode("utf-8")
-                        with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
-                            file.write(f"error:\n\n{err}\noutput:\n\n{out}")
-                    to_delete.append(task_id)
-            for to_delete_task in to_delete:
-                if REDIS is not None:
-                    task_id_splitted = to_delete_task.split("$")
-                    project_name = task_id_splitted[1]
-                    script_name = task_id_splitted[2]
-                    id = task_id_splitted[3]
-                    data = get_test_info(project_name, script_name, id, terminated=True)
-                    print("Handler: caching from thread")
-                    REDIS.hset(f"{project_name}:{script_name}", id, json.dumps(data))
-                    REDIS.expire(f"{project_name}:{script_name}", EXPIRE)
+                        data = get_test_info(project_name, script_name, id, terminated=True)
+                        print("Handler: caching from thread")
+                        REDIS.hset(f"{project_name}:{script_name}", id, json.dumps(data))
+                        REDIS.expire(f"{project_name}:{script_name}", EXPIRE)
 
-                del tasks[to_delete_task]
-        sleep(3)
-    # print("GARBAGE_COLLECTOR: terminating")
+                    del tasks[to_delete_task]
+            print("GARBAGE_COLLECTOR: running")
+            sleep(3)
+        except:
+            print("GARBAGE_COLLECTOR: error")
+            err = traceback.format_exc()
+            print(err)
+            # save error
+            with open(f"GARBAGE_COLLECTOR_ERR.log" , "a", encoding="utf-8") as file:
+                file.write(f"{datetime.now()}\n{err}\n")
+            sleep(3)
+    print("GARBAGE_COLLECTOR: terminating")
     with GARBAGE_COLLECTOR_LOCK:
         GARBAGE_COLLECTOR = None
+
 
 
 # create projects dir
@@ -638,6 +652,7 @@ def handle(req, no_request=False):
                                 + f"cd projects/{project_name} && \
                                     ../../env/{project_name}/bin/locust \
                                     -f locust/{script_name}.py \
+                                    \
                                     --logfile {worker_log_path} \
                                     --worker --master-port={port} &"
                             )
@@ -649,7 +664,8 @@ def handle(req, no_request=False):
                             --csv {results_path} \
                             --logfile {log_path} \
                             --master --master-bind-port={port} \
-                            --expect-workers={workers_count}"
+                            --expect-workers={workers_count} \
+                            "
                         command = worker_command + master_command
                     else:
                         command = f"cd {projects_dir}/{project_name} && \
@@ -659,14 +675,17 @@ def handle(req, no_request=False):
                             --spawn-rate {spawn_rate} \
                             --headless {time_command} \
                             --csv {results_path} \
-                            --logfile {log_path}"
+                            --logfile {log_path} \
+                            "
 
                     tasks[task_id] = subprocess.Popen(
                         f"ulimit -n 64000; {command}",
                         shell=True,
                         preexec_fn=os.setsid,
-                        stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE
+                        #stderr=subprocess.DEVNULL,
+                        #stdout=subprocess.DEVNULL
+                        #stderr=subprocess.PIPE,
+                        #stdout=subprocess.PIPE
                     )  
 
                 started_at = t.time()
@@ -741,13 +760,14 @@ def handle(req, no_request=False):
                     if task_id in tasks:
                         if tasks[task_id].poll() is not None:  # process finished
                             if not Path(csv_file_path).exists():  # test is not valid
-                                if platform.system() != "Windows":
-                                    # save error log
-                                    out, err = tasks[task_id].communicate()
-                                    out = out.decode("utf-8")
-                                    err = err.decode("utf-8")
-                                    with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
-                                        file.write(f"error:\n\n{err}\noutput:\n\n{out}")
+                                # should be modified
+                                # if platform.system() != "Windows":
+                                #     # save error log
+                                #     out, err = tasks[task_id].communicate()
+                                #     out = out.decode("utf-8")
+                                #     err = err.decode("utf-8")
+                                #     with open(f"{test_dir}/error_log.txt", "w", encoding="utf-8") as file:
+                                #         file.write(f"error:\n\n{err}\noutput:\n\n{out}")
                                 del tasks[task_id]
                                 if REDIS is not None:
                                     data = get_test_info(project_name, script_name, id)
@@ -1149,6 +1169,8 @@ def handle(req, no_request=False):
                 )
             # stop all running tests for this script
             with LOCK2:
+                # stop running tests
+                stopped = []
                 for task_id in tasks:
                     if task_id.startswith(f"TASK${project_name}${script_name}$"):
                         task_id_splitted = task_id.split("$")
@@ -1166,6 +1188,9 @@ def handle(req, no_request=False):
                             REDIS.hset(
                                 f"{project_name}:{script_name}", id, json.dumps(data)
                             )
+                # delete stopped tasks
+                for stopped_task in stopped:
+                    del tasks[stopped_task]
                 if REDIS is not None:
                     REDIS.expire(f"{project_name}:{script_name}", EXPIRE)
             return jsonify(success=True, exit_code=0, message="stopped"), headers

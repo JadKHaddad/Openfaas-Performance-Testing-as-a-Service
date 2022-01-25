@@ -11,8 +11,10 @@ import random
 import string
 import pathlib
 import shutil
+import traceback
 from urllib.parse import urljoin, unquote
 from threading import Lock
+from datetime import datetime
 import redis
 import requests
 from requests.exceptions import ConnectTimeout, InvalidSchema, ReadTimeout, InvalidURL
@@ -344,112 +346,127 @@ T_LOCK = Lock()
 def T_TASK():
     global T
     while True:
-        # copy
-        with T_LOCK:
-            current_connected_clients = CONNECTED_CLIENTS.copy()
-        if len(current_connected_clients) < 1:
-            break
-        sent = {}
-        for key, client in current_connected_clients.items():
-            url = client["url"]
-            events = client["events"]
-            for event, params in events.items():
-                # control
-                if event == "control":
-                    if f"{url}_control" not in sent:
-                        if url == "None":
-                            data = {"command": 13, "local": True}
-                            response = handler.handle(json.dumps(data), True)
-                            socketio.emit(f"{url}_control", response)
-                        else:
-                            data = {"command": 13}
-                            post_url = unquote(url)
-                            post_url = urljoin(post_url, "function/")
-                            post_url = urljoin(post_url, FUNCTION)
-                            try:
-                                response = requests.post(
-                                    post_url, data=json.dumps(data), timeout=2
-                                )
-                                socketio.emit(f"{url}_control", response.text)
-                            except (
-                                ConnectTimeout,
-                                RequestsConnectionError,
-                                InvalidSchema,
-                            ):
-                                socketio.emit(f"{url}_control", {"success": False})
-                        # print('sent to: ', f'{url}_control')
-                        sent[f"{url}_control"] = None
-                    continue
-                # script
-                if event == "script":
-                    for key, value in params.items():
-                        project_name = value["project_name"]
-                        script_name = value["script_name"]
-                        ids = value["test_ids"]
-                        if len(ids) > 0:
-                            if f"{url}_{project_name}_{script_name}" not in sent:
-                                if url == "None":
-                                    data = {
-                                        "command": 6,
-                                        "project_name": project_name,
-                                        "script_name": script_name,
-                                        "ids": ids,
-                                        "local": True,
-                                    }
-                                    response = handler.handle(json.dumps(data), True)
-                                    socketio.emit(
-                                        f"{url}_{project_name}_{script_name}", response
+        try:
+            # copy
+            with T_LOCK:
+                current_connected_clients = CONNECTED_CLIENTS.copy()
+            if len(current_connected_clients) < 1:
+                break
+            sent = {}
+            for key, client in current_connected_clients.items():
+                url = client["url"]
+                events = client["events"]
+                for event, params in events.items():
+                    # control
+                    if event == "control":
+                        if f"{url}_control" not in sent:
+                            if url == "None":
+                                data = {"command": 13, "local": True}
+                                response = handler.handle(json.dumps(data), True)
+                                socketio.emit(f"{url}_control", response)
+                            else:
+                                data = {"command": 13}
+                                post_url = unquote(url)
+                                post_url = urljoin(post_url, "function/")
+                                post_url = urljoin(post_url, FUNCTION)
+                                try:
+                                    response = requests.post(
+                                        post_url, data=json.dumps(data), timeout=2
                                     )
-                                else:
-                                    data = {
-                                        "command": 6,
-                                        "project_name": project_name,
-                                        "script_name": script_name,
-                                        "ids": ids,
-                                    }
-                                    post_url = unquote(url)
-                                    post_url = urljoin(post_url, "function/")
-                                    post_url = urljoin(post_url, FUNCTION)
-                                    try:
-                                        response = requests.post(
-                                            post_url, data=json.dumps(data), timeout=2
-                                        )
+                                    socketio.emit(f"{url}_control", response.text)
+                                except (
+                                    ConnectTimeout,
+                                    RequestsConnectionError,
+                                    InvalidSchema,
+                                    ReadTimeout, 
+                                    InvalidURL
+                                ):
+                                    socketio.emit(f"{url}_control", {"success": False})
+                            # print('sent to: ', f'{url}_control')
+                            sent[f"{url}_control"] = None
+                        continue
+                    # script
+                    if event == "script":
+                        for key, value in params.items():
+                            project_name = value["project_name"]
+                            script_name = value["script_name"]
+                            ids = value["test_ids"]
+                            if len(ids) > 0:
+                                if f"{url}_{project_name}_{script_name}" not in sent:
+                                    if url == "None":
+                                        data = {
+                                            "command": 6,
+                                            "project_name": project_name,
+                                            "script_name": script_name,
+                                            "ids": ids,
+                                            "local": True,
+                                        }
+                                        response = handler.handle(json.dumps(data), True)
                                         socketio.emit(
-                                            f"{url}_{project_name}_{script_name}",
-                                            response.text,
+                                            f"{url}_{project_name}_{script_name}", response
                                         )
-                                    except (
-                                        ConnectTimeout,
-                                        RequestsConnectionError,
-                                        InvalidSchema,
-                                    ):
-                                        socketio.emit(
-                                            f"{url}_{project_name}_{script_name}",
-                                            {"success": False},
-                                        )
-                                # print('sent to: ', f'{url}_{project_name}_{script_name}')
-                                sent[f"{url}_{project_name}_{script_name}"] = None
-            if url not in sent:
-                if url == "None":
-                    data = {"command": 14, "local": True}
-                    response = handler.handle(json.dumps(data), True)
-                    socketio.emit(url, response)
-                else:
-                    data = {"command": 14}
-                    post_url = unquote(url)
-                    post_url = urljoin(post_url, "function/")
-                    post_url = urljoin(post_url, FUNCTION)
-                    try:
-                        response = requests.post(
-                            post_url, data=json.dumps(data), timeout=2
-                        )
-                        socketio.emit(url, response.text)
-                    except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
-                        socketio.emit(url, {"success": False})
-                # print('sent to: ', url)
-                sent[url] = None
-        socketio.sleep(2)
-    print("Background thread has stopped")
+                                    else:
+                                        data = {
+                                            "command": 6,
+                                            "project_name": project_name,
+                                            "script_name": script_name,
+                                            "ids": ids,
+                                        }
+                                        post_url = unquote(url)
+                                        post_url = urljoin(post_url, "function/")
+                                        post_url = urljoin(post_url, FUNCTION)
+                                        try:
+                                            response = requests.post(
+                                                post_url, data=json.dumps(data), timeout=2
+                                            )
+                                            socketio.emit(
+                                                f"{url}_{project_name}_{script_name}",
+                                                response.text,
+                                            )
+                                        except (
+                                            ConnectTimeout,
+                                            RequestsConnectionError,
+                                            InvalidSchema,
+                                            ReadTimeout, 
+                                            InvalidURL
+                                        ):
+                                            socketio.emit(
+                                                f"{url}_{project_name}_{script_name}",
+                                                {"success": False},
+                                            )
+                                    # print('sent to: ', f'{url}_{project_name}_{script_name}')
+                                    sent[f"{url}_{project_name}_{script_name}"] = None
+                if url not in sent:
+                    if url == "None":
+                        data = {"command": 14, "local": True}
+                        response = handler.handle(json.dumps(data), True)
+                        socketio.emit(url, response)
+                    else:
+                        data = {"command": 14}
+                        post_url = unquote(url)
+                        post_url = urljoin(post_url, "function/")
+                        post_url = urljoin(post_url, FUNCTION)
+                        try:
+                            response = requests.post(
+                                post_url, data=json.dumps(data), timeout=2
+                            )
+                            socketio.emit(url, response.text)
+                        except (ConnectTimeout, RequestsConnectionError, InvalidSchema, ReadTimeout, InvalidURL):
+                            socketio.emit(url, {"success": False})
+                    # print('sent to: ', url)
+                    sent[url] = None
+            print("-------------------> Background thread sent info to clients <-------------------")
+            socketio.sleep(2)
+        except:
+            print("-------------------> Background thread Error <-------------------")
+            err = traceback.format_exc()
+            print(err)
+            # save error
+            with open(f"BACKGROUND_THREAD_ERR.log" , "a", encoding="utf-8") as file:
+                file.write(f"{datetime.now()}\n{err}\n")
+            socketio.sleep(2)
+
+    print("-------------------> Background thread has stopped <-------------------")
     with T_LOCK:
         T = None
 
@@ -475,7 +492,7 @@ def register(message):
             T = socketio.start_background_task(target=T_TASK)  # Thread(target=T_TASK)
             T.daemon = True
             T.start()
-            print("Background thread started")
+            print("-------------------> Background thread started <-------------------")
 
 
 @socketio.on("register_control")
