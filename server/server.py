@@ -14,7 +14,7 @@ import shutil
 import traceback
 from urllib.parse import urljoin, unquote
 from threading import Lock
-from datetime import datetime
+from datetime import datetime as datetime_
 import redis
 import requests
 from requests.exceptions import ConnectTimeout, InvalidSchema, ReadTimeout, InvalidURL
@@ -463,7 +463,7 @@ def T_TASK():
             print(err)
             # save error
             with open(f"BACKGROUND_THREAD_ERR.log" , "a", encoding="utf-8") as file:
-                file.write(f"{datetime.now()}\n{err}\n")
+                file.write(f"{datetime_.now()}\n{err}\n")
             socketio.sleep(2)
 
     print("-------------------> Background thread has stopped <-------------------")
