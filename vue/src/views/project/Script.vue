@@ -27,8 +27,17 @@
       >
         Delete all
       </button>
+      <button
+        v-if="!mobileAgent"
+        type="button"
+        class="btn btn-primary"
+        id="check"
+        @click="check"
+      >
+        Check
+      </button>
     </div>
-    <Test 
+    <Test
       v-for="test in reversedTests"
       :key="test[0]"
       :id="test[0]"
@@ -169,7 +178,14 @@ export default {
   components: {
     Test,
   },
-  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update", "mobileAgent"],
+  props: [
+    "url",
+    "openfaasUrl",
+    "socket",
+    "minimizeTests",
+    "update",
+    "mobileAgent",
+  ],
   data() {
     return {
       id: this.$route.params.id,
@@ -391,7 +407,7 @@ export default {
           workers: parseInt(workers),
           host: host,
           time: parseInt(time),
-          description: description
+          description: description,
         }),
       })
         .then((data) => data.json())
@@ -512,6 +528,27 @@ export default {
         openfaasurl: this.openfaasUrl,
         id: id,
       });
+    },
+    check() {
+      fetch(this.url, {
+        method: "POST",
+        body: JSON.stringify({
+          command: 916,
+          project_name: this.pid,
+          script_name: this.id,
+        }),
+      })
+        .then((data) => data.json())
+        .then((data) => {
+          if (data.success) {
+            console.log(data.out)
+          } else {
+            this.$emit("info", "Could not connect to server", "red");
+          }
+        })
+        .catch(function () {
+          this.$emit("info", "Could not connect to server", "red");
+        });
     },
   },
   computed: {

@@ -172,9 +172,6 @@ export default {
 
       axios
         .request({
-          headers: {
-            Origin: location.origin,
-          },
           method: "post",
           url: this.url,
           data: data,

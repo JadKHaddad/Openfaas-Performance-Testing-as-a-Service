@@ -1284,6 +1284,44 @@ def handle(req, no_request=False):
                 print(f"Handler: {message}")
                 return jsonify(success=True, exit_code=0, message=message), headers
 
+        if command == 916: # test a script -> sync
+            project_name = data.get("project_name") or None
+            script_name = data.get("script_name") or None
+            users = "1"
+            spawn_rate = "1"
+
+            if (
+                project_name is None
+                or script_name is None
+            ):
+                return (
+                    jsonify(success=False, exit_code=1, message="bad request"),
+                    headers,
+                )
+
+            # check if script exists
+            script_path = f"{projects_dir}/{project_name}/locust/{script_name}.py"
+            if not Path(script_path).exists():
+                return (
+                    jsonify(
+                        success=False, exit_code=5, message="script does not exist"
+                    ),
+                    headers,
+                )
+
+            command = f"cd {projects_dir}/{project_name} && \
+                        ../../env/{project_name}/bin/locust \
+                        -f locust/{script_name}.py\
+                        --users {users} \
+                        --spawn-rate {spawn_rate} \
+                        --headless -t 1s"
+
+            out, err = subprocess.Popen(command,shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate(timeout=3)
+            err = err.decode("utf-8")
+            return (
+                    jsonify(success=True, exit_code=0, message="tested", out=err),
+                    headers,
+                )
         return jsonify(success=False, exit_code=1, message="bad request"), headers
 
     except Exception as e:

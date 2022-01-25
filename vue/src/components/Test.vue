@@ -396,19 +396,17 @@
                 <div class="col-7">Name</div>
                 <div class="col-5">Requests</div>
               </div>
+              <div class="row">
+              <div class="col-7 ">{{ data.at(-1)["Name"] }}</div>
+              <div class="col-5">{{ data.at(-1)["Request Count"] }}</div>
             </div>
-            <div v-if="renderData" class="container-fluid results">
+            </div>
+            <!--<div v-if="renderData" class="container-fluid results">
               <div v-for="d in data.slice(0, -1)" :key="d" class="row">
                 <div class="col-7">{{ d["Name"] }}</div>
                 <div class="col-5">{{ d["Request Count"] }}</div>
               </div>
-            </div>
-          </div>
-          <div v-if="renderData" class="card-footer">
-            <div class="row">
-              <div class="col-7">{{ data.at(-1)["Name"] }}</div>
-              <div class="col-5">{{ data.at(-1)["Request Count"] }}</div>
-            </div>
+            </div>-->
           </div>
         </div>
       </div>
