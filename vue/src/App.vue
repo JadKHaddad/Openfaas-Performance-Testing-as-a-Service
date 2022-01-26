@@ -206,6 +206,7 @@ export default {
     updateSettings(settings) {
       this.disconnect();
       this.url = settings.baseUrl;
+      this.oldOpenfaasUrl = this.openfaasUrl
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
       this.noOpenfaas = settings.noOpenfaas;
@@ -221,7 +222,7 @@ export default {
       localStorage.setItem("darkTheme", this.darkTheme);
       localStorage.setItem("noRedges", this.noRedges);
       localStorage.setItem("minimizeTests", this.minimizeTests);
-      this.oldOpenfaasUrl = this.openfaasUrl
+      
       this.update = true;
 
       this.register();
@@ -237,6 +238,7 @@ export default {
       this.disconnect();
       //console.log(settings);
       this.url = settings.baseUrl;
+      this.oldOpenfaasUrl = this.openfaasUrl;
       this.openfaasUrl = settings.openfaasUrl;
       this.direct = settings.direct;
       this.noOpenfaas = settings.noOpenfaas;
@@ -245,7 +247,6 @@ export default {
       localStorage.setItem("direct", this.direct);
       localStorage.setItem("noOpenfaas", this.noOpenfaas);
       this.update = true;
-      this.oldOpenfaasUrl = this.openfaasUrl
       this.register();
       this.navBarRollBack = true;
       console.log("default openfaasUrl: " + this.openfaasUrl);

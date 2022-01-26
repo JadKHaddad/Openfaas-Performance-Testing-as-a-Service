@@ -293,6 +293,7 @@ export default {
   updated() {
     if (this.update) {
       this.socket.emit("disconnect_control");
+      console.log("control disconnected from: ", this.oldOpenfaasUrl);
       this.socket.off(this.oldOpenfaasUrl + "_control");
       this.init();
       this.$root.updated();
