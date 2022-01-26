@@ -61,7 +61,7 @@ export default {
     Test,
     InstallationProcess,
   },
-  props: ["url", "openfaasUrl", "socket", "minimizeTests", "update", "mobileAgent"],
+  props: ["url", "openfaasUrl", "oldOpenfaasUrl", "socket", "minimizeTests", "update", "mobileAgent"],
   data() {
     return {
       tests: {},
@@ -292,6 +292,8 @@ export default {
   },
   updated() {
     if (this.update) {
+      this.socket.emit("disconnect_control");
+      this.socket.off(this.oldOpenfaasUrl + "_control");
       this.init();
       this.$root.updated();
     }

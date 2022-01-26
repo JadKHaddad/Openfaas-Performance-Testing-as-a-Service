@@ -22,6 +22,7 @@
     <router-view
       :url="url"
       :openfaasUrl="openfaasUrl"
+      :oldOpenfaasUrl="oldOpenfaasUrl"
       :socket="socket"
       :minimizeTests="minimizeTests"
       :update="update"
@@ -135,6 +136,7 @@ export default {
   data() {
     return {
       openfaasUrl: "None",
+      oldOpenfaasUrl: "None",
       direct: true,
       noOpenfaas: true,
       functionName: "ptas",
@@ -219,7 +221,9 @@ export default {
       localStorage.setItem("darkTheme", this.darkTheme);
       localStorage.setItem("noRedges", this.noRedges);
       localStorage.setItem("minimizeTests", this.minimizeTests);
+      this.oldOpenfaasUrl = this.openfaasUrl
       this.update = true;
+
       this.register();
       this.navBarRollBack = true;
       console.log("new openfaasUrl: " + this.openfaasUrl);
@@ -241,6 +245,7 @@ export default {
       localStorage.setItem("direct", this.direct);
       localStorage.setItem("noOpenfaas", this.noOpenfaas);
       this.update = true;
+      this.oldOpenfaasUrl = this.openfaasUrl
       this.register();
       this.navBarRollBack = true;
       console.log("default openfaasUrl: " + this.openfaasUrl);

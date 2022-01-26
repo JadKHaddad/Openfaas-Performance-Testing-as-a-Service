@@ -181,6 +181,7 @@ export default {
   props: [
     "url",
     "openfaasUrl",
+    "oldOpenfaasUrl",
     "socket",
     "minimizeTests",
     "update",
@@ -577,6 +578,11 @@ export default {
   },
   updated() {
     if (this.update) {
+      this.socket.emit("disconnect_script", {
+        project_name: this.pid,
+        script_name: this.id,
+      });
+      this.socket.off(this.oldOpenfaasUrl + "_" + this.pid + "_" + this.id);
       this.init();
       this.$root.updated();
     }
