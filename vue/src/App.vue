@@ -27,6 +27,7 @@
       :minimizeTests="minimizeTests"
       :update="update"
       :mobileAgent="mobileAgent"
+      :out="testOutput"
       @info="showInfo"
     />
     <!-- Button trigger info modal -->
@@ -154,7 +155,8 @@ export default {
       confirmMessage: "",
       confirmButtonText: "confirm",
       navBarRollBack: false,
-      mobileAgent: false
+      mobileAgent: false,
+      testOutput: ""
     };
   },
   methods: {
@@ -255,6 +257,9 @@ export default {
     setNavBarRollBack() {
       this.navBarRollBack = false;
     },
+    setTestOutput(out){
+      this.testOutput = out;
+    }
   },
   created() {
     if (localStorage.getItem("url")) this.url = localStorage.getItem("url");

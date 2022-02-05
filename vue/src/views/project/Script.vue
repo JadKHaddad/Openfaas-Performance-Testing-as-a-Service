@@ -33,6 +33,7 @@
         class="btn btn-primary"
         id="check"
         @click="check"
+        :disabled="checkingScript"
       >
         Check
       </button>
@@ -198,6 +199,7 @@ export default {
       host: "",
       time: "",
       description: "",
+      checkingScript: false
     };
   },
   methods: {
@@ -531,6 +533,7 @@ export default {
       });
     },
     check() {
+      this.checkingScript = true;
       fetch(this.url, {
         method: "POST",
         body: JSON.stringify({
@@ -542,12 +545,15 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           if (data.success) {
-            console.log(data.out)
+            this.$root.setTestOutput(data.out.split("\n"));
+            this.$router.push({name: "Check", params: {script: this.id}});
           } else {
             this.$emit("info", "Could not connect to server", "red");
           }
+          this.checkingScript = false;
         })
-        .catch(function () {
+        .catch((err) => {
+          this.checkingScript = false;
           this.$emit("info", "Could not connect to server", "red");
         });
     },

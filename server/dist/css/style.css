@@ -370,3 +370,11 @@ h5 {
 progress{
   width: 100%;
 }
+
+.test-output{
+  padding: 2rem;
+}
+
+.dark .test-output{
+  color: hsla(0,0%,100%,.7) !important;
+}

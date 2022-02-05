@@ -1316,7 +1316,7 @@ def handle(req, no_request=False):
                         --spawn-rate {spawn_rate} \
                         --headless -t 1s"
 
-            out, err = subprocess.Popen(command,shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate(timeout=3)
+            out, err = subprocess.Popen(command,shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate(timeout=15)
             err = err.decode("utf-8")
             return (
                     jsonify(success=True, exit_code=0, message="tested", out=err),

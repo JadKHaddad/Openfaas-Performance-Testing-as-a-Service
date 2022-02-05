@@ -6,24 +6,26 @@
           <button
             type="button"
             class="btn btn-primary stop-test"
-            @click="stop"
+            ref="stop"
             :disabled="!running"
           >
+            <!-- @click="stop" -->
             Stop
           </button>
           <button
             type="button"
             class="btn btn-primary restart-test"
-            @click="restart"
+            ref="restart"
             :disabled="running"
           >
+            <!-- @click="restart" -->
             Restart
           </button>
           <button
             type="button"
             class="btn btn-primary download-test"
             @click="download"
-            :disabled="running"
+            :disabled="running || downloading"
           >
             Download
           </button>
@@ -203,7 +205,9 @@
               <div class="col-1">{{ data.at(-1)["Median Response Time"] }}</div>
               <div class="col-1">
                 <div v-if="data.at(-1)['Average Response Time']">
-                  {{ data.at(-1)["Average Response Time"].toString().slice(0, 8) }}
+                  {{
+                    data.at(-1)["Average Response Time"].toString().slice(0, 8)
+                  }}
                 </div>
               </div>
               <div class="col-1">
@@ -256,9 +260,10 @@
             <button
               type="button"
               class="btn btn-primary stop-test"
-              @click="stop"
+              ref="stop"
               :disabled="!running"
             >
+              <!-- @click="stop" -->
               Stop
             </button>
           </div>
@@ -266,9 +271,10 @@
             <button
               type="button"
               class="btn btn-primary restart-test"
-              @click="restart"
+              ref="restart"
               :disabled="running"
             >
+              <!-- @click="restart" -->
               Restart
             </button>
           </div>
@@ -279,7 +285,7 @@
               type="button"
               class="btn btn-primary download-test"
               @click="download"
-              :disabled="running"
+              :disabled="running || downloading"
             >
               Download
             </button>
@@ -397,9 +403,9 @@
                 <div class="col-5">Requests</div>
               </div>
               <div class="row">
-              <div class="col-7 ">{{ data.at(-1)["Name"] }}</div>
-              <div class="col-5">{{ data.at(-1)["Request Count"] }}</div>
-            </div>
+                <div class="col-7">{{ data.at(-1)["Name"] }}</div>
+                <div class="col-5">{{ data.at(-1)["Request Count"] }}</div>
+              </div>
             </div>
             <!--<div v-if="renderData" class="container-fluid results">
               <div v-for="d in data.slice(0, -1)" :key="d" class="row">
@@ -415,6 +421,8 @@
 </template>
 
 <script>
+import { fromEvent } from "rxjs";
+import { throttleTime } from "rxjs/operators";
 export default {
   name: "Test",
   props: [
@@ -447,6 +455,7 @@ export default {
       minimized: false,
       tooltipText: "Double click to minimize",
       workers: "",
+      downloading: false,
     };
   },
   computed: {
@@ -532,6 +541,7 @@ export default {
       );
     },
     download() {
+      this.downloading = true;
       fetch(this.url, {
         method: "POST",
         body: JSON.stringify({
@@ -545,6 +555,11 @@ export default {
         .then((blob) => {
           var objectUrl = URL.createObjectURL(blob);
           window.location.href = objectUrl;
+          this.downloading = false;
+        })
+        .catch(() => {
+          this.$root.showInfo("Could not connect to server", "red");
+          this.downloading = false;
         });
     },
     showResults() {
@@ -640,6 +655,12 @@ export default {
         this.elapsed = parseInt(Date.now() / 1000 - this.info.started_at);
       }, 1000);
     }
+    fromEvent(this.$refs["restart"], "click")
+      .pipe(throttleTime(1000))
+      .subscribe(() => this.restart());
+    fromEvent(this.$refs["stop"], "click")
+      .pipe(throttleTime(1000))
+      .subscribe(() => this.stop());
   },
 };
 </script>

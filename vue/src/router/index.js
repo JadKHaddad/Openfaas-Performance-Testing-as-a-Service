@@ -48,6 +48,12 @@ const routes = [
     props: true
   },
   {
+    path: '/check/:script',
+    name: 'Check',
+    component: () => import('../views/Check.vue'),
+    props: true
+  },
+  {
     path: '/egg',
     name: 'Egg',
     component: () => import('../views/Egg.vue')
