@@ -1,4 +1,4 @@
-# Performance Testing Service - Evaluation - Instractions
+# Performance Testing Service - Evaluation - Instructions
 
 ## Old system
 
