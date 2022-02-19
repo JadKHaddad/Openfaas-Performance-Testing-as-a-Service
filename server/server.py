@@ -61,6 +61,15 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 def extract_url(url):
+    """Calculates the OpenFaaS-Function's url from a given url
+
+    Args:
+        url (str): url to be formated
+
+    Returns:
+        url (str): OpenFaaS-Function's url
+    """
+
     if url is not None:
         if url != "None":
             url = unquote(url)
@@ -74,6 +83,14 @@ def extract_url(url):
 
 
 def check_openfaas():
+    """Checks if OpenFaaS is installed on the current mashine
+
+    Returns:
+        installed (bool): true if OpenFaaS is installed
+        check (bool): true if the browser should check again
+        message (str): current status (OpenFaaS not installed, Function installed, Function not installed, or OpenFaaS not running yet)
+    """
+
     out, err = subprocess.Popen(
         "faas-cli list", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ).communicate()
@@ -177,6 +194,10 @@ def egg():
 
 @app.route("/proxy", methods=["POST"])
 def proxy():
+    """Proxies requests to the given OpenFaaS url
+
+    """
+
     error = False
     url = request.cookies.get("openfaasurl")
     if url is not None:
@@ -230,11 +251,19 @@ def proxy():
 
 @app.route("/local", methods=["POST"])
 def local():
+    """Handles requests locally
+
+    """
     return handler.handle(request.data)
 
 
 @app.route("/check_connection", methods=["POST"])
 def check_connection():
+    """Checks connection to a given OpenFaaS server
+
+    Returns:
+        JsonResponse: {success: (bool)}
+    """
     url = json.loads(request.data)["url"]
     if url == "":
         return jsonify(success=False)
@@ -262,6 +291,11 @@ def check_connection():
 
 @app.route("/defaults", methods=["POST"])
 def defaults():
+    """Restores default settings in the browser
+
+    Returns:
+        JsonResponse: default_settings: (Dict)
+    """
     response = jsonify(openfaas_url=OPENFAASULR, direct=DIRECT)
     url = OPENFAASULR
     if url is None:
