@@ -4,6 +4,7 @@
    <div class="content">
       <h1> Performance Testing Service - Evaluation </h1>
       <div class="sections">
+
          <section class="first">
             <div class="card">
                <div class="card-body">
@@ -13,10 +14,15 @@
                      <div class="col">
                         <span class="form-text"> [[ item.q ]]</span>
                      </div>
-                     <div class="form-outline col order-5">
-                        <input type="text" :id="item.q" class="form-control" v-model="item.a"
+                     <div class=" col order-5">
+                        <!--<input type="text" :id="item.q" class="form-control" v-model="item.a"
                            :disabled="started || !ready" />
-                        <label class="form-label" :for="item.q">Antwort</label>
+                        <label class="form-label" :for="item.q">Antwort</label>-->
+                        
+                        <select class="form-select" :id="item.q" v-model="item.a"
+                        :disabled="started || !ready">
+                           <option v-for="option in item.options" :key="item">[[ option ]]</option>
+                        </select>
                      </div>
                   </div>
 
@@ -32,7 +38,7 @@
                <div class="card-body">
                   <h5 class="card-title">Test</h5>
                   <p class="card-text">
-                     <div v-if="!started" class="message">Informationen erscheinen nach dem starten.</div>
+                     <div v-if="!started" class="message">Informationen erscheinen nach dem Start.</div>
                      <div v-if="finished" class="message"><label class="url">Test beendet.</label></div>
                   <div v-if="started && loading">
                      <div class="spinner-border text-primary" role="status">
@@ -64,14 +70,16 @@
                <div class="card-body">
                   <h5 class="card-title">Nach dem Test</h5>
                   <p class="card-text">
-                  <div v-for="item in lastQuestions" :key="item" class="row g-3 align-items-center">
+                  <div v-for="(item, index) in lastQuestions" :key="item" class="row g-3 align-items-center">
                      <div class="col">
                         <span class="form-text"> [[ item.q ]]</span>
                      </div>
-                     <div class="form-outline col order-5">
-                        <input type="text" :id="item.q" class="form-control" v-model="item.a"
+                     <div class="col order-5">
+                        <input v-if="index == 2 || index == 3 || index == 7 || index == 8" type="text" :id="item.q" class="form-control" v-model="item.a"
                            :disabled="!ready || !started || finished" />
-                        <label class="form-label" :for="item.q">Antwort</label>
+                        <select v-else class="form-select" :id="item.q" v-model="item.a" :disabled="!ready || !started || finished">
+                           <option v-for="option in item.options" :key="item">[[ option ]]</option>
+                        </select>
                      </div>
                   </div>
                   </p>

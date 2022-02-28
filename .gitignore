@@ -7,6 +7,7 @@ modified_server/server/projects/locust_scripts/locust/gen_gs_alarm_device_worklo
 modified_server/server/projects/locust_scripts/locust/gen_gs_prod_workload
 modified_server/server/projects/locust_scripts/locust/locust_teastore
 __pycache__/
+env/
 # local env files
 .env.local
 .env.*.local
