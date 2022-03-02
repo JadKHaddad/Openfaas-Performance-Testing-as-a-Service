@@ -8,18 +8,46 @@ const app = Vue.createApp({
             ready: false,
             firstQuestions: [
                 { q: "Wie lange programmieren Sie?", a: "1 Jahr", options: ["1 Jahr", "2 Jahre", "3 Jahre", "4 Jahre", "5 Jahre", "Über 5 Jahre"]},
-                { q: "Wie oft programmieren Sie?", a: "Sehr selten", options: ["Sehr selten", "Selten", "Nicht oft", "Oft", "Regelmäßig", "Täglich"]},
+                { q: "Wie oft programmieren Sie?", a: "Weniger als 1 mal pro Monat", 
+                    options: [
+                        "Weniger als 1 mal pro Monat", 
+                        "1 mal pro Monat", 
+                        "2 mal pro Monat", 
+                        "3 mal pro Monat", 
+                        "1 mal pro Woche",
+                        "2 mal pro Woche",
+                        "3 mal pro Woche",
+                        "4 mal pro Woche",
+                        "5 mal pro Woche",
+                        "6 mal pro Woche",
+                        "1 mal pro Tag",
+                        "Mehr als 1 mal pro Tag"
+                    ]},
                 { q: "Ist Linux Ihr Hauptbetriebssystem?", a: "Ja", options: ["Ja", "Nein"]},
                 { q: "Wie vertraut sind Sie mit der Kommandozeile? Auf einer Skala von 1 bis 10 ( je größer umso vertrauter )", a: "1", options: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] },
-                { q: "Wie oft benutzen Sie die Kommandozeile?", a: "Sehr selten" , options: ["Sehr selten", "Selten", "Nicht oft", "Oft", "Regelmäßig", "Täglich"]},
+                { q: "Wie oft benutzen Sie die Kommandozeile?", a: "Weniger als 1 mal pro Monat",                     
+                options: [
+                    "Weniger als 1 mal pro Monat", 
+                    "1 mal pro Monat", 
+                    "2 mal pro Monat", 
+                    "3 mal pro Monat", 
+                    "1 mal pro Woche",
+                    "2 mal pro Woche",
+                    "3 mal pro Woche",
+                    "4 mal pro Woche",
+                    "5 mal pro Woche",
+                    "6 mal pro Woche",
+                    "1 mal pro Tag",
+                    "Mehr als 1 mal pro Tag"
+                ]},
             ],
             lastQuestions: [
                 { q: "Ist das alte System im Allgemeinen einfach zu bedienen?", a: "Ja", options: ["Ja", "Teilweise", "Nein"]},
                 { q: "Ist das neue System im Allgemeinen einfach zu bedienen?",  a: "Ja", options: ["Ja", "Teilweise", "Nein"]},
                 { q: "Welche Schwierigkeiten hatten Sie mit dem alten System?", a: "" },
                 { q: "Welche Schwierigkeiten hatten Sie mit dem neuen System?", a: "" },
-                { q: "Können Sie die Aufgaben alleine wiederholen (altes System)", a: "Ja", options: ["Ja", "Teilweise", "Nein"] },
-                { q: "Können Sie die Aufgaben alleine wiederholen (nues System)", a: "Ja", options: ["Ja", "Teilweise", "Nein"] },
+                { q: "Können Sie die Aufgaben alleine wiederholen (Altes System)", a: "Ja", options: ["Ja", "Teilweise", "Nein"] },
+                { q: "Können Sie die Aufgaben alleine wiederholen (Neues System)", a: "Ja", options: ["Ja", "Teilweise", "Nein"] },
                 { q: "Mit welchem System würden Sie schneller arbeiten", a: "Mit dem alten System", options: ["Mit dem alten System", "Mit dem neuen System"] },
                 { q: "Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?", a: "" },
                 { q: "Weitere Kommentare", a: "" },
@@ -79,6 +107,7 @@ const app = Vue.createApp({
         });
     },
     mounted() {
+
     }
 })
 app.mount('#app')

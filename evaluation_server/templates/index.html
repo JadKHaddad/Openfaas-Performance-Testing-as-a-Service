@@ -14,7 +14,7 @@
                      <div class="col">
                         <span class="form-text"> [[ item.q ]]</span>
                      </div>
-                     <div class=" col order-5">
+                     <div class="col order-5">
                         <!--<input type="text" :id="item.q" class="form-control" v-model="item.a"
                            :disabled="started || !ready" />
                         <label class="form-label" :for="item.q">Antwort</label>-->
@@ -75,7 +75,9 @@
                         <span class="form-text"> [[ item.q ]]</span>
                      </div>
                      <div class="col order-5">
-                        <input v-if="index == 2 || index == 3 || index == 7 || index == 8" type="text" :id="item.q" class="form-control" v-model="item.a"
+                        <textarea v-if="index == lastQuestions.length - 1" :id="item.q" class="form-control" rows="4" v-model="item.a"
+                           :disabled="!ready || !started || finished"></textarea>
+                        <input v-else-if="index == 2 || index == 3 || index == 7 || index == 8" type="text" :id="item.q" class="form-control" v-model="item.a"
                            :disabled="!ready || !started || finished" />
                         <select v-else class="form-select" :id="item.q" v-model="item.a" :disabled="!ready || !started || finished">
                            <option v-for="option in item.options" :key="item">[[ option ]]</option>
