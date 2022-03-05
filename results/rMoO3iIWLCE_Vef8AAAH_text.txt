@@ -1,0 +1,14 @@
+Wie lange programmieren Sie?:1 jahr
+Wie oft programmieren Sie?:jeden Tag
+Ist Linux Ihr Hauptbetriebssystem?:Nein
+Wie vertraut sind Sie mit der Kommandozeile?:ich kenne nur wichtige befehle
+Wie oft benutzen Sie die Kommandozeile?:Selten
+Ist das alte System im allgemeinen einfach zu bedienen?:not really
+Ist das neue System im allgemeinen einfach zu bedienen?:much easier to use. more understandable and user friendly.
+Welche Schwierigkeiten hatten Sie mit dem alten System?:navigating old and new tabs, and having to close one tab to be able to return to the previous one.
+Welche Schwierigkeiten hatten Sie mit dem neuen System?:scrolling down arrow is not always visible.
+Können Sie die Aufgaben alleine wiederholen (altes System):definitely not
+Können Sie die Aufgaben alleine wiederholen (nues System):yes
+Mit welchem System würden Sie schneller arbeiten:new system.
+Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?:new system for sure, maybe there will be cases that some commands are not built in the new system so the old system might be needed in some cases. (I assume))
+Weitere Kommentare:one of the reasons I avoid using command line is the need to memorize commands on the go and its not always easy to not copy so this is a great way to avoid that and be able to finish the task in a non complicated way.

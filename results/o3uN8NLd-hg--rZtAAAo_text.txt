@@ -1,0 +1,14 @@
+Wie lange programmieren Sie?:3 Jahren 
+Wie oft programmieren Sie?:2 mal wöchentlich 
+Ist Linux Ihr Hauptbetriebssystem?:Nein
+Wie vertraut sind Sie mit der Kommandozeile?: Skala von 1-10: 2
+Wie oft benutzen Sie die Kommandozeile?:Sehr selten 
+Ist das alte System im allgemeinen einfach zu bedienen?:Nein
+Ist das neue System im allgemeinen einfach zu bedienen?:Ja 
+Welche Schwierigkeiten hatten Sie mit dem alten System?: Die Schritte sind kompliziert 
+Welche Schwierigkeiten hatten Sie mit dem neuen System?: Keine 
+Können Sie die Aufgaben alleine wiederholen (altes System): Nein
+Können Sie die Aufgaben alleine wiederholen (nues System):Ja
+Mit welchem System würden Sie schneller arbeiten:Mit dem zweiten 
+Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?:Das zweite System 
+Weitere Kommentare:

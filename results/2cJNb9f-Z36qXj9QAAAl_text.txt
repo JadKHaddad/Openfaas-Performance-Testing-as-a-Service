@@ -1,0 +1,14 @@
+Wie lange programmieren Sie?:kaum
+Wie oft programmieren Sie?:selten
+Ist Linux Ihr Hauptbetriebssystem?:JA
+Wie vertraut sind Sie mit der Kommandozeile?:sehr
+Wie oft benutzen Sie die Kommandozeile?:immer
+Ist das alte System im allgemeinen einfach zu bedienen?:Ja
+Ist das neue System im allgemeinen einfach zu bedienen?:Ja, sehr
+Welche Schwierigkeiten hatten Sie mit dem alten System?:keine
+Welche Schwierigkeiten hatten Sie mit dem neuen System?:keine
+Können Sie die Aufgaben alleine wiederholen (altes System):ja
+Können Sie die Aufgaben alleine wiederholen (nues System):ja
+Mit welchem System würden Sie schneller arbeiten:Altes System
+Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?:Altes System. Bei Problemanalysen von unterwegs (Stichwort Bereitschaft) würde ich aber das Neue System bevorzugen
+Weitere Kommentare:n/a

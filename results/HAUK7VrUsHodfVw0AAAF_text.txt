@@ -1,0 +1,14 @@
+Wie lange programmieren Sie?:4 Jahre
+Wie oft programmieren Sie?:3 mal pro Woche
+Ist Linux Ihr Hauptbetriebssystem?:Nein
+Wie vertraut sind Sie mit der Kommandozeile? Auf einer Skala von 1 bis 10 ( je größer umso vertrauter ):7
+Wie oft benutzen Sie die Kommandozeile?:Mehr als 1 mal pro Tag
+Ist das alte System im Allgemeinen einfach zu bedienen?:Ja
+Ist das neue System im Allgemeinen einfach zu bedienen?:Ja
+Welche Schwierigkeiten hatten Sie mit dem alten System?:konnte kein neuen Tab in Tmux öffnen. Sonst hat alles funktioniert. 
+Welche Schwierigkeiten hatten Sie mit dem neuen System?:keine
+Können Sie die Aufgaben alleine wiederholen (Altes System):Ja
+Können Sie die Aufgaben alleine wiederholen (Neues System):Ja
+Mit welchem System würden Sie schneller arbeiten:Mit dem neuen System
+Welches System würden Sie lieber benutzen? gibt es Fälle, in denen Sie das andere System benutzen würden? wenn ja, welche?:
+Weitere Kommentare:Auto-Vervollständigung in der shell auf dem alten System ist pflicht!
