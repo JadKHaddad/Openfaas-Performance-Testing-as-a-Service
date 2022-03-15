@@ -21,7 +21,7 @@ modified_server/
 node_modules
 /dist
 /results
-
+mainvenv/
 
 # local env files
 .env.local
