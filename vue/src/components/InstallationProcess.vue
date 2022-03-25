@@ -112,7 +112,7 @@ export default {
         console.log("Task is finished");
         clearInterval(this.socketIntv);
         this.$emit("delete");
-        this.$root.showInfo("Installation successs", "green");
+        this.$root.showInfo("Installation success", "green");
       }
     });
   },
